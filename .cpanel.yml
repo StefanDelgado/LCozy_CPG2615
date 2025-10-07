@@ -2,4 +2,6 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/Main
+    - export DEPLOYPATH=/home/username/public_html/
+    - /bin/cp index.php $DEPLOYPATH
+    
