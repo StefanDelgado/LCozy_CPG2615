@@ -1,9 +1,9 @@
 <?php
 // Primary (remote) server
-$REMOTE_DB_HOST = 'your.remote.server.ip';
+$REMOTE_DB_HOST = 'localhost';
 $REMOTE_DB_NAME = 'cozydorms';
-$REMOTE_DB_USER = 'remote_user';
-$REMOTE_DB_PASS = 'remote_pass';
+$REMOTE_DB_USER = 'cozyadmin';
+$REMOTE_DB_PASS = 'PsBn9c4PZ2BMRMq';
 
 // Local fallback
 $LOCAL_DB_HOST = '127.0.0.1';
