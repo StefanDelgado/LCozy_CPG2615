@@ -1,6 +1,6 @@
 <?php
 // Primary (remote) server
-$REMOTE_DB_HOST = 'localhost';
+$REMOTE_DB_HOST = '50.63.129.30';
 $REMOTE_DB_NAME = 'cozydorms';
 $REMOTE_DB_USER = 'cozyadmin';
 $REMOTE_DB_PASS = 'PsBn9c4PZ2BMRMq';
