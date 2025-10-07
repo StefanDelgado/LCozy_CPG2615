@@ -7,3 +7,13 @@ deployment:
     - /bin/cp Main/config.php $DEPLOYPATH
     - /bin/cp Main/login.php $DEPLOYPATH
     - /bin/cp Main/auth.php $DEPLOYPATH
+    - /bin/cp Main/dashboard.php $DEPLOYPATH 
+    - /bin/cp Main/logout.php $DEPLOYPATH
+    - /bin/cp Main/owner_dashboard.php $DEPLOYPATH
+    - /bin/cp Main/register.php $DEPLOYPATH
+    - /bin/cp Main/register_admin.php $DEPLOYPATH
+    - /bin/cp Main/student_dashboard.php $DEPLOYPATH
+    - /bin/cp -R Main/modules $DEPLOYPATH
+    - /bin/cp -R Main/partials $DEPLOYPATH
+    - /bin/cp -R Main/assets $DEPLOYPATH
+    - /bin/cp -R Main/uploads $DEPLOYPATH
