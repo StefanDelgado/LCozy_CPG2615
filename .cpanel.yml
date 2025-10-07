@@ -1,0 +1,6 @@
+
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/Main
+    - /bin/cp -R images $DEPLOYPATH
