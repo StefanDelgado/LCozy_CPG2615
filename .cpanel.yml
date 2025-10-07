@@ -6,3 +6,4 @@ deployment:
     - /bin/cp Main/index.php $DEPLOYPATH
     - /bin/cp Main/config.php $DEPLOYPATH
     - /bin/cp Main/login.php $DEPLOYPATH
+    - /bin/cp Main/auth.php $DEPLOYPATH
