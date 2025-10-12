@@ -23,7 +23,7 @@ $owner_id = $_SESSION['user']['user_id'] ?? 0;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
     $booking_id = (int)$_POST['booking_id'];
     
-    // Fix: Explicitly check which button was clicked and set appropriate status
+    // Validate action and set status
     if (isset($_POST['approve_booking'])) {
         $new_status = 'approved';
     } elseif (isset($_POST['reject_booking'])) {
@@ -37,58 +37,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
     try {
         $pdo->beginTransaction();
 
-        // Validate owner access
-        $stmt = $pdo->prepare("
-            SELECT b.*, r.price, u.user_id AS student_id, b.start_date
+        // First check if booking exists and can be updated
+        $check_stmt = $pdo->prepare("
+            SELECT b.booking_id, b.status, r.price, u.user_id AS student_id, b.start_date
             FROM bookings b
             JOIN rooms r ON b.room_id = r.room_id
             JOIN dormitories d ON r.dorm_id = d.dorm_id
             JOIN users u ON b.student_id = u.user_id
-            WHERE b.booking_id = ? AND d.owner_id = ?
+            WHERE b.booking_id = ? AND d.owner_id = ? AND b.status = 'pending'
         ");
-        $stmt->execute([$booking_id, $owner_id]);
-        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+        $check_stmt->execute([$booking_id, $owner_id]);
+        $booking = $check_stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($booking) {
-            // Update booking status - remove LOWER() as we're explicitly setting the correct case
-            $update = $pdo->prepare("UPDATE bookings SET status = ? WHERE booking_id = ?");
-            $update->execute([$new_status, $booking_id]);
+        if (!$booking) {
+            throw new Exception('Booking not found or cannot be updated');
+        }
 
-            // Verify the update worked
-            if ($update->rowCount() === 0) {
-                throw new Exception('Failed to update booking status');
+        // Update booking status with explicit WHERE clause
+        $update = $pdo->prepare("
+            UPDATE bookings 
+            SET status = ? 
+            WHERE booking_id = ? 
+            AND status = 'pending'
+        ");
+        $update->execute([$new_status, $booking_id]);
+
+        if ($update->rowCount() === 0) {
+            throw new Exception('Booking status could not be updated');
+        }
+
+        // Handle approved bookings
+        if ($new_status === 'approved') {
+            // Check for existing payment
+            $check = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE booking_id = ?");
+            $check->execute([$booking_id]);
+            
+            if ($check->fetchColumn() == 0) {
+                // Create payment record
+                $insert = $pdo->prepare("
+                    INSERT INTO payments (
+                        booking_id, 
+                        student_id, 
+                        amount, 
+                        status, 
+                        due_date, 
+                        created_at
+                    ) VALUES (?, ?, ?, 'pending', ?, NOW())
+                ");
+                $insert->execute([
+                    $booking_id,
+                    $booking['student_id'],
+                    $booking['price'],
+                    $booking['start_date'] ?? date('Y-m-d', strtotime('+7 days'))
+                ]);
             }
 
-            // If approved, insert pending payment if not existing
-            if ($new_status === 'approved') {
-                $amount = $booking['price'] ?? 0;
-                $student_id = $booking['student_id'];
-                $due_date = $booking['start_date'] ?? date('Y-m-d', strtotime('+7 days'));
-
-                $check = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE booking_id = ?");
-                $check->execute([$booking_id]);
-                if ($check->fetchColumn() == 0) {
-                    $insert = $pdo->prepare("
-                        INSERT INTO payments (booking_id, student_id, amount, status, due_date, created_at)
-                        VALUES (?, ?, ?, 'pending', ?, NOW())
-                    ");
-                    $insert->execute([$booking_id, $student_id, $amount, $due_date]);
-                }
-
-                $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking approved and payment reminder created.'];
-            } else {
-                $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking rejected successfully.'];
-            }
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking approved and payment reminder created.'];
         } else {
-            $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Booking not found or unauthorized.'];
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking rejected successfully.'];
         }
 
         $pdo->commit();
+
     } catch (Exception $e) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         error_log('owner_bookings error: ' . $e->getMessage());
         $_SESSION['flash'] = [
-            'type' => 'error',
+            'type' => 'error', 
             'msg' => APP_DEBUG ? 'Internal error: ' . $e->getMessage() : 'An error occurred.'
         ];
     }
