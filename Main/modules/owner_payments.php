@@ -32,20 +32,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $payment_id = intval($_POST['payment_id']);
     $status = $_POST['status'];
 
+    // Authorize via booking->room->dorm (owner relationship) so we don't rely on payments.owner_id
     $stmt = $pdo->prepare("
-        UPDATE payments 
-        SET status = ?, updated_at = NOW()
-        WHERE payment_id = ?
-          AND owner_id = ?
+        UPDATE payments p
+        JOIN bookings b ON p.booking_id = b.booking_id
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN dormitories d ON r.dorm_id = d.dorm_id
+        SET p.status = ?, p.updated_at = NOW()
+        WHERE p.payment_id = ? AND d.owner_id = ?
     ");
     $stmt->execute([$status, $payment_id, $owner_id]);
     $flash = ['type' => 'success', 'msg' => 'Payment status updated successfully.'];
 }
-
+ 
 // --- Delete a Payment ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_payment'])) {
     $payment_id = intval($_POST['payment_id']);
-    $stmt = $pdo->prepare("DELETE FROM payments WHERE payment_id = ? AND owner_id = ?");
+    // Ensure owner owns the related dorm via booking -> room -> dorm
+    $stmt = $pdo->prepare("
+        DELETE p FROM payments p
+        JOIN bookings b ON p.booking_id = b.booking_id
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN dormitories d ON r.dorm_id = d.dorm_id
+        WHERE p.payment_id = ? AND d.owner_id = ?
+    ");
     $stmt->execute([$payment_id, $owner_id]);
     $flash = ['type' => 'error', 'msg' => 'Payment record deleted successfully.'];
 }
