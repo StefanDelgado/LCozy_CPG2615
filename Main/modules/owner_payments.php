@@ -148,7 +148,7 @@ async function fetchPayments() {
         </td>
         <td>
           ${p.receipt_image 
-            ? `<a href="../uploads/${p.receipt_image}" target="_blank">View</a>` 
+            ? `<a href="../uploads/receipts/${p.receipt_image}" target="_blank">View</a>` 
             : '<em>No receipt</em>'}
         </td>
         <td>
