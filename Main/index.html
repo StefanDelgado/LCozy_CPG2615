@@ -220,6 +220,59 @@
         section {
             padding-top: 80px; /* Add space for fixed nav */
         }
+
+        /* Add these styles to your existing CSS */
+        .team-section {
+            margin-top: 4rem;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .profile-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .profile-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            background: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .profile-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4A3AFF;
+            margin: 0.5rem 0;
+        }
+
+        .profile-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -282,6 +335,51 @@
                     </ul>
                 </div>
             </div>
+
+            <div class="team-section">
+                <h3>Meet Our Team</h3>
+                <div class="team-grid">
+                    <div class="profile-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="profile-image">
+                            <img src="assets/placeholder.jpg" alt="Project Manager">
+                        </div>
+                        <h4 class="profile-name">Lastname, Firstname</h4>
+                        <p class="profile-title">Project Manager</p>
+                    </div>
+
+                    <div class="profile-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="profile-image">
+                            <img src="assets/placeholder.jpg" alt="System Analyst">
+                        </div>
+                        <h4 class="profile-name">Lastname, Firstname</h4>
+                        <p class="profile-title">System Analyst</p>
+                    </div>
+
+                    <div class="profile-card" data-aos="fade-up" data-aos-delay="300">
+                        <div class="profile-image">
+                            <img src="assets/placeholder.jpg" alt="System Analyst">
+                        </div>
+                        <h4 class="profile-name">Lastname, Firstname</h4>
+                        <p class="profile-title">System Analyst</p>
+                    </div>
+
+                    <div class="profile-card" data-aos="fade-up" data-aos-delay="400">
+                        <div class="profile-image">
+                            <img src="assets/placeholder.jpg" alt="Web Developer">
+                        </div>
+                        <h4 class="profile-name">Lastname, Firstname</h4>
+                        <p class="profile-title">Web Developer</p>
+                    </div>
+
+                    <div class="profile-card" data-aos="fade-up" data-aos-delay="500">
+                        <div class="profile-image">
+                            <img src="assets/placeholder.jpg" alt="Mobile Developer">
+                        </div>
+                        <h4 class="profile-name">Lastname, Firstname</h4>
+                        <p class="profile-title">Mobile Developer</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -295,7 +393,7 @@
         });
 
         // Smooth scrolling for navigation
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {A
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 document.querySelector(this.getAttribute('href')).scrollIntoView({
