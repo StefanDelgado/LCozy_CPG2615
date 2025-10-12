@@ -161,6 +161,7 @@
             color: white;
         }
 
+        /* Update the nav-indicator styles */
         .nav-indicator {
             position: absolute;
             top: 0.5rem;
@@ -168,6 +169,7 @@
             background: #4A3AFF;
             border-radius: 6px;
             height: calc(100% - 1rem);
+            width: 0; /* Add initial width */
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 0;
         }
@@ -181,6 +183,7 @@
             display: none;
         }
 
+        /* Update scroll indicator styles */
         .scroll-indicator {
             position: fixed;
             bottom: 40px;
@@ -192,6 +195,8 @@
             border-radius: 15px;
             animation: bounce 2s infinite;
             z-index: 1000;
+            opacity: 1; /* Add initial opacity */
+            transition: opacity 0.3s ease; /* Add transition */
         }
 
         .scroll-indicator::before {
@@ -407,11 +412,23 @@
             const sections = document.querySelectorAll('section');
             const navLinks = document.querySelectorAll('.nav-links a');
             const indicator = document.querySelector('.nav-indicator');
+            const scrollIndicator = document.querySelector('.scroll-indicator');
             
+            // Handle scroll indicator visibility
+            if (window.pageYOffset > 100) {
+                scrollIndicator.style.opacity = '0';
+                scrollIndicator.style.pointerEvents = 'none';
+            } else {
+                scrollIndicator.style.opacity = '1';
+                scrollIndicator.style.pointerEvents = 'auto';
+            }
+            
+            // Handle nav indicator
             let current = '';
             sections.forEach(section => {
                 const sectionTop = section.offsetTop;
-                if (pageYOffset >= sectionTop - 150) {
+                const sectionHeight = section.clientHeight;
+                if (window.pageYOffset >= sectionTop - 150) {
                     current = section.getAttribute('id');
                 }
             });
@@ -420,28 +437,24 @@
                 link.classList.remove('active');
                 if (link.getAttribute('href').slice(1) === current) {
                     link.classList.add('active');
-                    // Update indicator position and width
-                    indicator.style.width = `${link.offsetWidth}px`;
-                    indicator.style.left = `${link.offsetLeft}px`;
+                    // Ensure indicator updates smoothly
+                    requestAnimationFrame(() => {
+                        indicator.style.width = `${link.offsetWidth}px`;
+                        indicator.style.left = `${link.offsetLeft}px`;
+                    });
                 }
             });
-
-            // Hide scroll indicator when user starts scrolling
-            const scrollIndicator = document.querySelector('.scroll-indicator');
-            if (window.scrollY > 100) {
-                scrollIndicator.style.opacity = '0';
-            } else {
-                scrollIndicator.style.opacity = '1';
-            }
         });
 
-        // Add initial indicator position
+        // Update the load event listener for initial indicator position
         window.addEventListener('load', () => {
             const activeLink = document.querySelector('.nav-links a.active');
             const indicator = document.querySelector('.nav-indicator');
             if (activeLink) {
-                indicator.style.width = `${activeLink.offsetWidth}px`;
-                indicator.style.left = `${activeLink.offsetLeft}px`;
+                requestAnimationFrame(() => {
+                    indicator.style.width = `${activeLink.offsetWidth}px`;
+                    indicator.style.left = `${activeLink.offsetLeft}px`;
+                });
             }
         });
     </script>
