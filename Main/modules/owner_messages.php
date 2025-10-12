@@ -101,7 +101,7 @@ let studentId = <?= json_encode($active_student_id) ?>;
 
 function fetchMessages() {
   if (!dormId || !studentId) return;
-  fetch(`/CAPSTONE/modules/fetch_messages.php?dorm_id=${dormId}&other_id=${studentId}`)
+  fetch(`fetch_messages.php?dorm_id=${dormId}&other_id=${studentId}`)
     .then(res => res.json())
     .then(data => {
       if (data.messages) {
@@ -124,7 +124,7 @@ function fetchMessages() {
     });
 }
 
-setInterval(fetchMessages, 3000);
+setInterval(fetchMessages, 1000);
 fetchMessages();
 </script>
 

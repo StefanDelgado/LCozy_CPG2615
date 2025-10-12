@@ -9,81 +9,48 @@ include __DIR__ . '/../partials/header.php';
 $owner_id = $_SESSION['user']['user_id'];
 $flash = null;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// --- Add Payment Reminder ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_reminder'])) {
+    $booking_id = intval($_POST['booking_id']);
+    $amount = floatval($_POST['amount']);
+    $due_date = $_POST['due_date'];
 
-    if (isset($_POST['add_reminder'])) {
-        $booking_id = intval($_POST['booking_id']);
-        $amount = floatval($_POST['amount']);
-        $due_date = $_POST['due_date'];
-
-        $stmt = $pdo->prepare("
-            INSERT INTO payments (booking_id, student_id, amount, due_date, status, created_at)
-            SELECT b.booking_id, b.student_id, ?, ?, 'pending', NOW()
-            FROM bookings b
-            JOIN rooms r ON b.room_id = r.room_id
-            JOIN dormitories d ON r.dorm_id = d.dorm_id
-            WHERE b.booking_id = ? AND d.owner_id = ?
-        ");
-        $stmt->execute([$amount, $due_date, $booking_id, $owner_id]);
-
-        $flash = ['type'=>'success','msg'=>'Payment reminder added successfully.'];
-    }
-
-    if (isset($_POST['update_status'])) {
-        $payment_id = intval($_POST['payment_id']);
-        $status = $_POST['status'];
-
-        $stmt = $pdo->prepare("
-            UPDATE payments 
-            SET status = ?, updated_at = NOW()
-            WHERE payment_id = ? 
-              AND booking_id IN (
-                SELECT b.booking_id 
-                FROM bookings b
-                JOIN rooms r ON b.room_id = r.room_id
-                JOIN dormitories d ON r.dorm_id = d.dorm_id
-                WHERE d.owner_id = ?
-              )
-        ");
-        $stmt->execute([$status, $payment_id, $owner_id]);
-        $flash = ['type'=>'success','msg'=>'Payment status updated successfully.'];
-    }
-
-    if (isset($_POST['delete_payment'])) {
-        $payment_id = intval($_POST['payment_id']);
-        $stmt = $pdo->prepare("
-            DELETE FROM payments 
-            WHERE payment_id = ? 
-              AND booking_id IN (
-                SELECT b.booking_id 
-                FROM bookings b
-                JOIN rooms r ON b.room_id = r.room_id
-                JOIN dormitories d ON r.dorm_id = d.dorm_id
-                WHERE d.owner_id = ?
-              )
-        ");
-        $stmt->execute([$payment_id, $owner_id]);
-        $flash = ['type'=>'error','msg'=>'Payment deleted successfully.'];
-    }
+    $stmt = $pdo->prepare("
+        INSERT INTO payments (booking_id, student_id, owner_id, amount, due_date, status, created_at)
+        SELECT b.booking_id, b.student_id, ?, ?, ?, 'pending', NOW()
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN dormitories d ON r.dorm_id = d.dorm_id
+        WHERE b.booking_id = ? AND d.owner_id = ?
+    ");
+    $stmt->execute([$owner_id, $amount, $due_date, $booking_id, $owner_id]);
+    $flash = ['type' => 'success', 'msg' => 'Payment reminder added successfully.'];
 }
 
-$sql = "
-    SELECT 
-        p.payment_id, p.amount, p.status, p.due_date, p.payment_date, p.receipt_image,
-        u.name AS student_name, u.email,
-        d.name AS dorm_name, r.room_type, b.booking_id
-    FROM payments p
-    JOIN bookings b ON p.booking_id = b.booking_id
-    JOIN rooms r ON b.room_id = r.room_id
-    JOIN dormitories d ON r.dorm_id = d.dorm_id
-    JOIN users u ON b.student_id = u.user_id
-    WHERE d.owner_id = ?
-    ORDER BY p.due_date ASC
-";
-$stmt = $pdo->prepare($sql);
-$stmt->execute([$owner_id]);
-$payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// --- Manual Status Updates (Confirm/Reject) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
+    $payment_id = intval($_POST['payment_id']);
+    $status = $_POST['status'];
 
+    $stmt = $pdo->prepare("
+        UPDATE payments 
+        SET status = ?, updated_at = NOW()
+        WHERE payment_id = ?
+          AND owner_id = ?
+    ");
+    $stmt->execute([$status, $payment_id, $owner_id]);
+    $flash = ['type' => 'success', 'msg' => 'Payment status updated successfully.'];
+}
+
+// --- Delete a Payment ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_payment'])) {
+    $payment_id = intval($_POST['payment_id']);
+    $stmt = $pdo->prepare("DELETE FROM payments WHERE payment_id = ? AND owner_id = ?");
+    $stmt->execute([$payment_id, $owner_id]);
+    $flash = ['type' => 'error', 'msg' => 'Payment record deleted successfully.'];
+}
+
+// --- Fetch Bookings for Dropdown ---
 $bookings = $pdo->prepare("
     SELECT b.booking_id, u.name AS student_name, d.name AS dorm_name
     FROM bookings b
@@ -97,13 +64,15 @@ $bookings = $bookings->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div class="page-header">
-  <p>Track, update, and remind tenants about their payments.</p>
+  <h1>Payment Management</h1>
+  <p>Track payments, confirm receipts, and manage student billing efficiently.</p>
 </div>
 
 <?php if ($flash): ?>
-<div class="alert <?= $flash['type'] ?>"><?= htmlspecialchars($flash['msg']) ?></div>
+  <div class="alert <?= $flash['type'] ?>"><?= htmlspecialchars($flash['msg']) ?></div>
 <?php endif; ?>
 
+<!-- Add Payment Reminder -->
 <div class="card">
   <h2>Add Payment Reminder</h2>
   <form method="post">
@@ -123,13 +92,14 @@ $bookings = $bookings->fetchAll(PDO::FETCH_ASSOC);
     <label>Due Date
       <input type="date" name="due_date" required>
     </label>
-    <button type="submit" name="add_reminder" class="btn-primary">Add Reminder</button>
+    <button type="submit" name="add_reminder" class="btn">Add Reminder</button>
   </form>
 </div>
 
+<!-- Payments Overview -->
 <div class="card">
   <h2>Payments Overview</h2>
-  <table class="data-table">
+  <table class="data-table" id="paymentsTable">
     <thead>
       <tr>
         <th>Student</th>
@@ -139,57 +109,73 @@ $bookings = $bookings->fetchAll(PDO::FETCH_ASSOC);
         <th>Due Date</th>
         <th>Status</th>
         <th>Receipt</th>
-        <th>Actions</th>
+        <th>Action</th>
       </tr>
     </thead>
-    <tbody>
-      <?php foreach ($payments as $p): ?>
-      <tr>
-        <td><?= htmlspecialchars($p['student_name']) ?></td>
-        <td><?= htmlspecialchars($p['dorm_name']) ?></td>
-        <td><?= htmlspecialchars($p['room_type']) ?></td>
-        <td>₱<?= number_format($p['amount'], 2) ?></td>
-        <td><?= htmlspecialchars($p['due_date']) ?></td>
-        <td>
-          <form method="post" style="display:inline;">
-            <input type="hidden" name="payment_id" value="<?= $p['payment_id'] ?>">
-            <select name="status" onchange="this.form.submit()">
-              <?php 
-              $statuses = ['pending', 'submitted', 'paid', 'overdue'];
-              foreach ($statuses as $s): 
-              ?>
-                <option value="<?= $s ?>" <?= $p['status'] === $s ? 'selected' : '' ?>>
-                  <?= ucfirst($s) ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
-            <input type="hidden" name="update_status" value="1">
-          </form>
-        </td>
-        <td>
-          <?php if ($p['receipt_image']): ?>
-            <a href="../uploads/receipts/<?= htmlspecialchars($p['receipt_image']) ?>" target="_blank">View</a>
-          <?php else: ?>
-            <em>No receipt</em>
-          <?php endif; ?>
-        </td>
-        <td>
-          <form method="post" onsubmit="return confirm('Delete this payment record?')" style="display:inline;">
-            <input type="hidden" name="payment_id" value="<?= $p['payment_id'] ?>">
-            <button type="submit" name="delete_payment" class="btn-danger">Delete</button>
-          </form>
-        </td>
-      </tr>
-      <?php endforeach; ?>
+    <tbody id="paymentsBody">
+      <!-- Loaded by fetch -->
     </tbody>
   </table>
 </div>
 
-<style>
-.alert.success {background:#d4edda;color:#155724;padding:10px;border-radius:6px;}
-.alert.error {background:#f8d7da;color:#721c24;padding:10px;border-radius:6px;}
-.btn-danger {background:#dc3545;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;}
-select {padding:4px 6px;border-radius:5px;}
-</style>
+<script>
+async function fetchPayments() {
+  try {
+    const res = await fetch('fetch_payments.php');
+    const data = await res.json();
+    const tbody = document.getElementById('paymentsBody');
+    tbody.innerHTML = '';
+
+    data.forEach(p => {
+      const createdAt = new Date(p.created_at);
+      const now = new Date();
+      const hoursElapsed = Math.floor((now - createdAt) / (1000 * 60 * 60));
+      const hoursLeft = 48 - hoursElapsed;
+      const expired = hoursElapsed >= 48 && p.status === 'pending';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${p.student_name}</td>
+        <td>${p.dorm_name}</td>
+        <td>${p.room_type}</td>
+        <td>₱${parseFloat(p.amount).toFixed(2)}</td>
+        <td>${p.due_date}</td>
+        <td>
+          <span class="badge ${expired ? 'overdue' : p.status}">
+            ${expired ? 'Expired' : p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+          </span>
+          ${p.status === 'pending' && !expired ? `<br><small>⏳ ${hoursLeft}h left</small>` : ''}
+        </td>
+        <td>
+          ${p.receipt_image 
+            ? `<a href="../uploads/${p.receipt_image}" target="_blank">View</a>` 
+            : '<em>No receipt</em>'}
+        </td>
+        <td>
+          <form method="post" style="display:inline;">
+            <input type="hidden" name="payment_id" value="${p.payment_id}">
+            <select name="status" onchange="this.form.submit()">
+              ${['pending', 'submitted', 'paid', 'expired'].map(s =>
+                `<option value="${s}" ${p.status === s ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+              ).join('')}
+            </select>
+            <input type="hidden" name="update_status" value="1">
+          </form>
+          <form method="post" style="display:inline;" onsubmit="return confirm('Delete this payment record?')">
+            <input type="hidden" name="payment_id" value="${p.payment_id}">
+            <button type="submit" name="delete_payment" class="btn-secondary">Delete</button>
+          </form>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error('Error fetching payments:', err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', fetchPayments);
+setInterval(fetchPayments, 10000);
+</script>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>

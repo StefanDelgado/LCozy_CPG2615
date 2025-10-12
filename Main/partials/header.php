@@ -29,32 +29,43 @@ if ($user && isset($user['user_id'])) {
     $unread_announcements = (int)$stmt->fetchColumn();
 }
 
+// Dynamic branding title per role
+$brand_title = "CozyDorms Management";
+if ($user['role'] === 'admin') {
+    $brand_title = "CozyAdmin";
+} elseif ($user['role'] === 'owner') {
+    $brand_title = "CozyOwner";
+} elseif ($user['role'] === 'student') {
+    $brand_title = "CozyTenant";
+}
+
 $message_page = "#";
 $announcement_page = "#";
 
 if ($user['role'] === 'student') {
-    $message_page = "/CAPSTONE/modules/student_messages.php";
-    $announcement_page = "/CAPSTONE/modules/student_announcements.php";
+    $message_page = "/../modules/student_messages.php";
+    $announcement_page = "/../modules/student_announcements.php";
 } elseif ($user['role'] === 'owner') {
-    $message_page = "/CAPSTONE/modules/owner_messages.php";
-    $announcement_page = "/CAPSTONE/modules/owner_announcements.php";
+    $message_page = "/../modules/owner_messages.php";
+    $announcement_page = "/../modules/owner_announcements.php";
 } elseif ($user['role'] === 'admin') {
-    $message_page = "/CAPSTONE/modules/messaging.php";
-    $announcement_page = "/CAPSTONE/modules/announcements.php";
+    $message_page = "/../modules/messaging.php";
+    $announcement_page = "/../modules/announcements.php";
 }
 ?>
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>CozyDorms — Dashboard</title>
+  <title><?= htmlspecialchars($brand_title) ?> — Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <link rel="icon" href="/CAPSTONE/assets/favicon.png" type="image/png">
-  <link rel="stylesheet" href="/CAPSTONE/assets/style.css">
-  <link rel="stylesheet" href="/CAPSTONE/assets/modules.css">
+  <link rel="icon" href="/../assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="/../assets/style.css">
+  <link rel="stylesheet" href="/../assets/modules.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     .badge {
       display:inline-block;
@@ -76,70 +87,106 @@ if ($user['role'] === 'student') {
       top: -5px;
       right: -5px;
     }
+
+    /* Sidebar header and user info styling */
+    .brand {
+      padding: 1.2rem;
+      background: #e9d5ff;
+      text-align: left;
+      font-weight: 700;
+      color: #1e1e2f;
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .user-info img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .user-details {
+      display: flex;
+      flex-direction: column;
+      font-weight: normal;
+      font-size: 0.9rem;
+      color: #333;
+      line-height: 1.2;
+    }
+
+    .user-details .name {
+      font-weight: 600;
+    }
+
+    .user-details .role {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .sidebar-separator {
+      border: none;
+      border-top: 1px solid #d0bfff;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
   <aside class="sidebar">
-    <div class="brand">CozyDorms Management</div>
-    <nav>
+    <div class="brand">
+      <div class="brand-title"><?= htmlspecialchars($brand_title) ?></div>
+      <div class="user-info">
+        <?php if (!empty($user['profile_pic'])): ?>
+          <img src="<?= htmlspecialchars($user['profile_pic']) ?>" alt="profile">
+        <?php else: ?>
+          <img src="/assets/default_profile.jpg" alt="default">
+        <?php endif; ?>
+        <div class="user-details">
+          <div class="name"><?= htmlspecialchars($user['name']) ?></div>
+          <div class="role"><?= htmlspecialchars(ucfirst($user['role'])) ?></div>
+        </div>
+      </div>
+    </div>
+    <hr class="sidebar-separator">
 
+    <nav>
       <?php if ($user['role'] === 'admin'): ?>
-        <a href="/CAPSTONE/dashboard.php">Overview</a>
-        <a href="/CAPSTONE/modules/user_management.php">User Management</a>
-        <a href="/CAPSTONE/modules/reports.php">Reports & Analytics</a>
-        <a href="/CAPSTONE/modules/owner_verification.php">Dorm Owner Verification</a>
-        <a href="/CAPSTONE/modules/dorm_listings.php">Dorm Listings</a>
-        <a href="/CAPSTONE/modules/booking_oversight.php">Booking & Reservation</a>
-        <a href="/CAPSTONE/modules/admin_payments.php">Payment Management</a>
-        <a href="/CAPSTONE/modules/announcements.php">Broadcast Announcements</a>
-        <a href="/CAPSTONE/modules/system_config.php">System Configuration</a>
-        <a href="/CAPSTONE/modules/map_radius.php">Map & Radius Management</a>
-        <a href="/CAPSTONE/modules/post_reservation.php">Post-Reservation Management</a>
-        <a href="/CAPSTONE/modules/download.php">Mobile Download</a>
+        <a href="/../dashboard.php">Overview</a>
+        <a href="/../modules/user_management.php">User Management</a>
+        <a href="/../modules/reports.php">Reports & Analytics</a>
+        <a href="/../modules/owner_verification.php">Dorm Owner Verification</a>
+        <a href="/../modules/dorm_listings.php">Dorm Listings</a>
+        <a href="/../modules/booking_oversight.php">Booking & Reservation</a>
+        <a href="/../modules/admin_payments.php">Payment Management</a>
+        <a href="/../modules/announcements.php">Broadcast Announcements</a>
       
       <?php elseif ($user['role'] === 'student'): ?>
-        <a href="/CAPSTONE/student_dashboard.php">My Dashboard</a>
-        <a href="/CAPSTONE/modules/available_dorms.php">Available Dorms</a>
-        <a href="/CAPSTONE/modules/student_reservations.php">My Reservations</a>
-        <a href="/CAPSTONE/modules/student_payments.php">Payments</a>
-        <a href="/CAPSTONE/modules/student_messages.php">Messages
-          <?php if ($unread_count > 0): ?>
-            <span class="badge"><?= $unread_count ?></span>
-          <?php endif; ?>
-        </a>
-        <a href="/CAPSTONE/modules/student_announcements.php">Announcements
-          <?php if ($unread_announcements > 0): ?>
-            <span class="badge"><?= $unread_announcements ?></span>
-          <?php endif; ?>
-        </a>
-        <a href="/CAPSTONE/modules/download.php">Mobile Download</a>
+        <a href="/../student_dashboard.php">My Dashboard</a>
+        <a href="/../modules/available_dorms.php">Available Dorms</a>
+        <a href="/../modules/student_reservations.php">My Reservations</a>
+        <a href="/../modules/student_payments.php">Payment Management</a>
+
 
       <?php elseif ($user['role'] === 'owner'): ?>
-        <a href="/CAPSTONE/owner_dashboard.php">My Dashboard</a>
-        <a href="/CAPSTONE/modules/owner_dorms.php">CozyDorms</a>
-        <a href="/CAPSTONE/modules/room_management.php">Dorm Room Management</a>
-        <a href="/CAPSTONE/modules/owner_bookings.php">Bookings</a>
-        <a href="/CAPSTONE/modules/owner_payments.php">Payments</a>
-        <a href="/CAPSTONE/modules/owner_messages.php">Messages
-          <?php if ($unread_count > 0): ?>
-            <span class="badge"><?= $unread_count ?></span>
-          <?php endif; ?>
-        </a>
-        <a href="/CAPSTONE/modules/owner_announcements.php">Announcements
-          <?php if ($unread_announcements > 0): ?>
-            <span class="badge"><?= $unread_announcements ?></span>
-          <?php endif; ?>
-        </a>
-        <a href="/CAPSTONE/modules/download.php">Mobile Download</a>
+        <a href="/../owner_dashboard.php">My Dashboard</a>
+        <a href="/../modules/owner_dorms.php">CozyDorms</a>
+        <a href="/../modules/room_management.php">Dorm Room Management</a>
+        <a href="/../modules/owner_bookings.php">Bookings</a>
+        <a href="/../modules/owner_payments.php">Payment Management</a>
       <?php endif; ?>
     </nav>
 
     <div class="sidebar-foot">
-      <div class="user">
-        <div class="name"><?=htmlspecialchars($user['name'])?></div>
-        <div class="role"><?=htmlspecialchars(ucfirst($user['role']))?></div>
-      </div>
-      <a class="logout" href="/CAPSTONE/logout.php"><i class="fa fa-sign-out-alt"></i> Logout</a>
+      <a class="logout" href="/../logout.php"><i class="fa fa-sign-out-alt"></i> Logout</a>
     </div>
   </aside>
 
@@ -147,7 +194,7 @@ if ($user['role'] === 'student') {
     <header class="topbar">
       <div class="page-title">
         <?php if (isset($page_title)): ?>
-          <h1><?=htmlspecialchars($page_title)?></h1>
+          <h1><?= htmlspecialchars($page_title) ?></h1>
         <?php endif; ?>
       </div>
       <div class="header-actions">

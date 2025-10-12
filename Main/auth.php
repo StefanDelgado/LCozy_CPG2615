@@ -1,4 +1,7 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/config.php';
 
 function current_user() {
@@ -7,7 +10,7 @@ function current_user() {
 
 function login_required() {
     if (!isset($_SESSION['user'])) {
-        header('Location: /CAPSTONE/login.php');
+        header('Location: /login.php');
         exit;
     }
 }
@@ -34,16 +37,16 @@ function require_role($role) {
 function redirect_to_dashboard($role) {
     switch ($role) {
         case 'admin':
-            header('Location: /CAPSTONE/dashboard.php');
+            header('Location: /dashboard.php');
             break;
         case 'owner':
-            header('Location: /CAPSTONE/owner_dashboard.php');
+            header('Location: /owner_dashboard.php');
             break;
         case 'student':
-            header('Location: /CAPSTONE/student_dashboard.php');
+            header('Location: /student_dashboard.php');
             break;
         default:
-            header('Location: /CAPSTONE/login.php');
+            header('Location: /login.php');
     }
     exit;
 }

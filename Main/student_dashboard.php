@@ -1,4 +1,4 @@
-<?php 
+<?php
 require_once __DIR__ . '/partials/header.php'; 
 require_role('student');
 require_once __DIR__ . '/config.php';
@@ -89,10 +89,10 @@ $recent_reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="section">
   <h2>Quick Actions</h2>
   <div class="actions">
-    <a href="/CAPSTONE/modules/student_reservations.php" class="btn-primary">My Reservations</a>
-    <a href="/CAPSTONE/modules/student_payments.php" class="btn-secondary">Payments</a>
-    <a href="/CAPSTONE/modules/student_messages.php" class="btn-secondary">Messages</a>
-    <a href="/CAPSTONE/modules/student_announcements.php" class="btn-secondary">Announcements</a>
+    <a href="/modules/student_reservations.php" class="btn-primary">My Reservations</a>
+    <a href="/modules/student_payments.php" class="btn-secondary">Payments</a>
+    <a href="/modules/student_messages.php" class="btn-secondary">Messages</a>
+    <a href="/modules/student_announcements.php" class="btn-secondary">Announcements</a>
   </div>
 </div>
 

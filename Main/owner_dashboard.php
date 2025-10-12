@@ -88,11 +88,11 @@ $recent_bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="section">
   <h2>Quick Actions</h2>
   <div class="actions">
-    <a href="/CAPSTONE/modules/owner_dorms.php" class="btn-primary">Manage Dorms</a>
-    <a href="/CAPSTONE/modules/owner_bookings.php" class="btn-secondary">Bookings</a>
-    <a href="/CAPSTONE/modules/owner_payments.php" class="btn-secondary">Payments</a>
-    <a href="/CAPSTONE/modules/owner_messages.php" class="btn-secondary">Messages</a>
-    <a href="/CAPSTONE/modules/owner_announcements.php" class="btn-secondary">Announcements</a>
+    <a href="/modules/owner_dorms.php" class="btn-primary">Manage Dorms</a>
+    <a href="/modules/owner_bookings.php" class="btn-secondary">Bookings</a>
+    <a href="/modules/owner_payments.php" class="btn-secondary">Payments</a>
+    <a href="/modules/owner_messages.php" class="btn-secondary">Messages</a>
+    <a href="/modules/owner_announcements.php" class="btn-secondary">Announcements</a>
   </div>
 </div>
 

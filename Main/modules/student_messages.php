@@ -108,7 +108,7 @@ let ownerId = <?= json_encode($owner_id) ?>;
 
 function fetchMessages() {
   if (!dormId || !ownerId) return;
-  fetch(`/CAPSTONE/modules/fetch_messages.php?dorm_id=${dormId}&other_id=${ownerId}`)
+  fetch(`fetch_messages.php?dorm_id=${dormId}&other_id=${ownerId}`)
     .then(res => res.json())
     .then(data => {
       if (data.messages) {
@@ -131,7 +131,7 @@ function fetchMessages() {
     });
 }
 
-setInterval(fetchMessages, 3000);
+setInterval(fetchMessages, 1000);
 fetchMessages();
 </script>
 

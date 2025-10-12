@@ -6,13 +6,13 @@ if (isset($_SESSION['user'])) {
 
     switch ($role) {
         case 'admin':
-            header('Location: modules/admin_dashboard.php');
+            header('Location: /dashboard.php');
             exit;
         case 'owner':
-            header('Location: modules/owner_dashboard.php');
+            header('Location: /owner_dashboard.php');
             exit;
         case 'student':
-            header('Location: modules/student_dashboard.php');
+            header('Location: /student_dashboard.php');
             exit;
     }
 }

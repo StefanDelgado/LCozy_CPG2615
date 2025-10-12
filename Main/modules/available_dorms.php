@@ -16,45 +16,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_room_id'])) {
     $end_date = date('Y-m-d', strtotime('+6 months'));
     $expires_at = date('Y-m-d H:i:s', strtotime('+2 hours'));
 
-    $check = $pdo->prepare("
-        SELECT r.capacity, r.status,
-               COUNT(b.booking_id) AS total_booked
-        FROM rooms r
-        LEFT JOIN bookings b ON b.room_id = r.room_id AND b.status IN ('pending','approved')
-        WHERE r.room_id = ?
-        GROUP BY r.room_id
+    // ✅ Check if the student already has an active booking in the same dorm
+    $check_existing = $pdo->prepare("
+        SELECT b.booking_id 
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN dormitories d ON r.dorm_id = d.dorm_id
+        WHERE b.student_id = ? 
+          AND d.dorm_id = (SELECT dorm_id FROM rooms WHERE room_id = ?)
+          AND b.status IN ('pending', 'approved')
     ");
-    $check->execute([$room_id]);
-    $room_info = $check->fetch(PDO::FETCH_ASSOC);
+    $check_existing->execute([$student_id, $room_id]);
+    $already_booked = $check_existing->fetch();
 
-    if (!$room_info) {
-        $flash = ['type' => 'error', 'msg' => 'Room not found.'];
-    } elseif ($room_info['status'] === 'occupied') {
-        $flash = ['type' => 'error', 'msg' => 'Room is already occupied.'];
-    } elseif ($room_info['total_booked'] >= $room_info['capacity']) {
-        $flash = ['type' => 'error', 'msg' => 'Room is already fully booked.'];
+    if ($already_booked) {
+        $flash = [
+            'type' => 'error',
+            'msg' => 'You already have an active booking in this dormitory.'
+        ];
     } else {
-        try {
-            if ($share_choice === 'whole' && $room_info['total_booked'] > 0) {
-                throw new Exception('Cannot book whole room — it already has other tenants.');
+        // Check room availability
+        $check = $pdo->prepare("
+            SELECT r.capacity, r.status,
+                   COUNT(b.booking_id) AS total_booked
+            FROM rooms r
+            LEFT JOIN bookings b ON b.room_id = r.room_id AND b.status IN ('pending','approved')
+            WHERE r.room_id = ?
+            GROUP BY r.room_id
+        ");
+        $check->execute([$room_id]);
+        $room_info = $check->fetch(PDO::FETCH_ASSOC);
+
+        if (!$room_info) {
+            $flash = ['type' => 'error', 'msg' => 'Room not found.'];
+        } elseif ($room_info['status'] === 'occupied') {
+            $flash = ['type' => 'error', 'msg' => 'Room is already occupied.'];
+        } elseif ($room_info['total_booked'] >= $room_info['capacity']) {
+            $flash = ['type' => 'error', 'msg' => 'Room is already fully booked.'];
+        } else {
+            try {
+                if ($share_choice === 'whole' && $room_info['total_booked'] > 0) {
+                    throw new Exception('Cannot book whole room — it already has other tenants.');
+                }
+
+                $stmt = $pdo->prepare("
+                    INSERT INTO bookings (room_id, student_id, booking_type, start_date, end_date, status, created_at, expires_at)
+                    VALUES (?, ?, ?, ?, ?, 'pending', NOW(), ?)
+                ");
+                $stmt->execute([$room_id, $student_id, $share_choice, $start_date, $end_date, $expires_at]);
+
+                $flash = [
+                    'type' => 'success',
+                    'msg' => 'Booking request submitted! Please upload your payment receipt within 48 hours.'
+                ];
+            } catch (Exception $e) {
+                $flash = ['type' => 'error', 'msg' => $e->getMessage()];
             }
-
-            $stmt = $pdo->prepare("
-                INSERT INTO bookings (room_id, student_id, booking_type, start_date, end_date, status, created_at, expires_at)
-                VALUES (?, ?, ?, ?, ?, 'pending', NOW(), ?)
-            ");
-            $stmt->execute([$room_id, $student_id, $share_choice, $start_date, $end_date, $expires_at]);
-
-            $flash = [
-                'type' => 'success',
-                'msg' => 'Booking request submitted! Please upload your payment receipt within 2 hours.'
-            ];
-        } catch (Exception $e) {
-            $flash = ['type' => 'error', 'msg' => $e->getMessage()];
         }
     }
 }
 
+// 🔍 Search filter
 $search = trim($_GET['search'] ?? '');
 $params = [];
 
