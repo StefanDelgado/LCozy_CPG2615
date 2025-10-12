@@ -204,7 +204,12 @@ foreach ($payments as $p) {
               <?php if ($p['status'] == 'pending'): ?>
                 <button class="btn" onclick="openUploadModal(<?php echo $p['payment_id']; ?>)">Upload Receipt</button>
               <?php else: ?>
-                <a href="<?php echo htmlspecialchars($p['receipt_image']); ?>" target="_blank" class="btn-secondary">View Receipt</a>
+                <!-- Fix: Update receipt path to point to uploads directory -->
+                <a href="../uploads/receipts/<?php echo htmlspecialchars($p['receipt_image']); ?>" 
+                   target="_blank" 
+                   class="btn-secondary">
+                  View Receipt
+                </a>
               <?php endif; ?>
             </td>
           </tr>
