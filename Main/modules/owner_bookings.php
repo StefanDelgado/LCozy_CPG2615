@@ -3,129 +3,100 @@ require_once __DIR__ . '/../auth.php';
 require_role('owner');
 require_once __DIR__ . '/../config.php';
 
-// ---- DEBUG / SAFETY: enable during local debug only ----
+// ---- DEBUG / SAFETY ----
 if (isset($pdo) && $pdo instanceof PDO) {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 }
-// Turn on detailed errors in development only:
+
 define('APP_DEBUG', true); // set to false on production
-if (defined('APP_DEBUG') && APP_DEBUG) {
+if (APP_DEBUG) {
     ini_set('display_errors', '1');
     ini_set('display_startup_errors', '1');
     error_reporting(E_ALL);
 }
-// --------------------------------------------------------
+// -------------------------
 
 $page_title = "Bookings";
 include __DIR__ . '/../partials/header.php';
 
-$owner_id = $_SESSION['user']['user_id'];
+$owner_id = $_SESSION['user']['user_id'] ?? null;
 
-// ─── Handle Booking Approval/Rejection ───
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['approve_booking']) || isset($_POST['reject_booking'])) {
-        $booking_id = (int)($_POST['booking_id'] ?? 0);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
+    $booking_id = (int)$_POST['booking_id'];
+    $action = isset($_POST['approve_booking']) ? 'approve' : (isset($_POST['reject_booking']) ? 'reject' : null);
 
-        // Determine new status from explicit button values (protect against empty values)
-        $new_status = null;
-        if (isset($_POST['approve_booking']) && $_POST['approve_booking'] !== '') {
-            $new_status = 'approved';
-        } elseif (isset($_POST['reject_booking']) && $_POST['reject_booking'] !== '') {
-            $new_status = 'rejected';
-        }
+    if (!$booking_id || !$action) {
+        $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Invalid booking action.'];
+        header('Location: owner_bookings.php');
+        exit;
+    }
 
-        // Basic validation
-        if (!$booking_id || !$new_status) {
-            $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Invalid request.'];
+    try {
+        $pdo->beginTransaction();
+
+        // Confirm ownership
+        $stmt = $pdo->prepare("
+            SELECT b.*, r.price, u.user_id AS student_id, b.start_date
+            FROM bookings b
+            JOIN rooms r ON b.room_id = r.room_id
+            JOIN dormitories d ON r.dorm_id = d.dorm_id
+            JOIN users u ON b.student_id = u.user_id
+            WHERE b.booking_id = ? AND d.owner_id = ?
+        ");
+        $stmt->execute([$booking_id, $owner_id]);
+        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$booking) {
+            $pdo->rollBack();
+            $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Booking not found or unauthorized.'];
             header('Location: owner_bookings.php');
             exit;
         }
 
-        try {
-            $pdo->beginTransaction();
+        // Update booking status
+        $new_status = $action === 'approve' ? 'approved' : 'rejected';
+        $update = $pdo->prepare("UPDATE bookings SET status = ?, updated_at = NOW() WHERE booking_id = ?");
+        $update->execute([$new_status, $booking_id]);
 
-            // Validate that the booking belongs to this owner
-            $stmt = $pdo->prepare("
-                SELECT b.*, r.price, r.room_id, r.dorm_id, u.user_id AS student_id, b.start_date
-                FROM bookings b
-                JOIN rooms r ON b.room_id = r.room_id
-                JOIN dormitories d ON r.dorm_id = d.dorm_id
-                JOIN users u ON b.student_id = u.user_id
-                WHERE b.booking_id = ? AND d.owner_id = ?
-            ");
-            $stmt->execute([$booking_id, $owner_id]);
-            $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+        // If approved, add payment reminder
+        if ($new_status === 'approved') {
+            $amount = $booking['price'] ?? 0;
+            $student_id = $booking['student_id'];
+            $due_date = $booking['start_date'] ?? date('Y-m-d', strtotime('+7 days'));
 
-            if (!$booking) {
-                $pdo->rollBack();
-                $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Booking not found or not authorized.'];
-                header('Location: owner_bookings.php');
-                exit;
+            $check = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE booking_id = ?");
+            $check->execute([$booking_id]);
+            if ($check->fetchColumn() == 0) {
+                $insert = $pdo->prepare("
+                    INSERT INTO payments (booking_id, student_id, amount, status, due_date, created_at)
+                    VALUES (?, ?, ?, 'pending', ?, NOW())
+                ");
+                $insert->execute([$booking_id, $student_id, $amount, $due_date]);
             }
 
-            // Strict validation for status values
-            $allowed = ['approved', 'rejected'];
-            if (!in_array($new_status, $allowed, true) || $new_status === '') {
-                $pdo->rollBack();
-                error_log("owner_bookings: invalid status for booking {$booking_id}: " . var_export($new_status, true));
-                $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Invalid status value.'];
-                header('Location: owner_bookings.php');
-                exit;
-            }
-
-            // Update booking status (avoid updated_at to prevent column errors)
-            $update = $pdo->prepare("UPDATE bookings SET status = ? WHERE booking_id = ?");
-            $update->execute([$new_status, $booking_id]);
-
-            // Log affected rows for debugging
-            $affected = $update->rowCount();
-            error_log("owner_bookings: booking_id={$booking_id} set status={$new_status} affected_rows={$affected}");
-
-            // If no rows were affected, treat as error and rollback
-            if ($affected === 0) {
-                $pdo->rollBack();
-                $_SESSION['flash'] = ['type' => 'error', 'msg' => 'No booking updated. It may already have that status or the booking does not exist.'];
-                header('Location: owner_bookings.php');
-                exit;
-            }
-
-            // If approved, create a pending payment record (only if not already present)
-            if ($new_status === 'approved') {
-                $amount = $booking['price'] ?? 0;
-                $student_id = $booking['student_id'];
-                $due_date = $booking['start_date'] ?? date('Y-m-d', strtotime('+7 days')); // fallback
-
-                $check = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE booking_id = ?");
-                $check->execute([$booking_id]);
-                if ($check->fetchColumn() == 0) {
-                    $insert = $pdo->prepare("
-                        INSERT INTO payments (booking_id, student_id, amount, status, due_date, created_at)
-                        VALUES (?, ?, ?, 'pending', ?, NOW())
-                    ");
-                    $insert->execute([$booking_id, $student_id, $amount, $due_date]);
-                }
-                $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking approved and payment reminder created.'];
-            } else {
-                $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking rejected successfully.'];
-            }
-
-            $pdo->commit();
-        } catch (Exception $e) {
-            if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            $msg = 'owner_bookings error: ' . $e->getMessage() . ' -- booking_id:' . ($booking_id ?? 'n/a') . ' owner_id:' . ($owner_id ?? 'n/a');
-            error_log($msg . "\n" . $e->getTraceAsString());
-            $_SESSION['flash'] = ['type' => 'error', 'msg' => defined('APP_DEBUG') && APP_DEBUG ? 'Internal error: ' . $e->getMessage() : 'An internal error occurred.'];
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking approved and payment reminder created.'];
+        } else {
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking rejected successfully.'];
         }
 
-        // Redirect (PRG)
-        header('Location: owner_bookings.php');
-        exit;
+        $pdo->commit();
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        error_log("owner_bookings error: " . $e->getMessage());
+        $_SESSION['flash'] = [
+            'type' => 'error',
+            'msg' => APP_DEBUG ? 'Internal error: ' . $e->getMessage() : 'An internal error occurred.'
+        ];
     }
+
+    header('Location: owner_bookings.php');
+    exit;
 }
 
-// ─── Fetch All Bookings for Owner ───
+// ─── Fetch All Bookings ───
 $sql = "
     SELECT 
         b.booking_id,
@@ -151,7 +122,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([$owner_id]);
 $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// retrieve flash for display
+// Flash message
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 ?>
@@ -161,7 +132,7 @@ unset($_SESSION['flash']);
 </div>
 
 <?php if ($flash): ?>
-<div class="alert <?= $flash['type'] ?>">
+<div class="alert <?= htmlspecialchars($flash['type']) ?>">
   <?= htmlspecialchars($flash['msg']) ?>
 </div>
 <?php endif; ?>
@@ -197,9 +168,15 @@ unset($_SESSION['flash']);
           <td><?= htmlspecialchars($b['capacity']) ?></td>
           <td>
             <?= htmlspecialchars($b['start_date'] ?? '—') ?> 
-            <?php if ($b['end_date']): ?> → <?= htmlspecialchars($b['end_date']) ?><?php endif; ?>
+            <?php if (!empty($b['end_date'])): ?> → <?= htmlspecialchars($b['end_date']) ?><?php endif; ?>
           </td>
-          <td><span class="badge <?= strtolower($b['status']) ?>"><?= ucfirst($b['status']) ?></span></td>
+          <td>
+            <?php if (!empty($b['status'])): ?>
+              <span class="badge <?= strtolower($b['status']) ?>"><?= ucfirst($b['status']) ?></span>
+            <?php else: ?>
+              <span class="badge cancelled">Unknown</span>
+            <?php endif; ?>
+          </td>
           <td>
             <?php if ($b['status'] === 'pending'): ?>
               <form method="post" style="display:inline-block;">
@@ -223,14 +200,19 @@ unset($_SESSION['flash']);
 
 <style>
 .alert {
-  padding: 10px; border-radius: 6px; margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
   font-weight: 500;
 }
 .alert.success { background: #d4edda; color: #155724; }
 .alert.error { background: #f8d7da; color: #721c24; }
 
 .badge {
-  padding: 4px 8px; border-radius: 6px; font-size: 0.9em; color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  color: #fff;
 }
 .badge.pending { background: #ffc107; color: #000; }
 .badge.approved { background: #28a745; }
@@ -238,13 +220,23 @@ unset($_SESSION['flash']);
 .badge.cancelled { background: #6c757d; }
 .badge.completed { background: #17a2b8; }
 
-.btn { padding: 4px 8px; border:none; border-radius:5px; cursor:pointer; font-size:0.85em; }
-.btn.success { background:#28a745; color:#fff; }
-.btn.danger { background:#dc3545; color:#fff; }
-.btn-secondary {
-  background:#007bff; color:#fff; padding:4px 8px; border-radius:5px; text-decoration:none;
+.btn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.85em;
 }
-.btn-secondary:hover { background:#0056b3; }
+.btn.success { background: #28a745; color: #fff; }
+.btn.danger { background: #dc3545; color: #fff; }
+.btn-secondary {
+  background: #007bff;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+.btn-secondary:hover { background: #0056b3; }
 </style>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>
