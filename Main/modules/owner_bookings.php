@@ -24,8 +24,22 @@ $owner_id = $_SESSION['user']['user_id'];
 // ─── Handle Booking Approval/Rejection ───
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['approve_booking']) || isset($_POST['reject_booking'])) {
-        $booking_id = (int)$_POST['booking_id'];
-        $new_status = isset($_POST['approve_booking']) ? 'approved' : 'rejected';
+        $booking_id = (int)($_POST['booking_id'] ?? 0);
+
+        // Determine new status from explicit button values (protect against empty values)
+        $new_status = null;
+        if (isset($_POST['approve_booking']) && $_POST['approve_booking'] !== '') {
+            $new_status = 'approved';
+        } elseif (isset($_POST['reject_booking']) && $_POST['reject_booking'] !== '') {
+            $new_status = 'rejected';
+        }
+
+        // Basic validation
+        if (!$booking_id || !$new_status) {
+            $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Invalid request.'];
+            header('Location: owner_bookings.php');
+            exit;
+        }
 
         try {
             $pdo->beginTransaction();
@@ -42,58 +56,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$booking_id, $owner_id]);
             $booking = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($booking) {
-                // Update booking status
-                $pdo->prepare("UPDATE bookings SET status = ?, updated_at = NOW() WHERE booking_id = ?")
-                    ->execute([$new_status, $booking_id]);
-
-                // If approved, create a pending payment record
-                if ($new_status === 'approved') {
-                    $amount = $booking['price'] ?? 0;
-                    $student_id = $booking['student_id'];
-                    $due_date = $booking['start_date'] ?? date('Y-m-d', strtotime('+7 days')); // fallback
-
-                    // Check if a payment already exists for this booking
-                    $check = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE booking_id = ?");
-                    $check->execute([$booking_id]);
-                    if ($check->fetchColumn() == 0) {
-                        $insert = $pdo->prepare("
-                            INSERT INTO payments (booking_id, student_id, amount, status, due_date, created_at)
-                            VALUES (?, ?, ?, 'pending', ?, NOW())
-                        ");
-                        $insert->execute([$booking_id, $student_id, $amount, $due_date]);
-                    }
-
-                    $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking approved and payment reminder created.'];
-                } else {
-                    $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Booking rejected successfully.'];
-                }
-            } else {
+            if (!$booking) {
+                $pdo->rollBack();
                 $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Booking not found or not authorized.'];
+                header('Location: owner_bookings.php');
+                exit;
+            }
+
+            // Update booking status (avoid updated_at to prevent column errors)
+            $update = $pdo->prepare("UPDATE bookings SET status = ? WHERE booking_id = ?");
+            $update->execute([$new_status, $booking_id]);
+
+            // Log affected rows for debugging
+            $affected = $update->rowCount();
+            error_log("owner_bookings: booking_id={$booking_id} set status={$new_status} affected_rows={$affected}");
+
+            // If approved, create a pending payment record (only if not already present)
+            if ($new_status === 'approved') {
+                $amount = $booking['price'] ?? 0;
+                $student_id = $booking['student_id'];
+                $due_date = $booking['start_date'] ?? date('Y-m-d', strtotime('+7 days')); // fallback
+
+                $check = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE booking_id = ?");
+                $check->execute([$booking_id]);
+                if ($check->fetchColumn() == 0) {
+                    $insert = $pdo->prepare("
+                        INSERT INTO payments (booking_id, student_id, amount, status, due_date, created_at)
+                        VALUES (?, ?, ?, 'pending', ?, NOW())
+                    ");
+                    $insert->execute([$booking_id, $student_id, $amount, $due_date]);
+                }
+                $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking approved and payment reminder created.'];
+            } else {
+                $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking rejected successfully.'];
             }
 
             $pdo->commit();
         } catch (Exception $e) {
-            // rollback and log full details
             if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             $msg = 'owner_bookings error: ' . $e->getMessage() . ' -- booking_id:' . ($booking_id ?? 'n/a') . ' owner_id:' . ($owner_id ?? 'n/a');
             error_log($msg . "\n" . $e->getTraceAsString());
-
-            // show diagnostic message only in debug. Generic for production.
-            if (defined('APP_DEBUG') && APP_DEBUG) {
-                $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Internal error: ' . $e->getMessage()];
-            } else {
-                $_SESSION['flash'] = ['type' => 'error', 'msg' => 'An internal error occurred.'];
-            }
-
-            // redirect (PRG)
-            header('Location: owner_bookings.php');
-            exit;
+            $_SESSION['flash'] = ['type' => 'error', 'msg' => defined('APP_DEBUG') && APP_DEBUG ? 'Internal error: ' . $e->getMessage() : 'An internal error occurred.'];
         }
 
-        // Redirect to avoid blank page / POST resubmission (PRG)
+        // Redirect (PRG)
         header('Location: owner_bookings.php');
         exit;
     }
@@ -178,11 +186,11 @@ unset($_SESSION['flash']);
             <?php if ($b['status'] === 'pending'): ?>
               <form method="post" style="display:inline-block;">
                 <input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>">
-                <button type="submit" name="approve_booking" class="btn success">Approve</button>
+                <button type="submit" name="approve_booking" value="1" class="btn success">Approve</button>
               </form>
               <form method="post" style="display:inline-block;">
                 <input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>">
-                <button type="submit" name="reject_booking" class="btn danger">Reject</button>
+                <button type="submit" name="reject_booking" value="1" class="btn danger">Reject</button>
               </form>
             <?php else: ?>
               <a href="owner_messages.php?recipient_id=<?= $b['student_id'] ?>" class="btn-secondary">Contact</a>
