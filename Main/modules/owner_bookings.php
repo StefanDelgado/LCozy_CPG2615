@@ -68,12 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
         // Debug log before update
         error_log("Attempting update - Booking ID: {$booking_id}, New Status: {$new_status}, Room ID: {$booking['room_id']}");
 
-        // Simplified update query without updated_at
+        // First, fix the update query to ensure proper status setting
         $update = $pdo->prepare("
             UPDATE bookings 
             SET status = ?
             WHERE booking_id = ? 
-            AND status = 'pending'
+            AND (status = 'pending' OR status IS NULL OR status = '')
         ");
 
         // Execute update with just status and booking_id
@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
 $sql = "
     SELECT 
         b.booking_id,
-        LOWER(b.status) AS status,
+        COALESCE(NULLIF(LOWER(TRIM(b.status)), ''), 'pending') AS status,
         b.start_date,
         b.end_date,
         u.user_id AS student_id,
@@ -157,7 +157,8 @@ $sql = "
     JOIN rooms r ON b.room_id = r.room_id
     JOIN dormitories d ON r.dorm_id = d.dorm_id
     WHERE d.owner_id = ?
-    ORDER BY FIELD(b.status, 'pending','approved','rejected','cancelled','completed'), b.start_date DESC
+    ORDER BY FIELD(COALESCE(b.status, 'pending'),'pending','approved','rejected','cancelled','completed'), 
+             b.start_date DESC
 ";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$owner_id]);
@@ -208,8 +209,9 @@ unset($_SESSION['flash']);
         <tr><td colspan="10" style="text-align:center;">No bookings found.</td></tr>
       <?php else: ?>
         <?php foreach ($bookings as $b): 
-          $status = strtolower(trim($b['status'] ?? 'pending')); // fallback to pending
-          if ($status === '' || $status === null) $status = 'pending';
+            // Improve status handling - treat empty/null as pending
+            $status = strtolower(trim($b['status'] ?? ''));
+            $status = ($status === '' || $status === null) ? 'pending' : $status;
         ?>
         <tr>
           <td><?= htmlspecialchars($b['student_name']) ?></td>
