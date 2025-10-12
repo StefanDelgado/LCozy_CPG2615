@@ -2,12 +2,12 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require_once __DIR__ . '/../auth.php';  // Add auth.php first
+require_once __DIR__ . '/../auth.php';
 require_once __DIR__ . '/../config.php';
 require_role('student');
 
 $page_title = "My Payments";
-include __DIR__ . '/../partials/header.php'; // Move header include after config and auth
+include __DIR__ . '/../partials/header.php';
 
 $user_id = $_SESSION['user']['user_id'];
 
@@ -17,83 +17,157 @@ if (!is_dir($uploadsDir)) {
     mkdir($uploadsDir, 0777, true);
 }
 
-// Fetch payments for the logged-in student
+// Fetch payments with booking and room details
 $stmt = $pdo->prepare("
-  SELECT 
-    p.payment_id, p.amount, p.status, p.payment_date, p.due_date, 
-    p.receipt_image, p.created_at,
-    d.name AS dorm_name, r.room_type
-  FROM payments p
-  JOIN bookings b ON p.booking_id = b.booking_id
-  JOIN rooms r ON b.room_id = r.room_id
-  JOIN dormitories d ON r.dorm_id = d.dorm_id
-  WHERE p.student_id = ?
-  ORDER BY p.created_at DESC
+    SELECT 
+        p.payment_id, p.amount, p.status, p.payment_date, p.due_date, 
+        p.receipt_image, p.created_at,
+        d.name AS dorm_name, r.room_type,
+        b.booking_id, b.start_date, b.end_date
+    FROM payments p
+    JOIN bookings b ON p.booking_id = b.booking_id
+    JOIN rooms r ON b.room_id = r.room_id
+    JOIN dormitories d ON r.dorm_id = d.dorm_id
+    WHERE p.student_id = ?
+    ORDER BY p.created_at DESC
 ");
 
-if (!$stmt->execute([$user_id])) {
-    $error = $stmt->errorInfo();
-    error_log('Payment query error: ' . print_r($error, true));
-    echo "Error fetching payments. Please try again.";
-    exit;
-}
-
+$stmt->execute([$user_id]);
 $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Calculate payment statistics
+$total_due = 0;
+$paid_amount = 0;
+$pending_count = 0;
+
+foreach ($payments as $p) {
+    if ($p['status'] === 'pending') {
+        $total_due += $p['amount'];
+        $pending_count++;
+    } elseif ($p['status'] === 'paid') {
+        $paid_amount += $p['amount'];
+    }
+}
 ?>
 
 <style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.stat-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.stat-card h3 { 
+    margin: 0;
+    color: #4A3AFF;
+    font-size: 1.5rem;
+}
+.stat-card p {
+    margin: 0.3rem 0 0;
+    color: #666;
+}
 .data-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 1rem;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
 }
-.data-table th, .data-table td {
-    padding: 8px;
-    border: 1px solid #ddd;
+.data-table th {
+    background: #f8f9fa;
+    padding: 12px;
     text-align: left;
+    font-weight: 600;
+}
+.data-table td {
+    padding: 12px;
+    border-top: 1px solid #eee;
 }
 .status-paid { color: #28a745; }
 .status-pending { color: #ffc107; }
 .status-overdue { color: #dc3545; }
+.btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+.btn-primary {
+    background: #4A3AFF;
+    color: white;
+}
+.btn-primary:hover {
+    background: #372fdb;
+}
+.btn-secondary {
+    background: #f8f9fa;
+    color: #444;
+    border: 1px solid #ddd;
+}
 .modal {
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: rgba(0,0,0,0.5);
     align-items: center;
     justify-content: center;
 }
 .modal-content {
     background: white;
-    padding: 20px;
-    border-radius: 8px;
+    padding: 1.5rem;
+    border-radius: 12px;
     max-width: 500px;
     width: 90%;
 }
-.btn {
-    padding: 5px 10px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    background: #4A3AFF;
-    color: white;
+.modal-content h2 {
+    margin: 0 0 1rem;
+    font-size: 1.4rem;
 }
-.btn-secondary {
-    background: #6c757d;
-    color: white;
-    text-decoration: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    display: inline-block;
+.form-group {
+    margin-bottom: 1rem;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
 }
 </style>
 
 <div class="page-header">
-  <h1>My Payments</h1>
-  <p>Manage and track your dorm payments — upload receipts, check status, and see due reminders.</p>
+    <h1>My Payments</h1>
+    <p>Track your payments and upload receipts</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3><?= $pending_count ?></h3>
+        <p>Pending Payments</p>
+    </div>
+    <div class="stat-card">
+        <h3>₱<?= number_format($total_due, 2) ?></h3>
+        <p>Total Due</p>
+    </div>
+    <div class="stat-card">
+        <h3>₱<?= number_format($paid_amount, 2) ?></h3>
+        <p>Total Paid</p>
+    </div>
 </div>
 
 <div class="card">
@@ -156,30 +230,33 @@ $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <script>
-// Countdown update
 function updateCountdowns() {
-  document.querySelectorAll('.countdown').forEach(el => {
-    let hours = parseInt(el.dataset.hours);
-    if (hours > 0) {
-      hours--;
-      el.dataset.hours = hours;
-      el.textContent = `⏳ ${hours}h left`;
-    } else {
-      el.textContent = '❌ Expired';
-      el.closest('tr').querySelector('td.status-pending').classList.replace('status-pending','status-overdue');
-    }
-  });
+    document.querySelectorAll('.countdown').forEach(el => {
+        let hours = parseInt(el.dataset.hours);
+        if (hours > 0) {
+            hours--;
+            el.dataset.hours = hours;
+            el.textContent = `⏳ ${hours}h left`;
+        } else {
+            el.textContent = '❌ Overdue';
+            el.closest('tr').querySelector('.status-pending')?.classList.replace('status-pending','status-overdue');
+        }
+    });
 }
-setInterval(updateCountdowns, 3600000); // update every hour
 
-// Upload modal controls
 function openUploadModal(id) {
-  document.getElementById('upload_payment_id').value = id;
-  document.getElementById('uploadModal').style.display = 'flex';
+    document.getElementById('upload_payment_id').value = id;
+    document.getElementById('uploadModal').style.display = 'flex';
 }
+
 function closeUploadModal() {
-  document.getElementById('uploadModal').style.display = 'none';
+    document.getElementById('uploadModal').style.display = 'none';
 }
+
+// Update countdowns every hour
+setInterval(updateCountdowns, 3600000);
+// Initial update
+updateCountdowns();
 </script>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>
