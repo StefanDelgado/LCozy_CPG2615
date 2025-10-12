@@ -3,6 +3,19 @@ require_once __DIR__ . '/../auth.php';
 require_role('owner');
 require_once __DIR__ . '/../config.php';
 
+// ---- DEBUG / SAFETY: enable during local debug only ----
+if (isset($pdo) && $pdo instanceof PDO) {
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+}
+// Turn on detailed errors in development only:
+define('APP_DEBUG', true); // set to false on production
+if (defined('APP_DEBUG') && APP_DEBUG) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
+}
+// --------------------------------------------------------
+
 $page_title = "Bookings";
 include __DIR__ . '/../partials/header.php';
 
@@ -61,9 +74,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
         } catch (Exception $e) {
-            $pdo->rollBack();
-            error_log('owner_bookings error: ' . $e->getMessage());
-            $_SESSION['flash'] = ['type' => 'error', 'msg' => 'An internal error occurred.'];
+            // rollback and log full details
+            if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $msg = 'owner_bookings error: ' . $e->getMessage() . ' -- booking_id:' . ($booking_id ?? 'n/a') . ' owner_id:' . ($owner_id ?? 'n/a');
+            error_log($msg . "\n" . $e->getTraceAsString());
+
+            // show diagnostic message only in debug. Generic for production.
+            if (defined('APP_DEBUG') && APP_DEBUG) {
+                $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Internal error: ' . $e->getMessage()];
+            } else {
+                $_SESSION['flash'] = ['type' => 'error', 'msg' => 'An internal error occurred.'];
+            }
+
+            // redirect (PRG)
+            header('Location: owner_bookings.php');
+            exit;
         }
 
         // Redirect to avoid blank page / POST resubmission (PRG)
