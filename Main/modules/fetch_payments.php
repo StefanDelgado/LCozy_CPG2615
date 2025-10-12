@@ -26,8 +26,17 @@ switch ($role) {
     case 'owner':
         $sql = "
             SELECT 
-                p.payment_id, p.amount, p.status, p.due_date, p.payment_date, 
-                u.name AS student_name, d.name AS dorm_name, r.room_type
+                p.payment_id,
+                p.amount,
+                p.status,
+                p.due_date,
+                p.payment_date,
+                p.receipt_image,            -- added
+                p.created_at,              -- added (used for elapsed time)
+                u.user_id AS student_id,   -- added
+                u.name AS student_name,    -- added
+                d.name AS dorm_name,
+                r.room_type
             FROM payments p
             JOIN bookings b ON p.booking_id = b.booking_id
             JOIN rooms r ON b.room_id = r.room_id
