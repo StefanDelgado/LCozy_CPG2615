@@ -53,16 +53,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
         LIMIT 1
     ");
 
-    // Then update the status update query to include room_id for extra validation
+    // Replace the update query (remove updated_at since it doesn't exist)
     $update = $pdo->prepare("
         UPDATE bookings 
-        SET status = ?,
-            updated_at = CURRENT_TIMESTAMP
+        SET status = ?
         WHERE booking_id = ? 
         AND room_id = ? 
         AND status = 'pending'
     ");
 
+    // Add debug logging to track the update
     try {
         $pdo->beginTransaction();
 
@@ -74,14 +74,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
             throw new Exception('Booking not found or already processed');
         }
 
-        // Update with additional room_id check
+        // Debug log before update
+        error_log("Attempting update - Booking ID: {$booking_id}, New Status: {$new_status}, Room ID: {$booking['room_id']}");
+
+        // Update status
         $update->execute([
             $new_status,
             $booking_id,
-            $booking['room_id'] // Add room_id validation
+            $booking['room_id']
         ]);
 
-        if ($update->rowCount() === 0) {
+        $affected = $update->rowCount();
+        error_log("Update affected rows: {$affected}");
+
+        if ($affected === 0) {
             throw new Exception('Booking status could not be updated - may have changed state');
         }
 
