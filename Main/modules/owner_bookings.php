@@ -7,7 +7,6 @@ $page_title = "Bookings";
 include __DIR__ . '/../partials/header.php';
 
 $owner_id = $_SESSION['user']['user_id'];
-$flash = null;
 
 // ─── Handle Booking Approval/Rejection ───
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,45 +14,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $booking_id = (int)$_POST['booking_id'];
         $new_status = isset($_POST['approve_booking']) ? 'approved' : 'rejected';
 
-        // Validate that the booking belongs to this owner
-        $stmt = $pdo->prepare("
-            SELECT b.*, r.price, r.room_id, r.dorm_id, u.user_id AS student_id, b.start_date
-            FROM bookings b
-            JOIN rooms r ON b.room_id = r.room_id
-            JOIN dormitories d ON r.dorm_id = d.dorm_id
-            JOIN users u ON b.student_id = u.user_id
-            WHERE b.booking_id = ? AND d.owner_id = ?
-        ");
-        $stmt->execute([$booking_id, $owner_id]);
-        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $pdo->beginTransaction();
 
-        if ($booking) {
-            // Update booking status
-            $pdo->prepare("UPDATE bookings SET status = ?, updated_at = NOW() WHERE booking_id = ?")
-                ->execute([$new_status, $booking_id]);
+            // Validate that the booking belongs to this owner
+            $stmt = $pdo->prepare("
+                SELECT b.*, r.price, r.room_id, r.dorm_id, u.user_id AS student_id, b.start_date
+                FROM bookings b
+                JOIN rooms r ON b.room_id = r.room_id
+                JOIN dormitories d ON r.dorm_id = d.dorm_id
+                JOIN users u ON b.student_id = u.user_id
+                WHERE b.booking_id = ? AND d.owner_id = ?
+            ");
+            $stmt->execute([$booking_id, $owner_id]);
+            $booking = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // If approved, create a pending payment record
-            if ($new_status === 'approved') {
-                $amount = $booking['price'] ?? 0;
-                $student_id = $booking['student_id'];
-                $due_date = $booking['start_date'] ?? date('Y-m-d', strtotime('+7 days')); // fallback
+            if ($booking) {
+                // Update booking status
+                $pdo->prepare("UPDATE bookings SET status = ?, updated_at = NOW() WHERE booking_id = ?")
+                    ->execute([$new_status, $booking_id]);
 
-                // Check if a payment already exists for this booking
-                $check = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE booking_id = ?");
-                $check->execute([$booking_id]);
-                if ($check->fetchColumn() == 0) {
-                    $insert = $pdo->prepare("
-                        INSERT INTO payments (booking_id, student_id, amount, status, due_date, created_at)
-                        VALUES (?, ?, ?, 'pending', ?, NOW())
-                    ");
-                    $insert->execute([$booking_id, $student_id, $amount, $due_date]);
+                // If approved, create a pending payment record
+                if ($new_status === 'approved') {
+                    $amount = $booking['price'] ?? 0;
+                    $student_id = $booking['student_id'];
+                    $due_date = $booking['start_date'] ?? date('Y-m-d', strtotime('+7 days')); // fallback
+
+                    // Check if a payment already exists for this booking
+                    $check = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE booking_id = ?");
+                    $check->execute([$booking_id]);
+                    if ($check->fetchColumn() == 0) {
+                        $insert = $pdo->prepare("
+                            INSERT INTO payments (booking_id, student_id, amount, status, due_date, created_at)
+                            VALUES (?, ?, ?, 'pending', ?, NOW())
+                        ");
+                        $insert->execute([$booking_id, $student_id, $amount, $due_date]);
+                    }
+
+                    $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking approved and payment reminder created.'];
+                } else {
+                    $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Booking rejected successfully.'];
                 }
-
-                $flash = ['type' => 'success', 'msg' => 'Booking approved and payment reminder created.'];
             } else {
-                $flash = ['type' => 'error', 'msg' => 'Booking rejected successfully.'];
+                $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Booking not found or not authorized.'];
             }
+
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            error_log('owner_bookings error: ' . $e->getMessage());
+            $_SESSION['flash'] = ['type' => 'error', 'msg' => 'An internal error occurred.'];
         }
+
+        // Redirect to avoid blank page / POST resubmission (PRG)
+        header('Location: owner_bookings.php');
+        exit;
     }
 }
 
@@ -82,6 +97,10 @@ $sql = "
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$owner_id]);
 $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// retrieve flash for display
+$flash = $_SESSION['flash'] ?? null;
+unset($_SESSION['flash']);
 ?>
 
 <div class="page-header">
