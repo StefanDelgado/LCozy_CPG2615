@@ -1,26 +1,95 @@
 <?php
-require_once __DIR__ . '/../partials/header.php';
-require_role('student');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+require_once __DIR__ . '/../auth.php';  // Add auth.php first
 require_once __DIR__ . '/../config.php';
+require_role('student');
 
 $page_title = "My Payments";
+include __DIR__ . '/../partials/header.php'; // Move header include after config and auth
+
 $user_id = $_SESSION['user']['user_id'];
+
+// Ensure uploads directory exists
+$uploadsDir = __DIR__ . '/../uploads/receipts';
+if (!is_dir($uploadsDir)) {
+    mkdir($uploadsDir, 0777, true);
+}
 
 // Fetch payments for the logged-in student
 $stmt = $pdo->prepare("
   SELECT 
-    p.payment_id, p.amount, p.status, p.payment_date, p.due_date, p.receipt_image, p.created_at,
+    p.payment_id, p.amount, p.status, p.payment_date, p.due_date, 
+    p.receipt_image, p.created_at,
     d.name AS dorm_name, r.room_type
   FROM payments p
   JOIN bookings b ON p.booking_id = b.booking_id
-  JOIN dormitories d ON b.dorm_id = d.dorm_id
   JOIN rooms r ON b.room_id = r.room_id
+  JOIN dormitories d ON r.dorm_id = d.dorm_id
   WHERE p.student_id = ?
   ORDER BY p.created_at DESC
 ");
-$stmt->execute([$user_id]);
+
+if (!$stmt->execute([$user_id])) {
+    $error = $stmt->errorInfo();
+    error_log('Payment query error: ' . print_r($error, true));
+    echo "Error fetching payments. Please try again.";
+    exit;
+}
+
 $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+
+<style>
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+.data-table th, .data-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+.status-paid { color: #28a745; }
+.status-pending { color: #ffc107; }
+.status-overdue { color: #dc3545; }
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+}
+.btn {
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    background: #4A3AFF;
+    color: white;
+}
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    display: inline-block;
+}
+</style>
 
 <div class="page-header">
   <h1>My Payments</h1>
@@ -44,57 +113,38 @@ $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </tr>
       </thead>
       <tbody>
-        <?php foreach ($payments as $p): 
-          $statusClass = match($p['status']) {
-            'paid' => 'status-paid',
-            'pending' => 'status-pending',
-            'expired' => 'status-overdue',
-            default => ''
-          };
-          $now = new DateTime();
-          $createdAt = new DateTime($p['created_at']);
-          $diff = $now->diff($createdAt);
-          $hoursPassed = ($diff->days * 24) + $diff->h;
-          $hoursLeft = max(0, 48 - $hoursPassed);
-        ?>
-        <tr>
-          <td><?= htmlspecialchars($p['dorm_name']) ?></td>
-          <td><?= htmlspecialchars($p['room_type']) ?></td>
-          <td>₱<?= number_format($p['amount'], 2) ?></td>
-          <td><?= $p['due_date'] ? date('M d, Y', strtotime($p['due_date'])) : '-' ?></td>
-          <td><?= $p['payment_date'] ? date('M d, Y', strtotime($p['payment_date'])) : '-' ?></td>
-          <td class="<?= $statusClass ?>">
-            <?= ucfirst($p['status']) ?>
-            <?php if ($p['status'] === 'pending'): ?>
-              <br><small class="countdown" data-hours="<?= $hoursLeft ?>">⏳ <?= $hoursLeft ?>h left</small>
-            <?php endif; ?>
-          </td>
-          <td>
-            <?php if ($p['status'] === 'pending'): ?>
-              <?php if ($p['receipt_image']): ?>
-                <a href="../uploads/<?= htmlspecialchars($p['receipt_image']) ?>" target="_blank" class="btn-secondary">View Receipt</a>
-              <?php else: ?>
-                <button class="btn upload-btn" onclick="openUploadModal(<?= $p['payment_id'] ?>)">Upload Receipt</button>
+        <?php foreach ($payments as $p): ?>
+          <tr>
+            <td><?php echo htmlspecialchars($p['dorm_name']); ?></td>
+            <td><?php echo htmlspecialchars($p['room_type']); ?></td>
+            <td><?php echo htmlspecialchars(number_format($p['amount'], 2)); ?></td>
+            <td><?php echo htmlspecialchars(date('Y-m-d', strtotime($p['due_date']))); ?></td>
+            <td><?php echo $p['payment_date'] ? htmlspecialchars(date('Y-m-d', strtotime($p['payment_date']))) : 'N/A'; ?></td>
+            <td class="<?php echo 'status-' . htmlspecialchars($p['status']); ?>">
+              <?php echo ucfirst(htmlspecialchars($p['status'])); ?>
+              <?php if ($p['status'] == 'pending' && strtotime($p['due_date']) > time()): ?>
+                <span class="countdown" data-hours="<?php echo floor((strtotime($p['due_date']) - time()) / 3600); ?>">⏳</span>
               <?php endif; ?>
-            <?php elseif ($p['status'] === 'paid'): ?>
-              ✅ Confirmed
-            <?php elseif ($p['status'] === 'expired'): ?>
-              ❌ Expired
-            <?php endif; ?>
-          </td>
-        </tr>
+            </td>
+            <td>
+              <?php if ($p['status'] == 'pending'): ?>
+                <button class="btn" onclick="openUploadModal(<?php echo $p['payment_id']; ?>)">Upload Receipt</button>
+              <?php else: ?>
+                <a href="<?php echo htmlspecialchars($p['receipt_image']); ?>" target="_blank" class="btn-secondary">View Receipt</a>
+              <?php endif; ?>
+            </td>
+          </tr>
         <?php endforeach; ?>
       </tbody>
     </table>
   <?php endif; ?>
 </div>
 
-<!-- Upload Receipt Modal -->
-<div id="uploadModal" class="modal">
+<div class="modal" id="uploadModal">
   <div class="modal-content">
-    <h3>Upload Payment Receipt</h3>
-    <form method="post" enctype="multipart/form-data" action="upload_receipt.php">
-      <input type="hidden" name="payment_id" id="upload_payment_id">
+    <h2>Upload Receipt</h2>
+    <form action="/payments/upload_receipt.php" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="payment_id" id="upload_payment_id" value="">
       <label for="receipt">Choose File (JPG/PNG/PDF)</label>
       <input type="file" name="receipt" id="receipt" accept=".jpg,.jpeg,.png,.pdf" required>
       <div class="actions">
