@@ -22,7 +22,17 @@ $owner_id = $_SESSION['user']['user_id'] ?? 0;
 // ─── Handle Approve/Reject ───
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
     $booking_id = (int)$_POST['booking_id'];
-    $new_status = isset($_POST['approve_booking']) ? 'approved' : 'rejected';
+    
+    // Fix: Explicitly check which button was clicked and set appropriate status
+    if (isset($_POST['approve_booking'])) {
+        $new_status = 'approved';
+    } elseif (isset($_POST['reject_booking'])) {
+        $new_status = 'rejected';
+    } else {
+        $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Invalid action specified'];
+        header('Location: owner_bookings.php');
+        exit;
+    }
 
     try {
         $pdo->beginTransaction();
@@ -40,9 +50,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
         $booking = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($booking) {
-            // Update booking status
-            $update = $pdo->prepare("UPDATE bookings SET status = LOWER(?), updated_at = NOW() WHERE booking_id = ?");
+            // Update booking status - remove LOWER() as we're explicitly setting the correct case
+            $update = $pdo->prepare("UPDATE bookings SET status = ? WHERE booking_id = ?");
             $update->execute([$new_status, $booking_id]);
+
+            // Verify the update worked
+            if ($update->rowCount() === 0) {
+                throw new Exception('Failed to update booking status');
+            }
 
             // If approved, insert pending payment if not existing
             if ($new_status === 'approved') {
@@ -171,14 +186,14 @@ unset($_SESSION['flash']);
           <td><span class="badge <?= $status ?>"><?= ucfirst($status) ?></span></td>
           <td>
             <?php if ($status === 'pending'): ?>
-              <form method="post" style="display:inline-block;">
-                <input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>">
-                <button type="submit" name="approve_booking" class="btn success">Approve</button>
-              </form>
-              <form method="post" style="display:inline-block;">
-                <input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>">
-                <button type="submit" name="reject_booking" class="btn danger">Reject</button>
-              </form>
+                <form method="post" style="display:inline-block;">
+                    <input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>">
+                    <button type="submit" name="approve_booking" value="1" class="btn success">Approve</button>
+                </form>
+                <form method="post" style="display:inline-block;">
+                    <input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>">
+                    <button type="submit" name="reject_booking" value="1" class="btn danger">Reject</button>
+                </form>
             <?php else: ?>
               <a href="owner_messages.php?recipient_id=<?= $b['student_id'] ?>" class="btn-secondary">Contact</a>
             <?php endif; ?>
