@@ -53,15 +53,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
         LIMIT 1
     ");
 
-    // Replace the update query (remove updated_at since it doesn't exist)
-    $update = $pdo->prepare("
-        UPDATE bookings 
-        SET status = ?
-        WHERE booking_id = ? 
-        AND room_id = ? 
-        AND status = 'pending'
-    ");
-
     // Add debug logging to track the update
     try {
         $pdo->beginTransaction();
@@ -77,18 +68,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
         // Debug log before update
         error_log("Attempting update - Booking ID: {$booking_id}, New Status: {$new_status}, Room ID: {$booking['room_id']}");
 
-        // Update status
+        // Simplified update query without updated_at
+        $update = $pdo->prepare("
+            UPDATE bookings 
+            SET status = ?
+            WHERE booking_id = ? 
+            AND status = 'pending'
+        ");
+
+        // Execute update with just status and booking_id
         $update->execute([
             $new_status,
-            $booking_id,
-            $booking['room_id']
+            $booking_id
         ]);
 
         $affected = $update->rowCount();
         error_log("Update affected rows: {$affected}");
 
         if ($affected === 0) {
-            throw new Exception('Booking status could not be updated - may have changed state');
+            throw new Exception('Booking status could not be updated');
         }
 
         // Handle approved bookings
