@@ -22,8 +22,8 @@ $owner_id = $_SESSION['user']['user_id'] ?? 0;
 // ─── Handle Approve/Reject ───
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
     $booking_id = (int)$_POST['booking_id'];
-
-    // Set new status based on button
+    
+    // Validate action and set status
     if (isset($_POST['approve_booking'])) {
         $new_status = 'approved';
     } elseif (isset($_POST['reject_booking'])) {
@@ -34,48 +34,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
         exit;
     }
 
+    // Replace the check_stmt query with this updated version
+    $check_stmt = $pdo->prepare("
+        SELECT 
+            b.booking_id,
+            b.status,
+            b.room_id,
+            b.student_id,
+            b.start_date,
+            r.price,
+            d.owner_id
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN dormitories d ON r.dorm_id = d.dorm_id
+        WHERE b.booking_id = ? 
+        AND d.owner_id = ?
+        AND b.status = 'pending'
+        LIMIT 1
+    ");
+
+    // Add debug logging to track the update
     try {
         $pdo->beginTransaction();
 
-        // Confirm booking belongs to owner
-        $check_stmt = $pdo->prepare("
-            SELECT 
-                b.booking_id, b.status, b.room_id, b.student_id, b.start_date,
-                r.price, d.owner_id
-            FROM bookings b
-            JOIN rooms r ON b.room_id = r.room_id
-            JOIN dormitories d ON r.dorm_id = d.dorm_id
-            WHERE b.booking_id = ? AND d.owner_id = ?
-            LIMIT 1
-        ");
+        // Check booking exists and is valid
         $check_stmt->execute([$booking_id, $owner_id]);
         $booking = $check_stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$booking) {
-            throw new Exception('Booking not found or unauthorized');
+            throw new Exception('Booking not found or already processed');
         }
 
-        // Update booking status safely
+        // Debug log before update
+        error_log("Attempting update - Booking ID: {$booking_id}, New Status: {$new_status}, Room ID: {$booking['room_id']}");
+
+        // First, fix the update query to ensure proper status setting
         $update = $pdo->prepare("
             UPDATE bookings 
-            SET status = LOWER(TRIM(?)), updated_at = NOW()
-            WHERE booking_id = ?
+            SET status = ?
+            WHERE booking_id = ? 
+            AND (status = 'pending' OR status IS NULL OR status = '')
         ");
-        $update->execute([$new_status, $booking_id]);
 
-        if ($update->rowCount() === 0) {
-            throw new Exception('Status update failed — no rows affected.');
+        // Execute update with just status and booking_id
+        $update->execute([
+            $new_status,
+            $booking_id
+        ]);
+
+        $affected = $update->rowCount();
+        error_log("Update affected rows: {$affected}");
+
+        if ($affected === 0) {
+            throw new Exception('Booking status could not be updated');
         }
 
-        // Create payment if approved
+        // Handle approved bookings
         if ($new_status === 'approved') {
+            // Check for existing payment
             $check = $pdo->prepare("SELECT COUNT(*) FROM payments WHERE booking_id = ?");
             $check->execute([$booking_id]);
-
+            
             if ($check->fetchColumn() == 0) {
+                // Create payment record
                 $insert = $pdo->prepare("
-                    INSERT INTO payments (booking_id, student_id, amount, status, due_date, created_at)
-                    VALUES (?, ?, ?, 'pending', ?, NOW())
+                    INSERT INTO payments (
+                        booking_id, 
+                        student_id, 
+                        amount, 
+                        status, 
+                        due_date, 
+                        created_at
+                    ) VALUES (?, ?, ?, 'pending', ?, NOW())
                 ");
                 $insert->execute([
                     $booking_id,
@@ -84,18 +114,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
                     $booking['start_date'] ?? date('Y-m-d', strtotime('+7 days'))
                 ]);
             }
-            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking approved and payment created.'];
+
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking approved and payment reminder created.'];
         } else {
             $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking rejected successfully.'];
         }
 
         $pdo->commit();
+
     } catch (Exception $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        error_log("owner_bookings error: " . $e->getMessage());
-        $_SESSION['flash'] = ['type' => 'error', 'msg' => APP_DEBUG ? $e->getMessage() : 'An error occurred.'];
+        error_log('owner_bookings error: ' . $e->getMessage());
+        $_SESSION['flash'] = [
+            'type' => 'error', 
+            'msg' => APP_DEBUG ? 'Internal error: ' . $e->getMessage() : 'An error occurred.'
+        ];
     }
 
     header('Location: owner_bookings.php');
@@ -122,23 +157,20 @@ $sql = "
     JOIN rooms r ON b.room_id = r.room_id
     JOIN dormitories d ON r.dorm_id = d.dorm_id
     WHERE d.owner_id = ?
-    ORDER BY FIELD(
-        COALESCE(NULLIF(LOWER(b.status), ''), 'pending'),
-        'pending','approved','rejected','cancelled','completed'
-    ), b.start_date DESC
+    ORDER BY FIELD(COALESCE(b.status, 'pending'),'pending','approved','rejected','cancelled','completed'), 
+             b.start_date DESC
 ";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$owner_id]);
 $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Flash message
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 ?>
 
 <div class="page-header">
   <h2>Manage Bookings</h2>
-  <p>Approve or reject student bookings. Approval auto-creates a payment reminder.</p>
+  <p>Approve or reject student bookings for your dorms. Approving automatically creates a payment reminder.</p>
 </div>
 
 <?php if ($flash): ?>
@@ -177,7 +209,8 @@ unset($_SESSION['flash']);
         <tr><td colspan="10" style="text-align:center;">No bookings found.</td></tr>
       <?php else: ?>
         <?php foreach ($bookings as $b): 
-            $status = strtolower(trim($b['status'] ?? 'pending'));
+          $status = strtolower(trim($b['status'] ?? 'pending')); // fallback to pending
+          if ($status === '' || $status === null) $status = 'pending';
         ?>
         <tr>
           <td><?= htmlspecialchars($b['student_name']) ?></td>
@@ -187,7 +220,10 @@ unset($_SESSION['flash']);
           <td><?= htmlspecialchars($b['room_type']) ?></td>
           <td>₱<?= number_format($b['price'], 2) ?></td>
           <td><?= htmlspecialchars($b['capacity']) ?></td>
-          <td><?= htmlspecialchars($b['start_date'] ?? '—') ?><?php if ($b['end_date']): ?> → <?= htmlspecialchars($b['end_date']) ?><?php endif; ?></td>
+          <td>
+            <?= htmlspecialchars($b['start_date'] ?? '—') ?> 
+            <?php if ($b['end_date']): ?> → <?= htmlspecialchars($b['end_date']) ?><?php endif; ?>
+          </td>
           <td><span class="badge <?= $status ?>"><?= ucfirst($status) ?></span></td>
           <td>
             <?php if ($status === 'pending'): ?>
