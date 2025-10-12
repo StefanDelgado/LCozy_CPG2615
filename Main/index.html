@@ -139,26 +139,46 @@
 
         .nav-links {
             display: flex;
-            gap: 2rem;
-        }
-
-        .scroll-nav a.active {
-            color: #372fdb;
+            gap: 1rem;
+            background: #f0f0f0;
+            padding: 0.5rem;
+            border-radius: 8px;
             position: relative;
         }
 
-        .scroll-nav a.active::after {
-            content: '';
+        .nav-links a {
+            color: #666;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-links a.active {
+            color: white;
+        }
+
+        .nav-indicator {
             position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: #372fdb;
+            top: 0.5rem;
+            left: 0.5rem;
+            background: #4A3AFF;
+            border-radius: 6px;
+            height: calc(100% - 1rem);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 0;
         }
 
         .nav-btn {
             margin-left: 2rem;
+        }
+
+        /* Remove the previous .scroll-nav a.active styles */
+        .scroll-nav a.active::after {
+            display: none;
         }
 
         .scroll-indicator {
@@ -205,6 +225,7 @@
 <body>
     <nav class="scroll-nav">
         <div class="nav-links">
+            <div class="nav-indicator"></div>
             <a href="#home" class="active">Home</a>
             <a href="#features">Features</a>
             <a href="#about">About</a>
@@ -217,7 +238,6 @@
             <div class="logo">🏠</div>
             <h1>Welcome to CozyDorms</h1>
             <p>Your complete student housing management solution. Access dorm listings, manage bookings, and more.</p>
-            <a href="login.php" class="btn">Access Portal</a>
         </div>
     </section>
 
@@ -284,15 +304,15 @@
             });
         });
 
-        // Update active section on scroll
+        // Update active section on scroll with indicator animation
         window.addEventListener('scroll', () => {
             const sections = document.querySelectorAll('section');
             const navLinks = document.querySelectorAll('.nav-links a');
+            const indicator = document.querySelector('.nav-indicator');
             
             let current = '';
             sections.forEach(section => {
                 const sectionTop = section.offsetTop;
-                const sectionHeight = section.clientHeight;
                 if (pageYOffset >= sectionTop - 150) {
                     current = section.getAttribute('id');
                 }
@@ -302,6 +322,9 @@
                 link.classList.remove('active');
                 if (link.getAttribute('href').slice(1) === current) {
                     link.classList.add('active');
+                    // Update indicator position and width
+                    indicator.style.width = `${link.offsetWidth}px`;
+                    indicator.style.left = `${link.offsetLeft}px`;
                 }
             });
 
@@ -311,6 +334,16 @@
                 scrollIndicator.style.opacity = '0';
             } else {
                 scrollIndicator.style.opacity = '1';
+            }
+        });
+
+        // Add initial indicator position
+        window.addEventListener('load', () => {
+            const activeLink = document.querySelector('.nav-links a.active');
+            const indicator = document.querySelector('.nav-indicator');
+            if (activeLink) {
+                indicator.style.width = `${activeLink.offsetWidth}px`;
+                indicator.style.left = `${activeLink.offsetLeft}px`;
             }
         });
     </script>
