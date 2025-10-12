@@ -63,6 +63,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
+            // Strict validation for status values
+            $allowed = ['approved', 'rejected'];
+            if (!in_array($new_status, $allowed, true) || $new_status === '') {
+                $pdo->rollBack();
+                error_log("owner_bookings: invalid status for booking {$booking_id}: " . var_export($new_status, true));
+                $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Invalid status value.'];
+                header('Location: owner_bookings.php');
+                exit;
+            }
+
             // Update booking status (avoid updated_at to prevent column errors)
             $update = $pdo->prepare("UPDATE bookings SET status = ? WHERE booking_id = ?");
             $update->execute([$new_status, $booking_id]);
@@ -70,6 +80,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Log affected rows for debugging
             $affected = $update->rowCount();
             error_log("owner_bookings: booking_id={$booking_id} set status={$new_status} affected_rows={$affected}");
+
+            // If no rows were affected, treat as error and rollback
+            if ($affected === 0) {
+                $pdo->rollBack();
+                $_SESSION['flash'] = ['type' => 'error', 'msg' => 'No booking updated. It may already have that status or the booking does not exist.'];
+                header('Location: owner_bookings.php');
+                exit;
+            }
 
             // If approved, create a pending payment record (only if not already present)
             if ($new_status === 'approved') {
