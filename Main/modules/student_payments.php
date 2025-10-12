@@ -143,7 +143,7 @@ $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="modal" id="uploadModal">
   <div class="modal-content">
     <h2>Upload Receipt</h2>
-    <form action="/payments/upload_receipt.php" method="POST" enctype="multipart/form-data">
+    <form action="upload_receipt.php" method="POST" enctype="multipart/form-data">
       <input type="hidden" name="payment_id" id="upload_payment_id" value="">
       <label for="receipt">Choose File (JPG/PNG/PDF)</label>
       <input type="file" name="receipt" id="receipt" accept=".jpg,.jpeg,.png,.pdf" required>
