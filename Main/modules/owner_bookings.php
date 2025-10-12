@@ -34,36 +34,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
         exit;
     }
 
+    // Replace the check_stmt query with this updated version
+    $check_stmt = $pdo->prepare("
+        SELECT 
+            b.booking_id,
+            b.status,
+            b.room_id,
+            b.student_id,
+            b.start_date,
+            r.price,
+            d.owner_id
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN dormitories d ON r.dorm_id = d.dorm_id
+        WHERE b.booking_id = ? 
+        AND d.owner_id = ?
+        AND b.status = 'pending'
+        LIMIT 1
+    ");
+
+    // Then update the status update query to include room_id for extra validation
+    $update = $pdo->prepare("
+        UPDATE bookings 
+        SET status = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE booking_id = ? 
+        AND room_id = ? 
+        AND status = 'pending'
+    ");
+
     try {
         $pdo->beginTransaction();
 
-        // First check if booking exists and can be updated
-        $check_stmt = $pdo->prepare("
-            SELECT b.booking_id, b.status, r.price, u.user_id AS student_id, b.start_date
-            FROM bookings b
-            JOIN rooms r ON b.room_id = r.room_id
-            JOIN dormitories d ON r.dorm_id = d.dorm_id
-            JOIN users u ON b.student_id = u.user_id
-            WHERE b.booking_id = ? AND d.owner_id = ? AND b.status = 'pending'
-        ");
+        // Check booking exists and is valid
         $check_stmt->execute([$booking_id, $owner_id]);
         $booking = $check_stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$booking) {
-            throw new Exception('Booking not found or cannot be updated');
+            throw new Exception('Booking not found or already processed');
         }
 
-        // Update booking status with explicit WHERE clause
-        $update = $pdo->prepare("
-            UPDATE bookings 
-            SET status = ? 
-            WHERE booking_id = ? 
-            AND status = 'pending'
-        ");
-        $update->execute([$new_status, $booking_id]);
+        // Update with additional room_id check
+        $update->execute([
+            $new_status,
+            $booking_id,
+            $booking['room_id'] // Add room_id validation
+        ]);
 
         if ($update->rowCount() === 0) {
-            throw new Exception('Booking status could not be updated');
+            throw new Exception('Booking status could not be updated - may have changed state');
         }
 
         // Handle approved bookings
