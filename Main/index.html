@@ -4,36 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CozyDorms - Student Housing Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
     <style>
         body {
             margin: 0;
-            height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #1f1147;
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+        }
+
+        section {
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-            color: #1f1147;
-            text-align: center;
+            padding: 2rem;
         }
+
         .container {
             background: white;
             padding: 2.5rem;
             border-radius: 16px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            max-width: 90%;
-            width: 400px;
+            max-width: 1200px;
+            width: 100%;
+            text-align: center;
         }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            transition: transform 0.3s;
+        }
+
+        .logo:hover {
+            transform: scale(1.1);
+        }
+
         h1 {
             margin: 0 0 1rem;
-            font-size: 1.8rem;
+            font-size: 2.5rem;
             color: #4A3AFF;
         }
+
+        h2 {
+            color: #4A3AFF;
+            margin-bottom: 2rem;
+        }
+
         p {
             margin: 0 0 1.5rem;
             color: #666;
-            line-height: 1.5;
+            line-height: 1.6;
         }
+
         .btn {
             display: inline-block;
             background: #4A3AFF;
@@ -42,30 +78,149 @@
             padding: 0.8rem 1.5rem;
             border-radius: 8px;
             font-weight: 600;
-            transition: background 0.2s;
+            transition: all 0.3s;
         }
+
         .btn:hover {
             background: #372fdb;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 58, 255, 0.3);
         }
-        .logo {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 1rem;
-            border-radius: 50%;
-            background: #f0f0f0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .feature-card {
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
             font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .about-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .about-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .scroll-nav {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .scroll-nav a {
+            color: #4A3AFF;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+
+        .scroll-nav a:hover {
+            color: #372fdb;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">🏠</div>
-        <h1>Welcome to CozyDorms</h1>
-        <p>Your complete student housing management solution. Access dorm listings, manage bookings, and more.</p>
-        <a href="login.php" class="btn">Access Portal</a>
-    </div>
+    <nav class="scroll-nav">
+        <a href="#home">Home</a>
+        <a href="#features">Features</a>
+        <a href="#about">About</a>
+    </nav>
+
+    <section id="home">
+        <div class="container hero" data-aos="fade-up">
+            <div class="logo">🏠</div>
+            <h1>Welcome to CozyDorms</h1>
+            <p>Your complete student housing management solution. Access dorm listings, manage bookings, and more.</p>
+            <a href="login.php" class="btn">Access Portal</a>
+        </div>
+    </section>
+
+    <section id="features">
+        <div class="container" data-aos="fade-up">
+            <h2>Our Features</h2>
+            <div class="features">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Easy Search</h3>
+                    <p>Find your perfect dorm with our advanced search filters.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon">📱</div>
+                    <h3>Online Booking</h3>
+                    <p>Book your accommodation instantly through our platform.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon">💳</div>
+                    <h3>Secure Payments</h3>
+                    <p>Safe and secure payment processing for your peace of mind.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about">
+        <div class="container" data-aos="fade-up">
+            <h2>About CozyDorms</h2>
+            <div class="about-section">
+                <div data-aos="fade-right">
+                    <h3>Our Mission</h3>
+                    <p>CozyDorms is dedicated to making student housing simple, accessible, and stress-free. We connect students with quality accommodation options while providing property owners with efficient management tools.</p>
+                </div>
+                <div data-aos="fade-left">
+                    <h3>Why Choose Us?</h3>
+                    <ul>
+                        <li>24/7 Support</li>
+                        <li>Verified Listings</li>
+                        <li>Student-Friendly Prices</li>
+                        <li>Secure Platform</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 1000,
+            once: true
+        });
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
 </body>
 </html>
