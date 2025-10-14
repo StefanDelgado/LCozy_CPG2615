@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 import 'dart:convert';
 import 'home.dart';
 import 'ownerdashboard.dart';
+import 'dart:io';
 
 // ==================== LoginScreen Widget ====================
 class LoginScreen extends StatefulWidget {
@@ -27,40 +29,21 @@ class _LoginScreenState extends State<LoginScreen> {
       errorMessage = '';
     });
 
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
+    // Create HTTP client that accepts self-signed certificates
+    final client = HttpClient()
+      ..badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
+    final http = IOClient(client);
 
-    // Basic email format validation
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (email.isEmpty || password.isEmpty) {
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Please enter both email and password.';
-      });
-      return;
-    }
-    if (!emailRegex.hasMatch(email)) {
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Please enter a valid email address.';
-      });
-      return;
-    }
-
-    print('Email: "$email"');
-    print('Password: "$password"');
-
-    final url = Uri.parse('https://cozydorms.life/modules/mobile-api/login-api.php');
     try {
       final response = await http.post(
-        url,
+        Uri.parse('http://cozydorms.life/modules/mobile-api/login-api.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({  // Convert to JSON string
-          'email': email,
-          'password': password
+        body: jsonEncode({
+          'email': emailController.text.trim(),
+          'password': passwordController.text.trim(),
         }),
       );
 
@@ -147,6 +130,8 @@ class _LoginScreenState extends State<LoginScreen> {
         errorMessage = 'Network error. Please try again.';
       });
       print('Login error: $e');
+    } finally {
+      http.close(); // Close the client
     }
   }
 
