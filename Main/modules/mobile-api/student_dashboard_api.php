@@ -47,7 +47,7 @@ try {
     $messagesStmt = $pdo->prepare("
         SELECT COUNT(*) 
         FROM messages 
-        WHERE receiver_id = ? AND is_read = 0
+        WHERE receiver_id = ? AND read_at IS NULL
     ");
     $messagesStmt->execute([$student_id]);
     $unread_messages = $messagesStmt->fetchColumn();
