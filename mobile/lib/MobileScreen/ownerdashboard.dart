@@ -86,16 +86,27 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         Uri.parse('http://cozydorms.life/modules/mobile-api/owner_dashboard_api.php?owner_email=${widget.ownerEmail}'),
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        setState(() {
-          dashboardData = data;
-          isLoading = false;
-        });
+        if (data['ok'] == true && data['stats'] != null) {
+          setState(() {
+            dashboardData = data;
+            isLoading = false;
+          });
+        } else {
+          throw Exception(data['error'] ?? 'Invalid response format');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
       }
     } catch (e) {
       print('Dashboard fetch error: $e');
-      setState(() => isLoading = false);
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -308,17 +319,17 @@ class _DashboardHome extends StatelessWidget {
                   children: [
                     _StatCard(
                       icon: Icons.meeting_room,
-                      value: "${dashboardData['stats']?['rooms'] ?? '0'}",
+                      value: "${dashboardData['stats']?['rooms']?.toString() ?? '0'}",
                       label: "Total Rooms",
                     ),
                     _StatCard(
                       icon: Icons.people,
-                      value: "${dashboardData['stats']?['tenants'] ?? '0'}",
-                      label: "Total Tenants", 
+                      value: "${dashboardData['stats']?['tenants']?.toString() ?? '0'}", 
+                      label: "Total Tenants",
                     ),
                     _StatCard(
                       icon: Icons.attach_money,
-                      value: "₱${((dashboardData['stats']?['monthly_revenue'] ?? 0)/1000).toStringAsFixed(1)}K",
+                      value: "₱${((dashboardData['stats']?['monthly_revenue'] ?? 0.0)/1000).toStringAsFixed(1)}K",
                       label: "Monthly Revenue",
                     ),
                   ],
