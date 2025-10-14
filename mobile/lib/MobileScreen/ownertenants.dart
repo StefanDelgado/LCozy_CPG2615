@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 // ==================== OwnerTenantsScreen Widget ====================
 class OwnerTenantsScreen extends StatefulWidget {
-  const OwnerTenantsScreen({super.key});
-
+  final String ownerEmail;
+  
+  const OwnerTenantsScreen({
+    Key? key,
+    required this.ownerEmail,
+  }) : super(key: key);
+  
   @override
   State<OwnerTenantsScreen> createState() => _OwnerTenantsScreenState();
 }
@@ -11,7 +18,44 @@ class OwnerTenantsScreen extends StatefulWidget {
 // ==================== OwnerTenantsScreen State ====================
 class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
   int selectedTab = 0;
-  int pendingCount = 1;
+  bool isLoading = true;
+  String? error;
+  List<Map<String, dynamic>> currentTenants = [];
+  List<Map<String, dynamic>> pastTenants = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTenants();
+  }
+
+  Future<void> fetchTenants() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://cozydorms.life/modules/mobile-api/owner_tenants_api.php?owner_email=${widget.ownerEmail}'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['ok'] == true) {
+          setState(() {
+            currentTenants = List<Map<String, dynamic>>.from(data['current_tenants']);
+            pastTenants = List<Map<String, dynamic>>.from(data['past_tenants']);
+            isLoading = false;
+          });
+        } else {
+          throw Exception(data['error']);
+        }
+      } else {
+        throw Exception('Server error');
+      }
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +124,7 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
                     _TenantsTab(
                       label: 'Current tenants',
                       selected: selectedTab == 0,
-                      count: pendingCount,
+                      count: currentTenants.length,
                       onTap: () => setState(() => selectedTab = 0),
                     ),
                     _TenantsTab(
@@ -96,26 +140,24 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 80),
-                  shrinkWrap: true,
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                  children: [
-                    if (selectedTab == 0) ...[
-                      AnnaCruzTenantCard(),
-                    ],
-                    if (selectedTab == 1)
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 60),
-                          child: Text(
-                            "No past tenants.",
-                            style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                child: isLoading 
+                ? const Center(child: CircularProgressIndicator())
+                : error != null
+                ? Center(child: Text(error!))
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 80),
+                    itemCount: selectedTab == 0 ? currentTenants.length : pastTenants.length,
+                    itemBuilder: (context, index) {
+                      final tenant = selectedTab == 0 
+                        ? currentTenants[index]
+                        : pastTenants[index];
+                      
+                      return TenantCard(
+                        tenant: tenant,
+                        isActive: selectedTab == 0,
+                      );
+                    },
+                  ),
               ),
             ),
           ],
@@ -193,91 +235,98 @@ class _TenantsTab extends StatelessWidget {
   }
 }
 
-// ==================== AnnaCruzTenantCard Widget SECTION ====================
-class AnnaCruzTenantCard extends StatelessWidget {
+// ==================== TenantCard Widget SECTION ====================
+class TenantCard extends StatelessWidget {
+  final Map<String, dynamic> tenant;
+  final bool isActive;
+
+  const TenantCard({
+    Key? key,
+    required this.tenant,
+    required this.isActive,
+  }) : super(key: key);
+
+  // Add this getter for the label style
+  TextStyle get labelStyle => const TextStyle(
+    fontSize: 13, 
+    color: Colors.black54
+  );
+
   @override
   Widget build(BuildContext context) {
     final green = Color(0xFF27AE60);
-    final border = Color(0xFFE0E0E0);
-    final labelStyle = TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w500, fontSize: 13.5);
-
+    
     return Container(
+      margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: border),
+        border: Border.all(color: Color(0xFFE0E0E0)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ----------- TOP ROW SECTION -----------
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
                 backgroundColor: Colors.orange[50],
                 radius: 26,
                 child: Text(
-                  "AC",
+                  tenant['tenant_name'].toString().split(' ').map((e) => e[0]).take(2).join(''),
                   style: TextStyle(
                     color: Colors.orange[700],
                     fontWeight: FontWeight.bold,
-                    fontSize: 20,
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Text(
-                          "Anna Cruz",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 17,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: green.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            "Paid",
-                            style: TextStyle(
-                              color: green,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      tenant['tenant_name'],
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                      ),
                     ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      "Sunset Dormitory - Room 2A",
+                    Text(
+                      '${tenant['dorm_name']} - ${tenant['room_type']}',
                       style: TextStyle(
                         color: Colors.black87,
                         fontSize: 14.5,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
+              if (isActive && tenant['payment_status'] != null)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: tenant['payment_status'] == 'paid' 
+                      ? green.withOpacity(0.12)
+                      : Colors.orange.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    tenant['payment_status'].toString().toUpperCase(),
+                    style: TextStyle(
+                      color: tenant['payment_status'] == 'paid' ? green : Colors.orange,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 10),
@@ -286,9 +335,9 @@ class AnnaCruzTenantCard extends StatelessWidget {
             children: [
               Icon(Icons.email_outlined, color: Colors.grey[600], size: 18),
               const SizedBox(width: 6),
-              const Text(
-                "anna.cruz@email.com",
-                style: TextStyle(fontSize: 13.5),
+              Text(
+                tenant['email'],
+                style: const TextStyle(fontSize: 13.5),
               ),
             ],
           ),
@@ -297,9 +346,9 @@ class AnnaCruzTenantCard extends StatelessWidget {
             children: [
               Icon(Icons.phone, color: Colors.grey[600], size: 18),
               const SizedBox(width: 6),
-              const Text(
-                "+63 912 345 6789",
-                style: TextStyle(fontSize: 13.5),
+              Text(
+                tenant['phone'],
+                style: const TextStyle(fontSize: 13.5),
               ),
             ],
           ),
@@ -316,10 +365,13 @@ class AnnaCruzTenantCard extends StatelessWidget {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Check-in:", style: TextStyle(fontSize: 13, color: Colors.black54)),
-                      SizedBox(height: 2),
-                      Text("Feb 1, 2024", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    children: [
+                      const Text("Check-in:", style: TextStyle(fontSize: 13, color: Colors.black54)),
+                      const SizedBox(height: 2),
+                      Text(
+                        tenant['check_in'],
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
                     ],
                   ),
                 ),
@@ -334,10 +386,13 @@ class AnnaCruzTenantCard extends StatelessWidget {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Contract End:", style: TextStyle(fontSize: 13, color: Colors.black54)),
-                      SizedBox(height: 2),
-                      Text("Feb 1, 2025", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    children: [
+                      const Text("Contract End:", style: TextStyle(fontSize: 13, color: Colors.black54)),
+                      const SizedBox(height: 2),
+                      Text(
+                        tenant['contract_end'],
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
                     ],
                   ),
                 ),
@@ -379,9 +434,9 @@ class AnnaCruzTenantCard extends StatelessWidget {
                         children: [
                           Text("Monthly Rent:", style: labelStyle),
                           const SizedBox(height: 2),
-                          const Text(
-                            "₱8,000",
-                            style: TextStyle(
+                          Text(
+                            tenant['monthly_rent'],
+                            style: const TextStyle(
                               color: Colors.green,
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
@@ -390,9 +445,9 @@ class AnnaCruzTenantCard extends StatelessWidget {
                           const SizedBox(height: 10),
                           Text("Next Payment:", style: labelStyle),
                           const SizedBox(height: 2),
-                          const Text(
-                            "Mar 1, 2024",
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          Text(
+                            tenant['next_payment'],
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                         ],
                       ),
@@ -403,16 +458,16 @@ class AnnaCruzTenantCard extends StatelessWidget {
                         children: [
                           Text("Last Payment:", style: labelStyle),
                           const SizedBox(height: 2),
-                          const Text(
-                            "Feb 1, 2024",
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          Text(
+                            tenant['last_payment'],
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                           const SizedBox(height: 10),
                           Text("Days Until Due:", style: labelStyle),
                           const SizedBox(height: 2),
-                          const Text(
-                            "15 days",
-                            style: TextStyle(
+                          Text(
+                            tenant['days_until_due'],
+                            style: const TextStyle(
                               color: Colors.blue,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,

@@ -136,7 +136,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
           OwnerBookingScreen(ownerEmail: widget.ownerEmail),  // <-- Update this line
           OwnerMessagesListScreen(ownerEmail: widget.ownerEmail),
           OwnerPaymentsScreen(ownerEmail: widget.ownerEmail),
-          OwnerTenantsScreen(),
+          OwnerTenantsScreen(ownerEmail: widget.ownerEmail),
           Container(), // Placeholder for settings
         ],
       ),
