@@ -4,6 +4,7 @@ import 'package:http/io_client.dart';
 import 'dart:convert';
 import 'home.dart';
 import 'ownerdashboard.dart';
+import 'student_home.dart'; // New import
 import 'dart:io';
 
 // ==================== LoginScreen Widget ====================
@@ -94,10 +95,9 @@ class _LoginScreenState extends State<LoginScreen> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => HomeScreen(
+                  builder: (_) => StudentHomeScreen( // Changed from HomeScreen
                     userName: name,
                     userEmail: email,
-                    userRole: role,
                   ),
                 ),
               );
