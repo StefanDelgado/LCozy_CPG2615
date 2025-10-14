@@ -102,7 +102,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
                     Expanded(
                       child: _StatCard(
                         label: "Total Revenue",
-                        value: "₱${(stats['monthly_revenue'] ?? 0).toStringAsFixed(2)}",
+                        value: "₱${(double.parse(stats['monthly_revenue']?.toString() ?? '0')).toStringAsFixed(2)}",
                         sublabel: "This month",
                         color: Colors.white,
                         textColor: Colors.orange,
@@ -113,7 +113,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
                     Expanded(
                       child: _StatCard(
                         label: "Pending",
-                        value: "₱${(stats['pending_amount'] ?? 0).toStringAsFixed(2)}",
+                        value: "₱${(double.parse(stats['pending_amount']?.toString() ?? '0')).toStringAsFixed(2)}",
                         sublabel: "Outstanding",
                         color: const Color(0xFFFFB74D),
                         textColor: Colors.white,
@@ -164,13 +164,13 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
                 itemBuilder: (context, index) {
                   final payment = getFilteredPayments()[index];
                   return _PaymentCard(
-                    name: payment['tenant_name'],
-                    dorm: "${payment['dorm_name']} - ${payment['room_type']}",
-                    amount: "₱${payment['amount'].toStringAsFixed(2)}",
-                    status: payment['status'],
-                    dueDate: payment['due_date'],
+                    name: payment['tenant_name'] ?? '',
+                    dorm: "${payment['dorm_name'] ?? ''} - ${payment['room_type'] ?? ''}",
+                    amount: "₱${(double.parse(payment['amount']?.toString() ?? '0')).toStringAsFixed(2)}",
+                    status: payment['status'] ?? '',
+                    dueDate: payment['due_date'] ?? '',
                     paidDate: payment['payment_date'],
-                    method: payment['payment_method'] ?? 'Not specified',
+                    method: 'GCash', // Since payment_method doesn't exist in DB
                     transactionId: payment['receipt_image'],
                   );
                 },
