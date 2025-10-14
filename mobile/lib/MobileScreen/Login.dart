@@ -50,15 +50,21 @@ class _LoginScreenState extends State<LoginScreen> {
     print('Email: "$email"');
     print('Password: "$password"');
 
-    final response = await http.post(
-      Uri.parse("https://cozydorms.life/modules/mobile-api/login-api.php"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "email": emailController.text,
-        "password": passwordController.text,
-      }),
-    );
-
+    final url = Uri.parse('https://cozydorms.life/modules/mobile-api/login-api.php');
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Accept': 'application/json',
+          // Optionally include an app identifier:
+          'X-App-Client': 'cozydorm-mobile',
+        },
+        body: {
+          'email': email,
+          'password': password,
+          'ajax': '1', // hint to server to return JSON
+        },
+      );
 
       print('Status code: ${response.statusCode}');
       print('Response body: ${response.body}');
