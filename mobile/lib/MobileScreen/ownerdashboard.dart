@@ -6,6 +6,7 @@ import 'student_owner_chat.dart';
 import 'ownerpayments.dart';
 import 'ownertenants.dart';
 import 'ownersetting.dart';
+import 'ownerdorms.dart';
 
 // ==================== OwnerDashboardScreen Widget ====================
 class OwnerDashboardScreen extends StatefulWidget {
@@ -142,6 +143,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             onTenantsTap: _onQuickActionTenants,
             isLoading: isLoading,
             dashboardData: dashboardData,
+            ownerEmail: widget.ownerEmail,  // Add this line
           ),
           // Fix: Pass the owner email to OwnerBookingScreen
           OwnerBookingScreen(ownerEmail: widget.ownerEmail),  // <-- Update this line
@@ -264,6 +266,7 @@ class _DashboardHome extends StatelessWidget {
   final VoidCallback onTenantsTap;
   final bool isLoading;
   final Map<String, dynamic> dashboardData;
+  final String ownerEmail;  // Add this line
 
   const _DashboardHome({
     required this.onBookingRequestsTap,
@@ -272,6 +275,7 @@ class _DashboardHome extends StatelessWidget {
     required this.onTenantsTap,
     required this.isLoading,
     required this.dashboardData,
+    required this.ownerEmail,  // Add this line
   });
 
   @override
@@ -377,7 +381,16 @@ class _DashboardHome extends StatelessWidget {
                           iconColor: const Color(0xFFFF9800),
                           borderColor: const Color(0xFFFF9800),
                           textColor: Colors.black87,
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => OwnerDormsScreen(
+                                  ownerEmail: ownerEmail,  // Use ownerEmail instead of widget.ownerEmail
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -460,53 +473,37 @@ class _DashboardHome extends StatelessWidget {
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: const [
-                _ActivityTile(
-                  icon: Icons.payments,
-                  iconBg: Color(0xFFE0F7E9),
-                  iconColor: Colors.green,
-                  title: "Payment Received",
-                  subtitle: "Maria Santos paid ₱8,000 for Sunset Dorm",
-                  time: "2h ago",
-                ),
-                SizedBox(height: 10),
-                _ActivityTile(
-                  icon: Icons.meeting_room,
-                  iconBg: Color(0xFFFFF3E0),
-                  iconColor: Colors.orange,
-                  title: "New Booking Request",
-                  subtitle: "John Cruz requested to book Sunrise Dorm",
-                  time: "3h ago",
-                ),
-              ],
-            ),
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : (dashboardData['stats']?['recent_activities'] ?? []).isEmpty
+                    ? const Center(
+                        child: Text('No recent activities'),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: (dashboardData['stats']?['recent_activities'] ?? []).length,
+                        itemBuilder: (context, index) {
+                          final activity = dashboardData['stats']['recent_activities'][index];
+                          final isPayment = activity['type'] == 'payment';
+                          
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _ActivityTile(
+                              icon: isPayment ? Icons.payments : Icons.meeting_room,
+                              iconBg: isPayment ? const Color(0xFFE0F7E9) : const Color(0xFFFFF3E0),
+                              iconColor: isPayment ? Colors.green : Colors.orange,
+                              title: isPayment ? 'Payment Received' : 'New Booking Request',
+                              subtitle: isPayment 
+                                ? "${activity['student_name']} paid ₱${activity['amount']} for ${activity['dorm_name']}"
+                                : "${activity['student_name']} requested to book ${activity['dorm_name']}",
+                              time: _formatTimeAgo(DateTime.parse(activity['created_at'])),
+                            ),
+                          );
+                        },
+                      ),
           ),
           const SizedBox(height: 24),
-          // ----------- RECENT ACTIVITIES SECTION (DYNAMIC) -----------
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: (dashboardData['stats']?['recent_activities'] ?? []).length,
-              itemBuilder: (context, index) {
-                final activity = dashboardData['stats']['recent_activities'][index];
-                final isPayment = activity['type'] == 'payment';
-                
-                return _ActivityTile(
-                  icon: isPayment ? Icons.payments : Icons.meeting_room,
-                  iconBg: isPayment ? Color(0xFFE0F7E9) : Color(0xFFFFF3E0),
-                  iconColor: isPayment ? Colors.green : Colors.orange,
-                  title: isPayment ? 'Payment Received' : 'New Booking Request',
-                  subtitle: isPayment 
-                    ? "${activity['student_name']} paid ₱${activity['amount']} for ${activity['dorm_name']}"
-                    : "${activity['student_name']} requested to book ${activity['dorm_name']}",
-                  time: _formatTimeAgo(DateTime.parse(activity['created_at'])),
-                );
-              },
-            ),
-          ),
         ],
       ),
     );
