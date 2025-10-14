@@ -1,31 +1,70 @@
 <?php
+session_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth.php';
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 $error = '';
+
+// Detect if client expects JSON (mobile/app)
+function client_wants_json() {
+    $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+    $xhr = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
+    return str_contains($accept, 'application/json') || strtolower($xhr) === 'xmlhttprequest' || isset($_POST['ajax']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $email = trim($_POST['email'] ?? '');
-  $password = $_POST['password'] ?? '';
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-  $stmt = $pdo->prepare("SELECT user_id, name, email, password, role FROM users WHERE email = ?");
-  $stmt->execute([$email]);
-  $user = $stmt->fetch();
+    try {
+        $stmt = $pdo->prepare("SELECT user_id, name, email, password, role FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
 
-  if ($user && password_verify($password, $user['password'])) {
-    $_SESSION['user'] = [
-      'user_id' => $user['user_id'],
-      'name'    => $user['name'],
-      'email'   => $user['email'],
-      'role'    => $user['role'],
-    ];
+        if ($user && password_verify($password, $user['password'])) {
+            // set session for browser clients
+            $_SESSION['user'] = [
+                'user_id' => $user['user_id'],
+                'name'    => $user['name'],
+                'email'   => $user['email'],
+                'role'    => $user['role'],
+            ];
 
-    redirect_to_dashboard($user['role']);
-  } else {
-    $error = 'Invalid email or password';
-  }
+            if (client_wants_json()) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'ok' => true,
+                    'user_id' => $user['user_id'],
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'role' => $user['role']
+                ]);
+                exit;
+            } else {
+                redirect_to_dashboard($user['role']);
+                exit;
+            }
+        } else {
+            $error = 'Invalid email or password';
+            if (client_wants_json()) {
+                header('Content-Type: application/json; charset=utf-8', true, 401);
+                echo json_encode(['ok' => false, 'error' => $error]);
+                exit;
+            }
+        }
+    } catch (Exception $e) {
+        error_log('login error: ' . $e->getMessage());
+        if (client_wants_json()) {
+            header('Content-Type: application/json; charset=utf-8', true, 500);
+            echo json_encode(['ok' => false, 'error' => 'Server error']);
+            exit;
+        } else {
+            $error = 'Server error';
+        }
+    }
 }
 ?>
 <!doctype html>
