@@ -83,7 +83,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   Future<void> fetchDashboardData() async {
     try {
       final response = await http.get(
-        Uri.parse('https://cozydorms.life/modules/mobile-api/owner_dashboard_api.php?owner_email=${widget.ownerEmail}'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/owner_dashboard_api.php?owner_email=${widget.ownerEmail}'),
       );
 
       if (response.statusCode == 200) {

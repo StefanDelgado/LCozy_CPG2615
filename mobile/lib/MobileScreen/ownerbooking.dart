@@ -25,14 +25,31 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
 
   // ----------- FETCH BOOKINGS SECTION -----------
   Future<void> fetchBookings() async {
-    final response = await http.get(
-      Uri.parse('https://bradedsale.helioho.st/booking_api/booking_api.php?action=get_owner_bookings&owner_email=$ownerEmail'),
-    );
-    if (response.statusCode == 200) {
-      setState(() {
-        bookings = jsonDecode(response.body);
-        pendingCount = bookings.where((b) => b['status'] == 'Pending').length;
-      });
+    try {
+      final response = await http.get(
+        Uri.parse('http://cozydorms.life/modules/mobile-api/owner_bookings_api.php?owner_email=$ownerEmail'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['ok'] == true) {
+          setState(() {
+            bookings = data['bookings'];
+            pendingCount = bookings.where((b) => 
+              b['status'].toString().toLowerCase() == 'pending'
+            ).length;
+          });
+        } else {
+          throw Exception(data['error'] ?? 'Failed to load bookings');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching bookings: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load bookings'))
+      );
     }
   }
 
@@ -186,18 +203,29 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
 
   // ----------- APPROVE BOOKING SECTION -----------
   Future<void> approveBooking(dynamic bookingId) async {
-    final response = await http.post(
-      Uri.parse('https://bradedsale.helioho.st/booking_api.php?action=approve_booking'),
-      body: {'id': bookingId.toString()},
-    );
-    if (response.statusCode == 200 && response.body.contains('success')) {
-      fetchBookings();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Booking approved!')),
+    try {
+      final response = await http.post(
+        Uri.parse('http://cozydorms.life/modules/mobile-api/owner_bookings_api.php'),
+        body: {
+          'action': 'approve',
+          'booking_id': bookingId.toString(),
+          'owner_email': ownerEmail
+        },
       );
-    } else {
+
+      final data = jsonDecode(response.body);
+      if (data['ok'] == true) {
+        await fetchBookings(); // Refresh list
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Booking approved successfully'))
+        );
+      } else {
+        throw Exception(data['error']);
+      }
+    } catch (e) {
+      print('Error approving booking: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to approve booking.')),
+        SnackBar(content: Text('Failed to approve booking'))
       );
     }
   }
