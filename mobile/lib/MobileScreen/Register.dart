@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'Login.dart';
 
 // ==================== RegisterScreen Widget ====================
@@ -16,6 +17,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  final nameController = TextEditingController();
   bool isLoading = false;
   String errorMessage = '';
 
@@ -29,7 +31,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     // Local validation
-    if (emailController.text.isEmpty ||
+    if (nameController.text.isEmpty ||
+        emailController.text.isEmpty ||
         passwordController.text.isEmpty ||
         confirmPasswordController.text.isEmpty) {
       setState(() {
@@ -48,41 +51,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
       isLoading = true;
     });
 
-    final url = Uri.parse('https://bradedsale.helioho.st/Dormitory/register.php');
-    final response = await http.post(
-      url,
-      body: {
-        'role': selectedRole.toLowerCase(), // Ensure role is lowercase
-        'email': emailController.text.trim(),
-        'password': passwordController.text.trim(),
-      },
-    );
-
-    setState(() {
-      isLoading = false;
-    });
-
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Registration Successful!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
+    try {
+      final response = await http.post(
+        Uri.parse('http://cozydorms.life/modules/mobile-api/register_api.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': nameController.text.trim(),
+          'email': emailController.text.trim(),
+          'password': passwordController.text,
+          'role': selectedRole.toLowerCase(),
+        }),
       );
-      Future.delayed(Duration(seconds: 2), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
-      });
-    } else if (response.statusCode == 409) {
+
+      print('Status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['ok'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Registration Successful!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+          
+          // Navigate to login after delay
+          await Future.delayed(Duration(seconds: 2));
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          }
+        } else {
+          throw Exception(data['error'] ?? 'Registration failed');
+        }
+      } else if (response.statusCode == 409) {
+        setState(() {
+          errorMessage = 'Email already registered.';
+        });
+      } else {
+        throw Exception('Server error');
+      }
+    } catch (e) {
       setState(() {
-        errorMessage = 'Email already registered.';
+        errorMessage = 'Registration failed: ${e.toString()}';
       });
-    } else {
+    } finally {
       setState(() {
-        errorMessage = 'Registration failed. Try again.';
+        isLoading = false;
       });
     }
   }
@@ -174,6 +193,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           selectedRole = value!;
                         });
                       },
+                    ),
+                    SizedBox(height: 10),
+                    // ----------- NAME INPUT SECTION -----------
+                    Text('Full Name', style: TextStyle(fontSize: 15)),
+                    SizedBox(height: 4),
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        hintText: 'Enter your full name',
+                        prefixIcon: Icon(Icons.person_outline),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      ),
                     ),
                     SizedBox(height: 10),
                     // ----------- EMAIL INPUT SECTION -----------
@@ -292,5 +326,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
   }
 }
