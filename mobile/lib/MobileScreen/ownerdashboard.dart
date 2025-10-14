@@ -132,9 +132,10 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             isLoading: isLoading,
             dashboardData: dashboardData,
           ),
-          const OwnerBookingScreen(),
+          // Fix: Pass the owner email to OwnerBookingScreen
+          OwnerBookingScreen(ownerEmail: widget.ownerEmail),  // <-- Update this line
           OwnerMessagesListScreen(ownerEmail: widget.ownerEmail),
-          const OwnerPaymentsScreen(),
+          OwnerPaymentsScreen(ownerEmail: widget.ownerEmail),
           OwnerTenantsScreen(),
           Container(), // Placeholder for settings
         ],

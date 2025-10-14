@@ -1,10 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 // ==================== OwnerPaymentsScreen Widget ====================
-class OwnerPaymentsScreen extends StatelessWidget {
-  const OwnerPaymentsScreen({super.key});
+class OwnerPaymentsScreen extends StatefulWidget {
+  final String ownerEmail;
+
+  const OwnerPaymentsScreen({
+    super.key,
+    required this.ownerEmail,
+  });
 
   @override
+  State<OwnerPaymentsScreen> createState() => _OwnerPaymentsScreenState();
+}
+
+class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
+  bool isLoading = true;
+  String? error;
+  Map<String, dynamic> stats = {};
+  List<dynamic> payments = [];
+  String selectedFilter = 'All';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPayments();
+  }
+
+  Future<void> fetchPayments() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://cozydorms.life/modules/mobile-api/owner_payments_api.php?owner_email=${widget.ownerEmail}'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['ok'] == true) {
+          setState(() {
+            stats = data['stats'];
+            payments = data['payments'];
+            isLoading = false;
+          });
+        } else {
+          throw Exception(data['error']);
+        }
+      } else {
+        throw Exception('Server error');
+      }
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+    }
+  }
+
+  List<dynamic> getFilteredPayments() {
+    if (selectedFilter == 'All') return payments;
+    return payments.where((p) => 
+      p['status'].toString().toLowerCase() == selectedFilter.toLowerCase()
+    ).toList();
+  }
+
+  @override 
   Widget build(BuildContext context) {
     final orange = const Color(0xFFFF9800);
 
@@ -27,8 +86,11 @@ class OwnerPaymentsScreen extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 32),
+        child: isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : error != null
+        ? Center(child: Text(error!))
+        : SingleChildScrollView(
           child: Column(
             children: [
               // ----------- STAT CARDS SECTION -----------
@@ -40,7 +102,7 @@ class OwnerPaymentsScreen extends StatelessWidget {
                     Expanded(
                       child: _StatCard(
                         label: "Total Revenue",
-                        value: "₱22,000",
+                        value: "₱${(stats['monthly_revenue'] ?? 0).toStringAsFixed(2)}",
                         sublabel: "This month",
                         color: Colors.white,
                         textColor: Colors.orange,
@@ -51,7 +113,7 @@ class OwnerPaymentsScreen extends StatelessWidget {
                     Expanded(
                       child: _StatCard(
                         label: "Pending",
-                        value: "₱14,000",
+                        value: "₱${(stats['pending_amount'] ?? 0).toStringAsFixed(2)}",
                         sublabel: "Outstanding",
                         color: const Color(0xFFFFB74D),
                         textColor: Colors.white,
@@ -84,42 +146,34 @@ class OwnerPaymentsScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _FilterChip(label: "All", selected: true),
-                        _FilterChip(label: "Completed"),
-                        _FilterChip(label: "Pending"),
-                        _FilterChip(label: "Failed"),
+                        _FilterChip(label: "All", selected: selectedFilter == 'All'),
+                        _FilterChip(label: "Completed", selected: selectedFilter == 'Completed'),
+                        _FilterChip(label: "Pending", selected: selectedFilter == 'Pending'),
+                        _FilterChip(label: "Failed", selected: selectedFilter == 'Failed'),
                       ],
                     ),
                   ],
                 ),
               ),
               // ----------- PAYMENT CARDS LIST SECTION -----------
-              ListView(
+              ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                children: const [
-                  _PaymentCard(
-                    name: "Anna Cruz",
-                    dorm: "Sunset Dormitory - Room 2A",
-                    amount: "₱8,000",
-                    status: "Completed",
-                    dueDate: "Mar 1, 2024",
-                    paidDate: "Mar 1, 2024",
-                    method: "GCash",
-                    transactionId: "GC123456789",
-                  ),
-                  _PaymentCard(
-                    name: "Sarah Lee",
-                    dorm: "Sunset Dormitory - Room 3C",
-                    amount: "₱8,000",
-                    status: "Pending",
-                    dueDate: "Mar 1, 2024",
-                    paidDate: null,
-                    method: "GCash",
-                    transactionId: null,
-                  ),
-                ],
+                itemCount: getFilteredPayments().length,
+                itemBuilder: (context, index) {
+                  final payment = getFilteredPayments()[index];
+                  return _PaymentCard(
+                    name: payment['tenant_name'],
+                    dorm: "${payment['dorm_name']} - ${payment['room_type']}",
+                    amount: "₱${payment['amount'].toStringAsFixed(2)}",
+                    status: payment['status'],
+                    dueDate: payment['due_date'],
+                    paidDate: payment['payment_date'],
+                    method: payment['payment_method'] ?? 'Not specified',
+                    transactionId: payment['receipt_image'],
+                  );
+                },
               ),
             ],
           ),
