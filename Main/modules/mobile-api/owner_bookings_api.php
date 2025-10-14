@@ -22,6 +22,9 @@ try {
         exit;
     }
 
+    // Debug owner
+    error_log("Found owner ID: " . $owner['user_id']);
+
     // Fetch bookings for owner's dorms
     $stmt = $pdo->prepare("
         SELECT 
@@ -29,7 +32,7 @@ try {
             u.email as student_email,
             u.name as student_name,
             b.created_at as requested_at,
-            b.status,
+            COALESCE(b.status, 'pending') as status, -- Default to pending if NULL
             d.name as dorm,
             r.room_type,
             r.price,
@@ -43,31 +46,36 @@ try {
         WHERE d.owner_id = ?
         ORDER BY b.created_at DESC
     ");
+    
     $stmt->execute([$owner['user_id']]);
     $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Debug bookings
+    error_log("Found " . count($bookings) . " bookings");
 
     // Format data for mobile app
     $formatted = array_map(function($b) {
         return [
             'id' => $b['id'],
             'student_email' => $b['student_email'],
-            'student_name' => $b['student_name'], 
+            'student_name' => $b['student_name'],
             'requested_at' => timeAgo($b['requested_at']),
             'status' => ucfirst(strtolower($b['status'])),
             'dorm' => $b['dorm'],
             'room_type' => $b['room_type'],
-            'duration' => $b['duration'],
+            'duration' => $b['duration'] ?? 'Not specified',
             'start_date' => $b['start_date'],
             'price' => '₱' . number_format($b['price'], 2),
             'message' => $b['message'] ?? 'No additional message'
         ];
     }, $bookings);
 
+    error_log("Formatted " . count($formatted) . " bookings for response");
     echo json_encode(['ok' => true, 'bookings' => $formatted]);
 
 } catch (Exception $e) {
     error_log('Owner bookings API error: ' . $e->getMessage());
-    echo json_encode(['error' => 'Server error']);
+    echo json_encode(['error' => 'Server error: ' . $e->getMessage()]);
 }
 
 function timeAgo($datetime) {

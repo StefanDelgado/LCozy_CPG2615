@@ -4,7 +4,12 @@ import 'package:http/http.dart' as http;
 
 // ==================== OwnerBookingScreen Widget ====================
 class OwnerBookingScreen extends StatefulWidget {
-  const OwnerBookingScreen({super.key});
+  final String? ownerEmail; // Add this parameter
+  
+  const OwnerBookingScreen({
+    super.key,
+    this.ownerEmail,  // Make it optional for now to avoid breaking existing code
+  });
 
   @override
   State<OwnerBookingScreen> createState() => _OwnerBookingScreenState();
@@ -15,54 +20,85 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
   int selectedTab = 0;
   int pendingCount = 0;
   List bookings = [];
-  final String ownerEmail = "brad@gmail.com"; // Replace with actual owner email
+  
+  // Remove hardcoded email and use widget.ownerEmail
+  String get ownerEmail => widget.ownerEmail ?? ''; // Safe getter
 
   @override
   void initState() {
     super.initState();
-    fetchBookings();
+    if (ownerEmail.isNotEmpty) {  // Only fetch if we have an email
+      fetchBookings();
+    }
   }
 
   // ----------- FETCH BOOKINGS SECTION -----------
   Future<void> fetchBookings() async {
     try {
+      print('Fetching bookings for owner: $ownerEmail');
+      
       final response = await http.get(
         Uri.parse('http://cozydorms.life/modules/mobile-api/owner_bookings_api.php?owner_email=$ownerEmail'),
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['ok'] == true) {
+        print('Parsed data: $data');
+
+        if (data['ok'] == true && data['bookings'] != null) {
           setState(() {
-            bookings = data['bookings'];
+            bookings = List<Map<String, dynamic>>.from(data['bookings']);
+            print('All bookings: $bookings');
+            
             pendingCount = bookings.where((b) => 
-              b['status'].toString().toLowerCase() == 'pending'
+              (b['status'] ?? '').toString().toLowerCase() == 'pending'
             ).length;
+            print('Pending count: $pendingCount');
           });
         } else {
-          throw Exception(data['error'] ?? 'Failed to load bookings');
+          print('API returned error: ${data['error'] ?? 'Unknown error'}');
         }
       } else {
         throw Exception('Server error: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching bookings: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load bookings'))
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load bookings: ${e.toString()}'))
+        );
+      }
     }
   }
 
-  @override
+  @override 
   Widget build(BuildContext context) {
     final orange = const Color(0xFFFF9800);
+    
+    print('Current tab: $selectedTab'); // Debug selected tab
+    
+    // Debug raw bookings before filtering
+    print('Before filtering - All bookings: $bookings');
+    
     List filteredBookings;
-    // ----------- TAB FILTERING LOGIC SECTION -----------
     if (selectedTab == 0) {
-      filteredBookings = bookings.where((b) => b['status'] == 'Pending').toList();
+      filteredBookings = bookings.where((b) {
+        final status = b['status']?.toString().toLowerCase() ?? '';
+        print('Checking booking status: $status'); // Debug each status
+        return status == 'pending';
+      }).toList();
     } else {
-      filteredBookings = bookings.where((b) => b['status'] == 'Approved').toList();
+      filteredBookings = bookings.where((b) {
+        final status = b['status']?.toString().toLowerCase() ?? '';
+        print('Checking booking status: $status'); // Debug each status  
+        return status == 'approved';
+      }).toList();
     }
+    
+    print('After filtering - Filtered bookings: $filteredBookings'); // Debug filtered results
 
     // ----------- MAIN UI SECTION -----------
     return Scaffold(
