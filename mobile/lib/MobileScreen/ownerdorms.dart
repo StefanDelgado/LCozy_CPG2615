@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/services.dart';
 
 class OwnerDormsScreen extends StatefulWidget {
   final String ownerEmail;
@@ -186,7 +187,10 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
             itemCount: dorms.length,
             itemBuilder: (context, index) {
               final dorm = dorms[index];
-              return DormCard(dorm: dorm);
+              return DormCard(
+                dorm: dorm,
+                ownerEmail: widget.ownerEmail, // Pass owner email
+              );
             },
           ),
       floatingActionButton: FloatingActionButton(
@@ -207,71 +211,294 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
   }
 }
 
+class RoomManagementScreen extends StatefulWidget {
+  final Map<String, dynamic> dorm;
+  final String ownerEmail;
+
+  const RoomManagementScreen({
+    Key? key,
+    required this.dorm,
+    required this.ownerEmail,
+  }) : super(key: key);
+
+  @override
+  State<RoomManagementScreen> createState() => _RoomManagementScreenState();
+}
+
+class _RoomManagementScreenState extends State<RoomManagementScreen> {
+  List<Map<String, dynamic>> rooms = [];
+  bool isLoading = true;
+  
+  final _formKey = GlobalKey<FormState>();
+  final _roomTypeController = TextEditingController();
+  final _capacityController = TextEditingController();
+  final _priceController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchRooms();
+  }
+
+  Future<void> fetchRooms() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://cozydorms.life/modules/mobile-api/fetch_rooms.php?dorm_id=${widget.dorm['dorm_id']}'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['ok'] == true) {
+          setState(() {
+            rooms = List<Map<String, dynamic>>.from(data['rooms']);
+            isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error fetching rooms: $e');
+    }
+  }
+
+  Future<void> _addRoom() async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://cozydorms.life/modules/mobile-api/add_room_api.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'owner_email': widget.ownerEmail,
+          'dorm_id': widget.dorm['dorm_id'],
+          'room_type': _roomTypeController.text,
+          'capacity': int.parse(_capacityController.text),
+          'price': double.parse(_priceController.text),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['ok'] == true) {
+          _roomTypeController.clear();
+          _capacityController.clear();
+          _priceController.clear();
+          await fetchRooms();
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Room added successfully'))
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'))
+      );
+    }
+  }
+
+  void _showAddRoomDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Add New Room'),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(labelText: 'Room Type'),
+                items: ['Single', 'Double', 'Twin', 'Suite']
+                    .map((type) => DropdownMenuItem(
+                          value: type,
+                          child: Text(type),
+                        ))
+                    .toList(),
+                onChanged: (value) => _roomTypeController.text = value ?? '',
+                validator: (value) => value == null ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _capacityController,
+                decoration: InputDecoration(labelText: 'Capacity'),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _priceController,
+                decoration: InputDecoration(labelText: 'Price (₱)'),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_formKey.currentState?.validate() ?? false) {
+                _addRoom();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+            ),
+            child: Text('Add Room'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Manage Rooms'),
+        backgroundColor: Colors.orange,
+      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              padding: EdgeInsets.all(16),
+              itemCount: rooms.length,
+              itemBuilder: (context, index) {
+                final room = rooms[index];
+                return Card(
+                  child: ListTile(
+                    title: Text(room['room_type']),
+                    subtitle: Text(
+                      'Capacity: ${room['capacity']} • ₱${room['price']}',
+                    ),
+                    trailing: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: room['status'] == 'vacant'
+                            ? Colors.green.withOpacity(0.1)
+                            : Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        room['status'].toString().toUpperCase(),
+                        style: TextStyle(
+                          color: room['status'] == 'vacant'
+                              ? Colors.green
+                              : Colors.orange,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddRoomDialog,
+        child: Icon(Icons.add),
+        backgroundColor: Colors.orange,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _roomTypeController.dispose();
+    _capacityController.dispose();
+    _priceController.dispose();
+    super.dispose();
+  }
+}
+
+// Update the DormCard class to make it tappable
 class DormCard extends StatelessWidget {
   final Map<String, dynamic> dorm;
+  final String ownerEmail;
 
-  const DormCard({Key? key, required this.dorm}) : super(key: key);
+  const DormCard({
+    Key? key,
+    required this.dorm,
+    required this.ownerEmail,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (dorm['cover_image'] != null)
-            Image.network(
-              'http://cozydorms.life/uploads/${dorm['cover_image']}',
-              height: 150,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                height: 150,
-                color: Colors.grey[200],
-                child: Icon(Icons.image_not_supported, color: Colors.grey),
+      child: InkWell( // Make the card tappable
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RoomManagementScreen(
+                dorm: dorm,
+                ownerEmail: ownerEmail,
               ),
             ),
-          Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        dorm['name'] ?? 'Unnamed Dorm',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (dorm['cover_image'] != null)
+              Image.network(
+                'http://cozydorms.life/uploads/${dorm['cover_image']}',
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 150,
+                  color: Colors.grey[200],
+                  child: Icon(Icons.image_not_supported, color: Colors.grey),
+                ),
+              ),
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          dorm['name'] ?? 'Unnamed Dorm',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    _buildStatusBadge(dorm['verified']),
-                  ],
-                ),
-                SizedBox(height: 8),
-                Text(
-                  dorm['address'] ?? 'No address provided',
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-                if (dorm['description'] != null) ...[
+                      _buildStatusBadge(dorm['verified']),
+                    ],
+                  ),
                   SizedBox(height: 8),
-                  Text(dorm['description']),
-                ],
-                SizedBox(height: 16),
-                Row(
-                  children: [
-                    _buildInfoChip(Icons.meeting_room, '${dorm['room_count'] ?? 0} Rooms'),
-                    SizedBox(width: 12),
-                    _buildInfoChip(Icons.book, '${dorm['active_bookings'] ?? 0} Active'),
+                  Text(
+                    dorm['address'] ?? 'No address provided',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  if (dorm['description'] != null) ...[
+                    SizedBox(height: 8),
+                    Text(dorm['description']),
                   ],
-                ),
-              ],
+                  SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _buildInfoChip(Icons.meeting_room, '${dorm['room_count'] ?? 0} Rooms'),
+                      SizedBox(width: 12),
+                      _buildInfoChip(Icons.book, '${dorm['active_bookings'] ?? 0} Active'),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
