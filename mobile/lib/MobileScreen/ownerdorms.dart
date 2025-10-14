@@ -18,6 +18,12 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
   bool isLoading = true;
   List<Map<String, dynamic>> dorms = [];
   String? error;
+  
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _featuresController = TextEditingController();
 
   @override
   void initState() {
@@ -52,6 +58,116 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
     }
   }
 
+  Future<void> _addDorm() async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://cozydorms.life/modules/mobile-api/add_dorm_api.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'owner_email': widget.ownerEmail,
+          'name': _nameController.text,
+          'address': _addressController.text,
+          'description': _descriptionController.text,
+          'features': _featuresController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['ok'] == true) {
+          // Clear form
+          _nameController.clear();
+          _addressController.clear();
+          _descriptionController.clear();
+          _featuresController.clear();
+          
+          // Refresh dorms list
+          await fetchDorms();
+          
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Dorm added successfully'))
+          );
+          
+          Navigator.pop(context); // Close dialog
+        } else {
+          throw Exception(data['error']);
+        }
+      } else {
+        throw Exception('Server error');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}'))
+      );
+    }
+  }
+
+  void _showAddDormDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Add New Dormitory'),
+        content: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: 'Dorm Name'),
+                  validator: (value) => 
+                    value?.isEmpty ?? true ? 'Required' : null,
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _addressController,
+                  decoration: InputDecoration(labelText: 'Address'),
+                  validator: (value) => 
+                    value?.isEmpty ?? true ? 'Required' : null,
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: InputDecoration(labelText: 'Description'),
+                  maxLines: 3,
+                  validator: (value) => 
+                    value?.isEmpty ?? true ? 'Required' : null,
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _featuresController,
+                  decoration: InputDecoration(
+                    labelText: 'Features',
+                    helperText: 'Comma separated (e.g. WiFi, Aircon, etc.)'
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_formKey.currentState?.validate() ?? false) {
+                _addDorm();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+            ),
+            child: Text('Add Dorm'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,13 +190,20 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
             },
           ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Implement add dorm
-        },
+        onPressed: _showAddDormDialog,
         child: Icon(Icons.add),
         backgroundColor: Colors.orange,
       ),
     );
+  }
+  
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _addressController.dispose();
+    _descriptionController.dispose();
+    _featuresController.dispose();
+    super.dispose();
   }
 }
 
