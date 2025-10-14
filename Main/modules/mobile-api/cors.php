@@ -1,9 +1,17 @@
 <?php
+// Enable JSON output and CORS access
 header('Content-Type: application/json; charset=utf-8');
-// During development allow any origin. Restrict this in production.
+
+// Allow any domain (for testing); later restrict to your Flutter web origin
 header('Access-Control-Allow-Origin: *');
+
+// Allow the methods your API uses
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+
+// Allow all headers your app might send
+header('Access-Control-Allow-Headers: Content-Type, Accept, Authorization, X-Requested-With, X-App-Client');
+
+// Handle preflight OPTIONS requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   http_response_code(204);
   exit;
