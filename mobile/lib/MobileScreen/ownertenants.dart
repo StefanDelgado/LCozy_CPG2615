@@ -252,10 +252,51 @@ class TenantCard extends StatelessWidget {
     color: Colors.black54
   );
 
+  String getInitials(String? name) {
+    if (name == null || name.isEmpty) return '??';
+    return name.split(' ')
+        .where((s) => s.isNotEmpty)
+        .take(2)
+        .map((e) => e[0])
+        .join('')
+        .toUpperCase();
+  }
+
+  String calculateDaysUntilDue(String? nextDueDate) {
+    if (nextDueDate == null) return 'Not set';
+    try {
+      final due = DateTime.parse(nextDueDate);
+      final today = DateTime.now();
+      final difference = due.difference(today).inDays;
+      if (difference < 0) return 'Overdue';
+      if (difference == 0) return 'Due today';
+      return '$difference days';
+    } catch (e) {
+      return 'Invalid date';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final green = Color(0xFF27AE60);
+    final green = const Color(0xFF27AE60);
     
+    // Safely get values with defaults
+    final tenantName = tenant['tenant_name']?.toString() ?? 'No Name';
+    final dormName = tenant['dorm_name']?.toString() ?? 'Unknown Dorm';
+    final roomType = tenant['room_type']?.toString() ?? 'Unknown Room';
+    final email = tenant['email']?.toString() ?? 'No email';
+    final phone = tenant['phone']?.toString() ?? 'No phone';
+    final checkIn = tenant['start_date']?.toString() ?? 'Not set';
+    final contractEnd = tenant['end_date']?.toString() ?? 'Not set';
+    final monthlyRent = tenant['price']?.toString() ?? '0';
+    final lastPayment = tenant['last_payment_date']?.toString() ?? 'No payment';
+    final nextPayment = tenant['next_due_date']?.toString() ?? 'Not set';
+    final paymentStatus = tenant['payment_status']?.toString().toLowerCase() ?? 'pending';
+
+    // Update the room information to include room number
+    final roomNumber = tenant['room_number']?.toString();
+    final roomInfo = '$dormName - $roomType${roomNumber != null ? ' (Room $roomNumber)' : ''}';
+
     return Container(
       margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -272,7 +313,6 @@ class TenantCard extends StatelessWidget {
       ),
       padding: EdgeInsets.all(18),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -280,7 +320,7 @@ class TenantCard extends StatelessWidget {
                 backgroundColor: Colors.orange[50],
                 radius: 26,
                 child: Text(
-                  tenant['tenant_name'].toString().split(' ').map((e) => e[0]).take(2).join(''),
+                  getInitials(tenantName),
                   style: TextStyle(
                     color: Colors.orange[700],
                     fontWeight: FontWeight.bold,
@@ -293,15 +333,15 @@ class TenantCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      tenant['tenant_name'],
-                      style: TextStyle(
+                      tenantName,
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 17,
                       ),
                     ),
                     Text(
-                      '${tenant['dorm_name']} - ${tenant['room_type']}',
-                      style: TextStyle(
+                      roomInfo,  // Updated to use combined room info
+                      style: const TextStyle(
                         color: Colors.black87,
                         fontSize: 14.5,
                       ),
@@ -309,19 +349,19 @@ class TenantCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (isActive && tenant['payment_status'] != null)
+              if (isActive)
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                   decoration: BoxDecoration(
-                    color: tenant['payment_status'] == 'paid' 
+                    color: paymentStatus == 'paid' 
                       ? green.withOpacity(0.12)
                       : Colors.orange.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    tenant['payment_status'].toString().toUpperCase(),
+                    paymentStatus.toUpperCase(),
                     style: TextStyle(
-                      color: tenant['payment_status'] == 'paid' ? green : Colors.orange,
+                      color: paymentStatus == 'paid' ? green : Colors.orange,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -336,7 +376,7 @@ class TenantCard extends StatelessWidget {
               Icon(Icons.email_outlined, color: Colors.grey[600], size: 18),
               const SizedBox(width: 6),
               Text(
-                tenant['email'],
+                email,
                 style: const TextStyle(fontSize: 13.5),
               ),
             ],
@@ -347,7 +387,7 @@ class TenantCard extends StatelessWidget {
               Icon(Icons.phone, color: Colors.grey[600], size: 18),
               const SizedBox(width: 6),
               Text(
-                tenant['phone'],
+                phone,
                 style: const TextStyle(fontSize: 13.5),
               ),
             ],
@@ -369,7 +409,7 @@ class TenantCard extends StatelessWidget {
                       const Text("Check-in:", style: TextStyle(fontSize: 13, color: Colors.black54)),
                       const SizedBox(height: 2),
                       Text(
-                        tenant['check_in'],
+                        checkIn,
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                     ],
@@ -390,7 +430,7 @@ class TenantCard extends StatelessWidget {
                       const Text("Contract End:", style: TextStyle(fontSize: 13, color: Colors.black54)),
                       const SizedBox(height: 2),
                       Text(
-                        tenant['contract_end'],
+                        contractEnd,
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                     ],
@@ -435,7 +475,7 @@ class TenantCard extends StatelessWidget {
                           Text("Monthly Rent:", style: labelStyle),
                           const SizedBox(height: 2),
                           Text(
-                            tenant['monthly_rent'],
+                            monthlyRent,
                             style: const TextStyle(
                               color: Colors.green,
                               fontWeight: FontWeight.bold,
@@ -446,7 +486,7 @@ class TenantCard extends StatelessWidget {
                           Text("Next Payment:", style: labelStyle),
                           const SizedBox(height: 2),
                           Text(
-                            tenant['next_payment'],
+                            nextPayment,
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                         ],
@@ -459,15 +499,15 @@ class TenantCard extends StatelessWidget {
                           Text("Last Payment:", style: labelStyle),
                           const SizedBox(height: 2),
                           Text(
-                            tenant['last_payment'],
+                            lastPayment,
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                           const SizedBox(height: 10),
                           Text("Days Until Due:", style: labelStyle),
                           const SizedBox(height: 2),
                           Text(
-                            tenant['days_until_due'],
-                            style: const TextStyle(
+                            calculateDaysUntilDue(nextPayment),
+                            style: TextStyle(
                               color: Colors.blue,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
