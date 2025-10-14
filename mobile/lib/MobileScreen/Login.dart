@@ -55,15 +55,13 @@ class _LoginScreenState extends State<LoginScreen> {
       final response = await http.post(
         url,
         headers: {
+          'Content-Type': 'application/json',
           'Accept': 'application/json',
-          // Optionally include an app identifier:
-          'X-App-Client': 'cozydorm-mobile',
         },
-        body: {
+        body: jsonEncode({  // Convert to JSON string
           'email': email,
-          'password': password,
-          'ajax': '1', // hint to server to return JSON
-        },
+          'password': password
+        }),
       );
 
       print('Status code: ${response.statusCode}');

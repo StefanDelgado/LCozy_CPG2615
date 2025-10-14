@@ -6,10 +6,10 @@ header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
 // Allow the methods your API uses
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 
 // Allow all headers your app might send
-header('Access-Control-Allow-Headers: Content-Type, Accept, Authorization, X-Requested-With, X-App-Client');
+header('Access-Control-Allow-Headers: Content-Type, Accept, X-Requested-With');
 
 // Handle preflight OPTIONS requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
