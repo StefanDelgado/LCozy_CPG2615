@@ -352,6 +352,125 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     );
   }
 
+  Future<void> _deleteRoom(int roomId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://cozydorms.life/modules/mobile-api/delete_room_api.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'owner_email': widget.ownerEmail,
+          'room_id': roomId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['ok'] == true) {
+          await fetchRooms();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Room deleted successfully'))
+          );
+        } else {
+          throw Exception(data['error']);
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'))
+      );
+    }
+  }
+
+  Future<void> _editRoom(Map<String, dynamic> room) async {
+    _roomTypeController.text = room['room_type'];
+    _capacityController.text = room['capacity'].toString();
+    _priceController.text = room['price'].toString();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit Room'),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(labelText: 'Room Type'),
+                value: _roomTypeController.text,
+                items: ['Single', 'Double', 'Twin', 'Suite']
+                    .map((type) => DropdownMenuItem(
+                          value: type,
+                          child: Text(type),
+                        ))
+                    .toList(),
+                onChanged: (value) => _roomTypeController.text = value ?? '',
+                validator: (value) => value == null ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _capacityController,
+                decoration: InputDecoration(labelText: 'Capacity'),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _priceController,
+                decoration: InputDecoration(labelText: 'Price (₱)'),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (_formKey.currentState?.validate() ?? false) {
+                try {
+                  final response = await http.post(
+                    Uri.parse('http://cozydorms.life/modules/mobile-api/edit_room_api.php'),
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({
+                      'owner_email': widget.ownerEmail,
+                      'room_id': room['room_id'],
+                      'room_type': _roomTypeController.text,
+                      'capacity': int.parse(_capacityController.text),
+                      'price': double.parse(_priceController.text),
+                    }),
+                  );
+
+                  if (response.statusCode == 200) {
+                    final data = jsonDecode(response.body);
+                    if (data['ok'] == true) {
+                      await fetchRooms();
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Room updated successfully'))
+                      );
+                    }
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'))
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+            ),
+            child: Text('Save Changes'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -372,27 +491,74 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
                     subtitle: Text(
                       'Capacity: ${room['capacity']} • ₱${room['price']}',
                     ),
-                    trailing: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: room['status'] == 'vacant'
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        room['status'].toString().toUpperCase(),
-                        style: TextStyle(
-                          color: room['status'] == 'vacant'
-                              ? Colors.green
-                              : Colors.orange,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: room['status'] == 'vacant'
+                                ? Colors.green.withOpacity(0.1)
+                                : Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            room['status'].toString().toUpperCase(),
+                            style: TextStyle(
+                              color: room['status'] == 'vacant'
+                                  ? Colors.green
+                                  : Colors.orange,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
-                      ),
+                        PopupMenuButton(
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              child: ListTile(
+                                leading: Icon(Icons.edit),
+                                title: Text('Edit'),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              onTap: () => Future(() => _editRoom(room)),
+                            ),
+                            PopupMenuItem(
+                              child: ListTile(
+                                leading: Icon(Icons.delete, color: Colors.red),
+                                title: Text('Delete', style: TextStyle(color: Colors.red)),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              onTap: () => showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Delete Room'),
+                                  content: Text('Are you sure you want to delete this room?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        _deleteRoom(room['room_id']);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                      ),
+                                      child: Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 );
