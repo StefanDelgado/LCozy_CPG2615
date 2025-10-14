@@ -25,6 +25,8 @@ class OwnerDashboardScreen extends StatefulWidget {
 // ==================== OwnerDashboardScreen State ====================
 class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   int _selectedIndex = 0;
+  Map<String, dynamic> dashboardData = {};
+  bool isLoading = true;
 
   // ----------- NAVIGATION LOGIC SECTION -----------
   void _onNavTap(int index) {
@@ -72,6 +74,32 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    fetchDashboardData();
+  }
+
+  // ----------- FETCH DASHBOARD DATA SECTION -----------
+  Future<void> fetchDashboardData() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://cozydorms.life/modules/mobile-api/owner_dashboard_api.php?owner_email=${widget.ownerEmail}'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          dashboardData = data;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Dashboard fetch error: $e');
+      setState(() => isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final orange = const Color(0xFFFF9800);
 
@@ -101,6 +129,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             onMessagesTap: _onQuickActionMessages,
             onPaymentsTap: _onQuickActionPayments,
             onTenantsTap: _onQuickActionTenants,
+            isLoading: isLoading,
+            dashboardData: dashboardData,
           ),
           const OwnerBookingScreen(),
           OwnerMessagesListScreen(ownerEmail: widget.ownerEmail),
@@ -220,12 +250,16 @@ class _DashboardHome extends StatelessWidget {
   final VoidCallback onMessagesTap;
   final VoidCallback onPaymentsTap;
   final VoidCallback onTenantsTap;
+  final bool isLoading;
+  final Map<String, dynamic> dashboardData;
 
   const _DashboardHome({
     required this.onBookingRequestsTap,
     required this.onMessagesTap,
     required this.onPaymentsTap,
     required this.onTenantsTap,
+    required this.isLoading,
+    required this.dashboardData,
   });
 
   @override
@@ -273,17 +307,17 @@ class _DashboardHome extends StatelessWidget {
                   children: [
                     _StatCard(
                       icon: Icons.meeting_room,
-                      value: "25",
+                      value: "${dashboardData['stats']?['rooms'] ?? '0'}",
                       label: "Total Rooms",
                     ),
                     _StatCard(
                       icon: Icons.people,
-                      value: "12",
-                      label: "Total Tenants",
+                      value: "${dashboardData['stats']?['tenants'] ?? '0'}",
+                      label: "Total Tenants", 
                     ),
                     _StatCard(
                       icon: Icons.attach_money,
-                      value: "₱84K",
+                      value: "₱${((dashboardData['stats']?['monthly_revenue'] ?? 0)/1000).toStringAsFixed(1)}K",
                       label: "Monthly Revenue",
                     ),
                   ],
@@ -437,9 +471,48 @@ class _DashboardHome extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
+          // ----------- RECENT ACTIVITIES SECTION (DYNAMIC) -----------
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: (dashboardData['stats']?['recent_activities'] ?? []).length,
+              itemBuilder: (context, index) {
+                final activity = dashboardData['stats']['recent_activities'][index];
+                final isPayment = activity['type'] == 'payment';
+                
+                return _ActivityTile(
+                  icon: isPayment ? Icons.payments : Icons.meeting_room,
+                  iconBg: isPayment ? Color(0xFFE0F7E9) : Color(0xFFFFF3E0),
+                  iconColor: isPayment ? Colors.green : Colors.orange,
+                  title: isPayment ? 'Payment Received' : 'New Booking Request',
+                  subtitle: isPayment 
+                    ? "${activity['student_name']} paid ₱${activity['amount']} for ${activity['dorm_name']}"
+                    : "${activity['student_name']} requested to book ${activity['dorm_name']}",
+                  time: _formatTimeAgo(DateTime.parse(activity['created_at'])),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  // ----------- TIME AGO FORMATTER -----------
+  String _formatTimeAgo(DateTime dateTime) {
+    final difference = DateTime.now().difference(dateTime);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
   }
 }
 
