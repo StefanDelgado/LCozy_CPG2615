@@ -64,7 +64,6 @@ try {
             p.status,
             DATE_FORMAT(p.due_date, '%Y-%m-%d') as due_date,
             DATE_FORMAT(p.payment_date, '%Y-%m-%d') as payment_date,
-            p.payment_method,
             p.receipt_image,
             DATE_FORMAT(p.created_at, '%Y-%m-%d %H:%i:%s') as created_at
         FROM payments p
