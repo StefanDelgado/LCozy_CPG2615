@@ -300,13 +300,10 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => BookingFormScreen(
-                              property: {
-                                'dorm_id': dormDetails['dorm_id']?.toString() ?? '',
-                                'name': dormDetails['name'] ?? '',
-                                'address': dormDetails['address'] ?? '',
-                                'price': pricing['min_price']?.toString() ?? '0',
-                              },
-                              studentEmail: 'student@email.com', // TODO: Get from auth
+                              dormId: dormDetails['dorm_id']?.toString() ?? '',
+                              dormName: dormDetails['name'] ?? '',
+                              rooms: rooms,
+                              studentEmail: 'student@email.com', // TODO: Get from actual auth
                             ),
                           ),
                         );
@@ -317,6 +314,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   padding: const EdgeInsets.symmetric(vertical: 12),
+                  disabledBackgroundColor: Colors.grey,
                 ),
               ),
             ),
