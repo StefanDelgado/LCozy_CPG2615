@@ -3,6 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'viewdetails.dart';
 import 'browse_dorms.dart';
+//import 'student_bookings.dart';
+//import 'student_payments.dart';
+//import 'student_messages.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   final String userName;
@@ -38,7 +41,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/student_dashboard_api.php?student_email=${widget.userEmail}'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/student_dashboard_api.php?student_email=${Uri.encodeComponent(widget.userEmail)}'),
       );
 
       print('Dashboard API Response: ${response.statusCode}');
@@ -46,18 +49,13 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['ok'] == true) {
+        if (data['ok'] == true && data['stats'] != null) {
           setState(() {
-            dashboardData = data['stats'] ?? {
-              'active_reservations': 0,
-              'payments_due': 0,
-              'unread_messages': 0,
-              'active_bookings': []
-            };
+            dashboardData = data['stats'];
             isLoading = false;
           });
         } else {
-          throw Exception(data['error'] ?? 'Unknown error');
+          throw Exception(data['error'] ?? 'Invalid response format');
         }
       } else {
         throw Exception('Server returned ${response.statusCode}');
@@ -66,7 +64,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       print('Dashboard fetch error: $e');
       setState(() {
         error = 'Failed to load dashboard: ${e.toString()}';
-        // Set default values so UI doesn't break
+        // Set default empty values
         dashboardData = {
           'active_reservations': 0,
           'payments_due': 0,
@@ -78,70 +76,111 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
   }
 
+  void _onNavTap(int index) {
+    setState(() => _selectedIndex = index);
+    
+    switch (index) {
+      case 1: // Browse
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const BrowseDormsScreen()),
+        );
+        break;
+      case 2: // Bookings
+        Navigator.pushNamed(context, '/student_reservations');
+        break;
+      case 3: // Messages
+        Navigator.pushNamed(context, '/student_messages');
+        break;
+      case 4: // Profile
+        // TODO: Navigate to profile screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile feature coming soon')),
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final orange = const Color(0xFFFF9800);
     final scaffoldBg = const Color(0xFFF9F6FB);
-    final panelBg = Colors.white;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      // removed BottomNavigationBar that contained the Wishlist
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onNavTap,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: orange,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Browse'),
+          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Bookings'),
+          BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // Orange header similar to owner dashboard
+            // Orange header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [orange.withOpacity(0.95), orange],
+                  colors: [orange, orange.withOpacity(0.8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
                 ),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.school, color: orange, size: 28),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Student Dashboard', style: TextStyle(color: Colors.white70)),
-                        Text(widget.userName,
-                            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.notifications_none, color: Colors.white),
-                    onPressed: () {},
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Welcome back!',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.userName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 28),
+                        onPressed: () {},
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
 
-            // Main white panel (owner-like)
+            // Main content
             Expanded(
               child: Container(
-                width: double.infinity,
-                margin: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: panelBg,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 6))],
-                ),
+                color: scaffoldBg,
                 child: isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : error.isNotEmpty
@@ -149,83 +188,135 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.error_outline, size: 48, color: Colors.grey),
-                                SizedBox(height: 16),
-                                Text(
+                                const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                                const SizedBox(height: 16),
+                                const Text(
                                   'Error loading dashboard',
                                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(height: 8),
-                                Text(
-                                  error,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.grey),
+                                const SizedBox(height: 8),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                                  child: Text(
+                                    error,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
                                 ),
-                                SizedBox(height: 16),
+                                const SizedBox(height: 16),
                                 ElevatedButton(
                                   onPressed: fetchDashboardData,
-                                  child: Text('Retry'),
+                                  child: const Text('Retry'),
                                 ),
                               ],
                             ),
                           )
-                        : SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Stats row (owner-like cards)
-                                Row(
-                                  children: [
-                                    _miniStat('Active', '${dashboardData['active_reservations'] ?? 0}', orange),
-                                    _miniStat('Due', '₱${dashboardData['payments_due'] ?? 0}', Colors.redAccent),
-                                    _miniStat('Messages', '${dashboardData['unread_messages'] ?? 0}', Colors.green),
-                                  ],
-                                ),
-                                const SizedBox(height: 18),
+                        : RefreshIndicator(
+                            onRefresh: fetchDashboardData,
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Stats row
+                                  Row(
+                                    children: [
+                                      _miniStat('Active', '${dashboardData['active_reservations'] ?? 0}', orange),
+                                      _miniStat('Due', '₱${dashboardData['payments_due'] ?? 0}', Colors.redAccent),
+                                      _miniStat('Messages', '${dashboardData['unread_messages'] ?? 0}', Colors.green),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 24),
 
-                                // Quick actions (owner-style tiles)
-                                Text('Quick Actions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 10),
-                                Wrap(
-                                  spacing: 12,
-                                  runSpacing: 12,
-                                  children: [
-                                    _actionTile(Icons.search, 'Browse Dorms', orange, () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const BrowseDormsScreen()),
-                                      );
-                                    }),
-                                    _actionTile(Icons.book_online, 'My Bookings', Colors.orange.shade200, () {
-                                      Navigator.pushNamed(context, '/student_reservations');
-                                    }),
-                                    _actionTile(Icons.payments, 'Payments', Colors.orange.shade200, () {
-                                      Navigator.pushNamed(context, '/student_payments');
-                                    }),
-                                    _actionTile(Icons.message, 'Messages', Colors.orange.shade200, () {
-                                      Navigator.pushNamed(context, '/student_messages');
-                                    }),
-                                  ],
-                                ),
-                                const SizedBox(height: 18),
+                                  // Active Bookings Section
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Active Bookings',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      if ((dashboardData['active_bookings'] as List?)?.isNotEmpty ?? false)
+                                        TextButton(
+                                          onPressed: () {
+                                            // Navigate to all bookings
+                                          },
+                                          child: const Text('View All'),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
 
-                                // Notifications (replaces Featured Properties)
-                                Text('Notifications', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-                                const SizedBox(height: 12),
-                                // Show notifications returned from the dashboard API. Expected shape: List of {title, body, time}
-                                if ((dashboardData['notifications'] ?? []).isEmpty)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 24),
-                                    alignment: Alignment.center,
-                                    child: Text('No notifications', style: TextStyle(color: Colors.black54)),
-                                  )
-                                else
-                                  Column(
-                                    children: List<Widget>.from(
-                                      (dashboardData['notifications'] as List).map((n) => _notificationTile(n)),
+                                  // Bookings List
+                                  if ((dashboardData['active_bookings'] as List?)?.isEmpty ?? true)
+                                    Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(32.0),
+                                        child: Column(
+                                          children: [
+                                            Icon(Icons.bookmark_border, size: 64, color: Colors.grey[300]),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              'No active bookings',
+                                              style: TextStyle(color: Colors.grey[600]),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => const BrowseDormsScreen(),
+                                                  ),
+                                                );
+                                              },
+                                              child: const Text('Browse Dorms'),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    ...((dashboardData['active_bookings'] as List).map((booking) {
+                                      return _buildBookingCard(booking);
+                                    })),
+
+                                  const SizedBox(height: 24),
+
+                                  // Quick Actions
+                                  const Text(
+                                    'Quick Actions',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                              ],
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      _quickAction(Icons.search, 'Browse', () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const BrowseDormsScreen(),
+                                          ),
+                                        );
+                                      }),
+                                      _quickAction(Icons.payment, 'Payments', () {
+                                        Navigator.pushNamed(context, '/student_payments');
+                                      }),
+                                      _quickAction(Icons.message, 'Messages', () {
+                                        Navigator.pushNamed(context, '/student_messages');
+                                      }),
+                                      _quickAction(Icons.help, 'Help', () {}),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
               ),
@@ -236,84 +327,173 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     );
   }
 
-  // helper for small stat card
   Widget _miniStat(String label, String value, Color color) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        margin: const EdgeInsets.symmetric(horizontal: 4),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 4),
-            Text(label, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            Text(
+              label,
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  // helper for quick action tile
-  Widget _actionTile(IconData icon, String label, Color bg, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        width: 150,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-        decoration: BoxDecoration(
-          color: bg.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: bg.withOpacity(0.18)),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(backgroundColor: bg, child: Icon(icon, color: Colors.white, size: 18), radius: 18),
-            const SizedBox(width: 10),
-            Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600))),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // helper to render a single notification entry
-  Widget _notificationTile(dynamic n) {
-    final title = n['title'] ?? 'Notification';
-    final body = n['body'] ?? '';
-    final time = n['time'] ?? '';
+  Widget _buildBookingCard(Map<String, dynamic> booking) {
+    final status = booking['status'] ?? 'pending';
+    final statusColor = status == 'approved' ? Colors.green : Colors.orange;
+    final dorm = booking['dorm'] ?? {};
+    final room = booking['room'] ?? {};
+    final daysUntil = booking['days_until_checkin'] ?? 0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(radius: 18, backgroundColor: Colors.orange.shade100, child: Icon(Icons.notifications, color: Colors.orange)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 6),
-                Text(body, style: const TextStyle(color: Colors.black87)),
-                if (time.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(time, style: const TextStyle(fontSize: 12, color: Colors.black45)),
-                ]
-              ],
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  dorm['name'] ?? 'Unknown Dorm',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  status.toUpperCase(),
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            dorm['address'] ?? '',
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.meeting_room, size: 16, color: Colors.grey[600]),
+              const SizedBox(width: 4),
+              Text(
+                room['room_type'] ?? 'Unknown Room',
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+              const SizedBox(width: 16),
+              Icon(Icons.people, size: 16, color: Colors.grey[600]),
+              const SizedBox(width: 4),
+              Text(
+                '${room['capacity'] ?? 0} persons',
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '₱${room['price'] ?? 0}/month',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFFF9800),
+                ),
+              ),
+              if (daysUntil > 0)
+                Text(
+                  'Check-in in $daysUntil days',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _quickAction(IconData icon, String label, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.only(right: 8),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: const Color(0xFFFF9800)),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
