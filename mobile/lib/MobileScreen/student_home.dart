@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'browse_dorms.dart';
+import 'student_payments.dart';
 //import 'student_bookings.dart';
-//import 'student_payments.dart';
 //import 'student_messages.dart';
 
 class StudentHomeScreen extends StatefulWidget {
@@ -306,7 +306,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                                         );
                                       }),
                                       _quickAction(Icons.payment, 'Payments', () {
-                                        Navigator.pushNamed(context, '/student_payments');
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => StudentPaymentsScreen(userEmail: widget.userEmail),
+                                          ),
+                                        );
                                       }),
                                       _quickAction(Icons.message, 'Messages', () {
                                         Navigator.pushNamed(context, '/student_messages');
