@@ -4,7 +4,14 @@ require_once __DIR__ . '/cors.php';
 
 header('Content-Type: application/json');
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // Don't show errors in production
+ini_set('display_errors', 1); // Show errors for debugging
+
+// Check if PDO is initialized
+if (!isset($pdo) || $pdo === null) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'error' => 'Database connection not initialized']);
+    exit;
+}
 
 if (!isset($_GET['dorm_id'])) {
     http_response_code(400);
@@ -184,11 +191,23 @@ try {
     ]);
 
 } catch (PDOException $e) {
-    error_log('Dorm details API error: ' . $e->getMessage());
+    error_log('Dorm details API PDO error: ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['ok' => false, 'error' => 'Database error']);
+    echo json_encode([
+        'ok' => false, 
+        'error' => 'Database error', 
+        'debug' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
 } catch (Exception $e) {
     error_log('Dorm details API error: ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['ok' => false, 'error' => 'Server error']);
+    echo json_encode([
+        'ok' => false, 
+        'error' => 'Server error',
+        'debug' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
 }
