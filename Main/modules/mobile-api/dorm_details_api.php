@@ -101,7 +101,7 @@ try {
         SELECT 
             r.review_id,
             r.rating,
-            r.review,
+            r.comment,
             r.created_at,
             u.name as student_name
         FROM reviews r
@@ -182,7 +182,8 @@ try {
             return [
                 'review_id' => (int)$review['review_id'],
                 'rating' => (int)$review['rating'],
-                'review' => $review['review'],
+                'review' => $review['comment'] ?? '',
+                'comment' => $review['comment'] ?? '',
                 'student_name' => $review['student_name'],
                 'created_at' => $review['created_at'],
                 'stars' => str_repeat('⭐', (int)$review['rating'])
