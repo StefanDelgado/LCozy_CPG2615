@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'student_owner_chat.dart';
 import 'booking_form.dart';
+import 'browse_dorms.dart';
 
 // ==================== ViewDetailsScreen Widget ====================
 class ViewDetailsScreen extends StatelessWidget {
@@ -42,6 +43,7 @@ class ViewDetailsScreen extends StatelessWidget {
                             )
                           : Container(color: Colors.grey[300]),
                     ),
+                    // Back button
                     Positioned(
                       top: 16,
                       left: 16,
@@ -53,19 +55,12 @@ class ViewDetailsScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Positioned(
-                      top: 16,
-                      right: 16,
-                      child: CircleAvatar(
-                        backgroundColor: Colors.white,
-                        child: Icon(Icons.favorite_border, color: Colors.orange),
-                      ),
-                    ),
                   ],
                 ),
               ),
             ),
-            // ----------- TAB CONTROLLER SECTION -----------
+
+            // Content section
             Expanded(
               child: DefaultTabController(
                 length: 4,
@@ -91,29 +86,21 @@ class ViewDetailsScreen extends StatelessWidget {
                         ),
                         labelColor: Colors.orange,
                         unselectedLabelColor: Colors.grey,
-                        labelStyle: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        unselectedLabelStyle: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15,
-                        ),
                         tabs: [
                           Tab(
-                            icon: Icon(Icons.info_outline, color: Colors.orange),
+                            icon: Icon(Icons.info_outline),
                             text: 'Overview',
                           ),
                           Tab(
-                            icon: Icon(Icons.list_alt, color: Colors.orange),
+                            icon: Icon(Icons.list_alt),
                             text: 'Amenities',
                           ),
                           Tab(
-                            icon: Icon(Icons.map_outlined, color: Colors.orange),
+                            icon: Icon(Icons.map_outlined),
                             text: 'Maps',
                           ),
                           Tab(
-                            icon: Icon(Icons.contact_phone_outlined, color: Colors.orange),
+                            icon: Icon(Icons.contact_phone_outlined),
                             text: 'Contacts',
                           ),
                         ],
@@ -126,7 +113,7 @@ class ViewDetailsScreen extends StatelessWidget {
                         children: [
                           // ----------- OVERVIEW TAB SECTION -----------
                           SingleChildScrollView(
-                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: EdgeInsets.all(16),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -324,22 +311,33 @@ class ViewDetailsScreen extends StatelessWidget {
                                     color: Colors.black87,
                                   ),
                                 ),
-                                SizedBox(height: 12),
-                                ListTile(
-                                  leading: Icon(Icons.phone, color: Colors.orange),
-                                  title: Text('0912 345 6789'),
-                                  subtitle: Text('Call for inquiries'),
-                                ),
-                                ListTile(
-                                  leading: Icon(Icons.email, color: Colors.orange),
-                                  title: Text('info@sunsetdormitory.com'),
-                                  subtitle: Text('Email us'),
-                                ),
-                                ListTile(
-                                  leading: Icon(Icons.location_on, color: Colors.orange),
-                                  title: Text('Sunset Dormitory, Bacolod City'),
-                                  subtitle: Text('Near University of St. La Salle'),
-                                ),
+                                const SizedBox(height: 12),
+                                // Use API-provided owner / property data (no hardcoded values)
+                                if ((property['owner_name'] ?? '').isNotEmpty)
+                                  ListTile(
+                                    leading: Icon(Icons.person, color: Colors.orange),
+                                    title: Text(property['owner_name'] ?? ''),
+                                    subtitle: Text('Owner'),
+                                  ),
+                                if ((property['owner_email'] ?? '').isNotEmpty)
+                                  ListTile(
+                                    leading: Icon(Icons.email, color: Colors.orange),
+                                    title: Text(property['owner_email'] ?? ''),
+                                    subtitle: Text('Email'),
+                                  ),
+                                if ((property['location'] ?? property['address'] ?? '').isNotEmpty)
+                                  ListTile(
+                                    leading: Icon(Icons.location_on, color: Colors.orange),
+                                    title: Text(property['location'] ?? property['address'] ?? ''),
+                                    subtitle: Text(property['type'] ?? ''),
+                                  ),
+                                // Optional phone if API provides it
+                                if ((property['phone'] ?? '').isNotEmpty)
+                                  ListTile(
+                                    leading: Icon(Icons.phone, color: Colors.orange),
+                                    title: Text(property['phone'] ?? ''),
+                                    subtitle: Text('Call for inquiries'),
+                                  ),
                                 SizedBox(height: 20),
                                 Center(
                                   child: ElevatedButton.icon(
@@ -383,27 +381,7 @@ class ViewDetailsScreen extends StatelessWidget {
           ],
         ),
       ),
-      // ----------- BOTTOM NAVIGATION SECTION -----------
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: Colors.orange,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pop(context);
-          }
-        },
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Wishlist'),
-          BottomNavigationBarItem(icon: Icon(Icons.message_outlined), label: 'Messages'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications_none), label: 'Alerts'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
-        ],
-      ),
+      
     );
   }
 

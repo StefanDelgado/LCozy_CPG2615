@@ -4,6 +4,7 @@ import 'package:cozydorm/MobileScreen/search.dart';
 import 'package:cozydorm/MobileScreen/profile.dart';
 import 'package:cozydorm/MobileScreen/student_owner_chat.dart';
 import 'package:cozydorm/MobileScreen/student_home.dart';
+import 'browse_dorms.dart';
 
 // ==================== HomeScreen Widget ====================
 class HomeScreen extends StatefulWidget {
@@ -129,22 +130,24 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
         selectedItemColor: orange,
         unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+          // Search opens the browse dorms list (uses website API)
+          if (index == 1) {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const BrowseDormsScreen()));
+            return;
+          }
+          // keep other nav functionality (Home, Messages, Profile)
+          setState(() => _selectedIndex = index);
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Wishlist'),
           BottomNavigationBarItem(icon: Icon(Icons.message_outlined), label: 'Messages'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications_none), label: 'Alerts'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
         ],
       ),

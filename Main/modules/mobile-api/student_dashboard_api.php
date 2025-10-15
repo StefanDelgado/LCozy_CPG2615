@@ -7,7 +7,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 if (!isset($_GET['student_email'])) {
-    echo json_encode(['error' => 'Student email required']);
+    echo json_encode(['ok' => false, 'error' => 'Student email required']);
     exit;
 }
 
@@ -18,7 +18,7 @@ try {
     $student = $stmt->fetch();
 
     if (!$student) {
-        echo json_encode(['error' => 'Student not found']);
+        echo json_encode(['ok' => false, 'error' => 'Student not found']);
         exit;
     }
 
@@ -33,40 +33,47 @@ try {
     $reservationsStmt->execute([$student_id]);
     $active_reservations = $reservationsStmt->fetchColumn();
 
-    // Get pending payments
-    $paymentsStmt = $pdo->prepare("
-        SELECT COALESCE(SUM(amount), 0) 
-        FROM payments 
-        WHERE booking_id IN (SELECT booking_id FROM bookings WHERE student_id = ?)
-        AND status = 'pending'
-    ");
-    $paymentsStmt->execute([$student_id]);
-    $payments_due = $paymentsStmt->fetchColumn();
+    // Get pending payments with proper error handling
+    try {
+        $paymentsStmt = $pdo->prepare("
+            SELECT COALESCE(SUM(amount), 0) 
+            FROM payments 
+            WHERE student_id = ? AND status = 'pending'
+        ");
+        $paymentsStmt->execute([$student_id]);
+        $payments_due = $paymentsStmt->fetchColumn();
+    } catch (PDOException $e) {
+        $payments_due = 0;
+    }
 
-    // Get unread messages count
-    $messagesStmt = $pdo->prepare("
-        SELECT COUNT(*) 
-        FROM messages 
-        WHERE receiver_id = ? AND read_at IS NULL
-    ");
-    $messagesStmt->execute([$student_id]);
-    $unread_messages = $messagesStmt->fetchColumn();
+    // Get unread messages with proper error handling
+    try {
+        $messagesStmt = $pdo->prepare("
+            SELECT COUNT(*) 
+            FROM messages 
+            WHERE receiver_id = ? AND (status = 'unread' OR status IS NULL)
+        ");
+        $messagesStmt->execute([$student_id]);
+        $unread_messages = $messagesStmt->fetchColumn();
+    } catch (PDOException $e) {
+        $unread_messages = 0;
+    }
 
     // Get active bookings
     $bookingsStmt = $pdo->prepare("
         SELECT 
             b.booking_id,
-            d.name as dorm_name,
-            r.room_type,
             b.status,
             b.start_date,
             b.end_date,
+            d.name as dorm_name,
+            r.room_type,
             u.name as owner_name
         FROM bookings b
         JOIN rooms r ON b.room_id = r.room_id
         JOIN dormitories d ON r.dorm_id = d.dorm_id
         JOIN users u ON d.owner_id = u.user_id
-        WHERE b.student_id = ?
+        WHERE b.student_id = ? AND b.status IN ('pending', 'approved')
         ORDER BY b.created_at DESC
         LIMIT 5
     ");
