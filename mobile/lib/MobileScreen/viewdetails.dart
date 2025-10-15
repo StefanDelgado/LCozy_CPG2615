@@ -34,6 +34,23 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
     fetchDormDetails();
   }
 
+  // Helper method to safely parse double values
+  double _parseDouble(dynamic value, double defaultValue) {
+    if (value == null) return defaultValue;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? defaultValue;
+    return defaultValue;
+  }
+
+  // Helper method to safely display text, replacing null with N/A
+  String _safeText(dynamic value, [String defaultText = 'N/A']) {
+    if (value == null) return defaultText;
+    String text = value.toString();
+    if (text.isEmpty || text.toLowerCase() == 'null') return defaultText;
+    return text;
+  }
+
   Future<void> fetchDormDetails() async {
     setState(() {
       isLoading = true;
@@ -60,7 +77,17 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
             dormDetails = data['dorm'] ?? {};
             rooms = data['rooms'] ?? [];
             reviews = data['reviews'] ?? [];
-            images = List<String>.from(dormDetails['images'] ?? []);
+            
+            // Safely parse images list with null handling
+            final imagesList = dormDetails['images'];
+            if (imagesList != null && imagesList is List) {
+              images = imagesList
+                  .where((img) => img != null && img.toString().isNotEmpty)
+                  .map((img) => img.toString())
+                  .toList();
+            } else {
+              images = [];
+            }
             
             // Add placeholder if no images
             if (images.isEmpty) {
@@ -125,7 +152,15 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
     final owner = dormDetails['owner'] ?? {};
     final stats = dormDetails['stats'] ?? {};
     final pricing = dormDetails['pricing'] ?? {};
-    final features = List<String>.from(dormDetails['features'] ?? []);
+    
+    // Safely parse features list with null handling
+    final featuresList = dormDetails['features'];
+    final features = featuresList != null && featuresList is List
+        ? featuresList
+            .where((f) => f != null && f.toString().isNotEmpty)
+            .map((f) => f.toString())
+            .toList()
+        : <String>[];
     
     return Scaffold(
       backgroundColor: Colors.white,
@@ -172,7 +207,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              dormDetails['name'] ?? 'Unknown Dorm',
+                              _safeText(dormDetails['name'], 'Unknown Dorm'),
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -190,7 +225,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              dormDetails['address'] ?? 'Address not available',
+                              _safeText(dormDetails['address'], 'Address not available'),
                               style: TextStyle(color: Colors.grey[600]),
                             ),
                           ),
@@ -362,7 +397,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            dormDetails['description'] ?? 'No description available.',
+            _safeText(dormDetails['description'], 'No description available.'),
             style: const TextStyle(fontSize: 15, height: 1.5),
           ),
           if (features.isNotEmpty) ...[
@@ -409,8 +444,8 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                     child: GoogleMap(
                       initialCameraPosition: CameraPosition(
                         target: LatLng(
-                          dormDetails['latitude'] ?? 10.6765,
-                          dormDetails['longitude'] ?? 122.9509,
+                          _parseDouble(dormDetails['latitude'], 10.6765),
+                          _parseDouble(dormDetails['longitude'], 122.9509),
                         ),
                         zoom: 15,
                       ),
@@ -418,11 +453,11 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                         Marker(
                           markerId: const MarkerId('dorm'),
                           position: LatLng(
-                            dormDetails['latitude'] ?? 10.6765,
-                            dormDetails['longitude'] ?? 122.9509,
+                            _parseDouble(dormDetails['latitude'], 10.6765),
+                            _parseDouble(dormDetails['longitude'], 122.9509),
                           ),
                           infoWindow: InfoWindow(
-                            title: dormDetails['name'] ?? '',
+                            title: dormDetails['name']?.toString() ?? '',
                           ),
                         ),
                       },
@@ -460,7 +495,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        room['room_type'] ?? 'Unknown Room',
+                        _safeText(room['room_type'], 'Unknown Room'),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -552,20 +587,20 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      review['student_name'] ?? 'Anonymous',
+                      _safeText(review['student_name'], 'Anonymous'),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      review['stars'] ?? '',
+                      _safeText(review['stars'], ''),
                       style: const TextStyle(color: Colors.orange),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(review['review'] ?? ''),
+                Text(_safeText(review['review'], 'No comment')),
                 const SizedBox(height: 4),
                 Text(
-                  review['created_at'] ?? '',
+                  _safeText(review['created_at'], ''),
                   style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),
               ],
@@ -587,9 +622,9 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          _buildContactRow(Icons.person, 'Name', owner['name'] ?? 'Not available'),
-          _buildContactRow(Icons.email, 'Email', owner['email'] ?? 'Not available'),
-          _buildContactRow(Icons.phone, 'Phone', owner['phone'] ?? 'Not provided'),
+          _buildContactRow(Icons.person, 'Name', _safeText(owner['name'], 'Not available')),
+          _buildContactRow(Icons.email, 'Email', _safeText(owner['email'], 'Not available')),
+          _buildContactRow(Icons.phone, 'Phone', _safeText(owner['phone'], 'Not provided')),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,

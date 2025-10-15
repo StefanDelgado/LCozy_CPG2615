@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cozydorm/MobileScreen/viewdetails.dart';
 import 'package:cozydorm/MobileScreen/search.dart';
 import 'package:cozydorm/MobileScreen/profile.dart';
 import 'package:cozydorm/MobileScreen/student_owner_chat.dart';
@@ -138,7 +137,12 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: (index) {
           // Search opens the browse dorms list (uses website API)
           if (index == 1) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const BrowseDormsScreen()));
+            Navigator.push(
+              context, 
+              MaterialPageRoute(
+                builder: (_) => BrowseDormsScreen(userEmail: widget.userEmail)
+              )
+            );
             return;
           }
           // keep other nav functionality (Home, Messages, Profile)
