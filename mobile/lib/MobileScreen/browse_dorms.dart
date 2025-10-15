@@ -5,7 +5,13 @@ import 'viewdetails.dart';
 
 class BrowseDormsScreen extends StatefulWidget {
   final String? searchQuery;
-  const BrowseDormsScreen({Key? key, this.searchQuery}) : super(key: key);
+  final String userEmail;
+  
+  const BrowseDormsScreen({
+    Key? key, 
+    this.searchQuery,
+    required this.userEmail,
+  }) : super(key: key);
 
   @override
   State<BrowseDormsScreen> createState() => _BrowseDormsScreenState();
@@ -107,7 +113,10 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ViewDetailsScreen(property: prop),
+                    builder: (_) => ViewDetailsScreen(
+                      property: prop,
+                      userEmail: widget.userEmail,
+                    ),
                   ),
                 );
               },

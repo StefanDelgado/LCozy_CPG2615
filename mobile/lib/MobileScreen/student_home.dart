@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'viewdetails.dart';
 import 'browse_dorms.dart';
 //import 'student_bookings.dart';
 //import 'student_payments.dart';
@@ -83,7 +82,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       case 1: // Browse
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const BrowseDormsScreen()),
+          MaterialPageRoute(builder: (context) => BrowseDormsScreen(userEmail: widget.userEmail)),
         );
         break;
       case 2: // Bookings
@@ -270,7 +269,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                                                 Navigator.push(
                                                   context,
                                                   MaterialPageRoute(
-                                                    builder: (context) => const BrowseDormsScreen(),
+                                                    builder: (context) => BrowseDormsScreen(userEmail: widget.userEmail),
                                                   ),
                                                 );
                                               },
@@ -302,7 +301,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => const BrowseDormsScreen(),
+                                            builder: (context) => BrowseDormsScreen(userEmail: widget.userEmail),
                                           ),
                                         );
                                       }),

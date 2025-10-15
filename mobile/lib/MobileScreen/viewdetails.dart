@@ -8,8 +8,13 @@ import 'booking_form.dart';
 
 class ViewDetailsScreen extends StatefulWidget {
   final Map<String, String> property;
+  final String userEmail;
   
-  const ViewDetailsScreen({super.key, required this.property});
+  const ViewDetailsScreen({
+    super.key, 
+    required this.property,
+    required this.userEmail,
+  });
 
   @override
   State<ViewDetailsScreen> createState() => _ViewDetailsScreenState();
@@ -276,7 +281,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => StudentOwnerChatScreen(
-                        currentUserEmail: 'student@email.com', // TODO: Get from auth
+                        currentUserEmail: widget.userEmail,
                         currentUserRole: 'student',
                         otherUserEmail: owner['email'] ?? '',
                       ),
@@ -303,7 +308,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                               dormId: dormDetails['dorm_id']?.toString() ?? '',
                               dormName: dormDetails['name'] ?? '',
                               rooms: rooms,
-                              studentEmail: 'student@email.com', // TODO: Get from actual auth
+                              studentEmail: widget.userEmail,
                             ),
                           ),
                         );
@@ -594,7 +599,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => StudentOwnerChatScreen(
-                      currentUserEmail: 'student@email.com', // TODO: Get from auth
+                      currentUserEmail: widget.userEmail,
                       currentUserRole: 'student',
                       otherUserEmail: owner['email'] ?? '',
                     ),
