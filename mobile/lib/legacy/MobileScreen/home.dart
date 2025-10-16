@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cozydorm/MobileScreen/search.dart';
-import 'package:cozydorm/MobileScreen/profile.dart';
-import 'package:cozydorm/MobileScreen/student_owner_chat.dart';
-import 'package:cozydorm/MobileScreen/student_home.dart';
+import 'search.dart';
+import 'profile.dart';
+import 'student_owner_chat.dart';
+import 'student_home.dart';
 import 'browse_dorms.dart';
 
 // ==================== HomeScreen Widget ====================

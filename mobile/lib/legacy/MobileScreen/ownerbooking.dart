@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/booking.dart';
 
 // ==================== OwnerBookingScreen Widget ====================
 class OwnerBookingScreen extends StatefulWidget {
@@ -21,7 +20,7 @@ class OwnerBookingScreen extends StatefulWidget {
 class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
   bool isLoading = true;
   String? error;
-  List<Booking> bookings = [];
+  List<Map<String, dynamic>> bookings = [];
   int selectedTab = 0;
 
   @override
@@ -47,9 +46,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
         final data = jsonDecode(response.body);
         if (data['ok'] == true) {
           setState(() {
-            bookings = (data['bookings'] as List)
-                .map((b) => Booking.fromJson(b))
-                .toList();
+            bookings = List<Map<String, dynamic>>.from(data['bookings']);
             isLoading = false;
           });
         } else {
@@ -99,8 +96,8 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
     // Filter bookings based on selected tab
     final filteredBookings = bookings.where((booking) {
       return selectedTab == 0 
-          ? booking.status.toLowerCase() == 'pending'
-          : booking.status.toLowerCase() == 'approved';
+          ? (booking['status'] ?? '').toString().toLowerCase() == 'pending'
+          : (booking['status'] ?? '').toString().toLowerCase() == 'approved';
     }).toList();
 
     // ----------- MAIN UI SECTION -----------
@@ -157,7 +154,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
                         final booking = filteredBookings[index];
                         return _BookingCard(
                           booking: booking,
-                          onApprove: () => approveBooking(booking.id),
+                          onApprove: () => approveBooking(booking['booking_id'] ?? 0),
                         );
                       },
                     ),
@@ -199,7 +196,7 @@ class _TabButton extends StatelessWidget {
 
 // ==================== BookingCard Widget SECTION ====================
 class _BookingCard extends StatelessWidget {
-  final Booking booking;
+  final Map<String, dynamic> booking;
   final VoidCallback onApprove;
 
   const _BookingCard({
@@ -220,21 +217,21 @@ class _BookingCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  booking.studentName,
+                  booking['student_name'] ?? 'Unknown',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(booking.requestedAt),
+                Text(booking['requested_at'] ?? ''),
               ],
             ),
             const Divider(),
-            _InfoRow(label: 'Dorm', value: booking.dormName),
-            _InfoRow(label: 'Room', value: booking.roomType),
-            _InfoRow(label: 'Duration', value: booking.duration),
-            _InfoRow(label: 'Price', value: booking.price),
-            if (booking.status.toLowerCase() == 'pending')
+            _InfoRow(label: 'Dorm', value: booking['dorm_name'] ?? ''),
+            _InfoRow(label: 'Room', value: booking['room_type'] ?? ''),
+            _InfoRow(label: 'Duration', value: booking['duration'] ?? ''),
+            _InfoRow(label: 'Price', value: booking['price'] ?? ''),
+            if ((booking['status'] ?? '').toString().toLowerCase() == 'pending')
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: Row(

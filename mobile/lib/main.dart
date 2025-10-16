@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'MobileScreen/Login.dart';
-import 'MobileScreen/Register.dart';
+import 'legacy/MobileScreen/Login.dart';
+import 'legacy/MobileScreen/Register.dart';
 
 void main() {
   runApp(const MyApp());
