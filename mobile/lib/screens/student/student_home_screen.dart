@@ -10,6 +10,7 @@ import '../../widgets/student/home/empty_bookings_widget.dart';
 import 'browse_dorms_screen.dart';
 import '../../legacy/MobileScreen/student_payments.dart';
 import 'student_profile_screen.dart';
+import '../shared/chat_list_screen.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   final String userName;
@@ -94,7 +95,15 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         Navigator.pushNamed(context, '/student_reservations');
         break;
       case 3: // Messages
-        Navigator.pushNamed(context, '/student_messages');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatListScreen(
+              currentUserEmail: widget.userEmail,
+              currentUserRole: 'student',
+            ),
+          ),
+        );
         break;
       case 4: // Profile
         Navigator.push(

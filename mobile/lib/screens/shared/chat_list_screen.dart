@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../services/chat_service.dart';
-import '../../widgets/chat/chat_list_tile.dart';
 import '../../widgets/common/error_display_widget.dart';
 import 'chat_conversation_screen.dart';
 
@@ -8,12 +7,14 @@ import 'chat_conversation_screen.dart';
 /// Displays all conversations for the current user
 class ChatListScreen extends StatefulWidget {
   final String currentUserEmail;
+  final String currentUserRole; // 'student' or 'owner'
   final bool showAppBar;
 
   const ChatListScreen({
     super.key,
     required this.currentUserEmail,
-    this.showAppBar = false,
+    required this.currentUserRole,
+    this.showAppBar = true,
   });
 
   @override
@@ -37,7 +38,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
       _errorMessage = '';
     });
 
-    final result = await ChatService.getUserChats(widget.currentUserEmail);
+    final result = await ChatService.getUserChats(
+      widget.currentUserEmail,
+      widget.currentUserRole,
+    );
 
     if (!mounted) return;
 
@@ -51,17 +55,21 @@ class _ChatListScreenState extends State<ChatListScreen> {
     });
   }
 
-  void _navigateToChat(String otherUserEmail) {
+  void _navigateToChat(Map<String, dynamic> chat) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ChatConversationScreen(
           currentUserEmail: widget.currentUserEmail,
-          otherUserEmail: otherUserEmail,
-          currentUserRole: "student", // Can be passed as parameter if needed
+          currentUserRole: widget.currentUserRole,
+          otherUserId: chat['other_user_id'],
+          otherUserName: chat['other_user_name'],
+          otherUserEmail: chat['other_user_email'],
+          dormId: chat['dorm_id'],
+          dormName: chat['dorm_name'],
         ),
       ),
-    );
+    ).then((_) => _fetchChats()); // Refresh when returning
   }
 
   @override
@@ -101,7 +109,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Start a conversation with a dorm owner!',
+                            widget.currentUserRole == 'student'
+                                ? 'Start a conversation with a dorm owner!'
+                                : 'Students will message you about bookings.',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[500],
@@ -112,21 +122,92 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     )
                   : RefreshIndicator(
                       onRefresh: _fetchChats,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 8),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(8),
                         itemCount: _chats.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final chat = _chats[index];
-                          final otherUserEmail = chat['other_user_email'];
-                          final lastMessage = chat['last_message'] ?? '';
+                          final unreadCount = chat['unread_count'] ?? 0;
+                          final hasUnread = unreadCount > 0;
 
-                          return ChatListTile(
-                            otherUserEmail: otherUserEmail,
-                            lastMessage: lastMessage,
-                            currentUserEmail: widget.currentUserEmail,
-                            onTap: () => _navigateToChat(otherUserEmail),
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: const Color(0xFFFF9800),
+                                child: Text(
+                                  chat['other_user_name']
+                                          ?.substring(0, 1)
+                                          .toUpperCase() ??
+                                      '?',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      chat['other_user_name'] ?? 'Unknown',
+                                      style: TextStyle(
+                                        fontWeight: hasUnread
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ),
+                                  if (hasUnread)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        '$unreadCount',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    chat['dorm_name'] ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    chat['last_message'] ?? 'No messages yet',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontWeight: hasUnread
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => _navigateToChat(chat),
+                            ),
                           );
                         },
                       ),

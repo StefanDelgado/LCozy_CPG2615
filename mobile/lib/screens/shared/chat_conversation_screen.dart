@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../services/chat_service.dart';
-import '../../widgets/chat/message_bubble.dart';
-import '../../widgets/chat/message_input.dart';
 import '../../widgets/common/error_display_widget.dart';
 
 /// Chat conversation screen
-/// Displays messages between two users
+/// Displays messages between a student and owner about a specific dorm
 class ChatConversationScreen extends StatefulWidget {
   final String currentUserEmail;
-  final String otherUserEmail;
   final String currentUserRole;
+  final int otherUserId;
+  final String otherUserName;
+  final String otherUserEmail;
+  final int dormId;
+  final String dormName;
 
   const ChatConversationScreen({
     super.key,
     required this.currentUserEmail,
-    required this.otherUserEmail,
     required this.currentUserRole,
+    required this.otherUserId,
+    required this.otherUserName,
+    required this.otherUserEmail,
+    required this.dormId,
+    required this.dormName,
   });
 
   @override
@@ -26,63 +33,78 @@ class ChatConversationScreen extends StatefulWidget {
 class _ChatConversationScreenState extends State<ChatConversationScreen> {
   List _messages = [];
   bool _isLoading = true;
+  bool _isSending = false;
   String _errorMessage = '';
   final ScrollController _scrollController = ScrollController();
-
-  String get _chatId {
-    return ChatService.generateChatId(
-      widget.currentUserEmail,
-      widget.otherUserEmail,
-    );
-  }
+  final TextEditingController _messageController = TextEditingController();
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchMessages();
+    // Auto-refresh every 3 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _fetchMessages(silent: true);
+    });
   }
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
     _scrollController.dispose();
+    _messageController.dispose();
     super.dispose();
   }
 
-  Future<void> _fetchMessages() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
+  Future<void> _fetchMessages({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+      });
+    }
 
-    final result = await ChatService.getMessages(_chatId);
+    final result = await ChatService.getMessages(
+      widget.currentUserEmail,
+      widget.dormId,
+      widget.otherUserId,
+    );
 
     if (!mounted) return;
 
     setState(() {
-      _isLoading = false;
+      if (!silent) _isLoading = false;
       if (result['success'] == true) {
         _messages = result['messages'] ?? [];
         _scrollToBottom();
       } else {
-        _errorMessage = result['error'] ?? 'Failed to load messages';
+        if (!silent) {
+          _errorMessage = result['error'] ?? 'Failed to load messages';
+        }
       }
     });
   }
 
-  Future<void> _sendMessage(String text) async {
-    if (text.trim().isEmpty) return;
+  Future<void> _sendMessage() async {
+    final text = _messageController.text.trim();
+    if (text.isEmpty || _isSending) return;
+
+    setState(() => _isSending = true);
 
     final result = await ChatService.sendMessage(
-      chatId: _chatId,
-      senderId: widget.currentUserEmail,
-      receiverId: widget.otherUserEmail,
+      senderEmail: widget.currentUserEmail,
+      receiverId: widget.otherUserId,
+      dormId: widget.dormId,
       message: text,
     );
 
     if (!mounted) return;
 
+    setState(() => _isSending = false);
+
     if (result['success'] == true) {
-      // Refresh messages after sending
+      _messageController.clear();
       await _fetchMessages();
     } else {
       // Show error
@@ -113,18 +135,24 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: FutureBuilder<String>(
-          future: ChatService.getUserName(widget.otherUserEmail),
-          builder: (context, snapshot) {
-            final displayName = snapshot.data ?? widget.otherUserEmail;
-            return Text(displayName);
-          },
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.otherUserName),
+            Text(
+              widget.dormName,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ],
         ),
         backgroundColor: const Color(0xFFFF9800),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _fetchMessages,
+            onPressed: () => _fetchMessages(),
             tooltip: 'Refresh messages',
           ),
         ],
@@ -160,11 +188,11 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                Text(
+                                const Text(
                                   'Start the conversation!',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.grey[500],
+                                    color: Colors.grey,
                                   ),
                                 ),
                               ],
@@ -176,23 +204,124 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                             itemCount: _messages.length,
                             itemBuilder: (context, index) {
                               final msg = _messages[index];
-                              final isMe = msg['sender_id'] ==
-                                  widget.currentUserEmail;
-                              final message = msg['message'] ?? '';
-
-                              return MessageBubble(
-                                message: message,
-                                isMe: isMe,
-                              );
+                              return _buildMessageBubble(msg);
                             },
                           ),
           ),
 
           // Message Input
-          MessageInput(
-            onSend: _sendMessage,
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: 'Type a message...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[200],
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                    ),
+                    maxLines: null,
+                    textCapitalization: TextCapitalization.sentences,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                CircleAvatar(
+                  backgroundColor: const Color(0xFFFF9800),
+                  child: _isSending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.send, color: Colors.white),
+                          onPressed: _sendMessage,
+                          padding: EdgeInsets.zero,
+                        ),
+                ),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(Map<String, dynamic> message) {
+    final isMine = message['is_mine'] == true;
+    final timestamp = DateTime.parse(message['created_at']);
+    final timeStr =
+        '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
+
+    return Align(
+      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        decoration: BoxDecoration(
+          color: isMine ? const Color(0xFFFF9800) : Colors.grey[300],
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: isMine ? const Radius.circular(16) : Radius.zero,
+            bottomRight: isMine ? Radius.zero : const Radius.circular(16),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!isMine)
+              Text(
+                message['sender_name'] ?? '',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            if (!isMine) const SizedBox(height: 4),
+            Text(
+              message['body'] ?? '',
+              style: TextStyle(
+                color: isMine ? Colors.white : Colors.black87,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              timeStr,
+              style: TextStyle(
+                color: isMine ? Colors.white70 : Colors.black54,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

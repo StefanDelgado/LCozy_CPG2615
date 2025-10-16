@@ -193,30 +193,60 @@ class DormService {
   /// - data: Dorm details or null
   /// - message: Success or error message
   Future<Map<String, dynamic>> getDormDetails(String dormId) async {
+    print('🏠 [DormService] Fetching dorm details for ID: $dormId');
     try {
       final uri = Uri.parse(
-        '$_baseUrl/mobile-api/get_dorm_details.php?dorm_id=$dormId',
+        '${ApiConstants.dormDetailsEndpoint}?dorm_id=$dormId',
       );
       
+      print('🏠 [DormService] Request URL: $uri');
       final response = await http.get(uri);
+      print('🏠 [DormService] Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
+        print('🏠 [DormService] Response body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
         final data = json.decode(response.body);
         
         if (data is Map) {
-          return {
-            'success': true,
-            'data': data,
-            'message': 'Dorm details loaded successfully',
-          };
-        } else {
-          return {
-            'success': false,
-            'error': 'Invalid data format',
-            'message': 'Unexpected response format',
-          };
+          // Check if API returns {ok: true, dorm: {...}}
+          if (data['ok'] == true && data['dorm'] != null) {
+            print('🏠 [DormService] ✅ Success! Dorm details loaded');
+            return {
+              'success': true,
+              'data': data['dorm'], // Use 'dorm' field from API
+              'rooms': data['rooms'], // Also include rooms
+              'reviews': data['reviews'], // And reviews
+              'message': 'Dorm details loaded successfully',
+            };
+          }
+          // Or direct dorm data (fallback)
+          else if (data['dorm_id'] != null) {
+            print('🏠 [DormService] ✅ Success! Dorm details loaded (direct format)');
+            return {
+              'success': true,
+              'data': data,
+              'message': 'Dorm details loaded successfully',
+            };
+          }
+          // Error response
+          else if (data['ok'] == false) {
+            print('🏠 [DormService] ❌ API error: ${data['error']}');
+            return {
+              'success': false,
+              'error': data['error'] ?? 'Unknown error',
+              'message': data['message'] ?? data['error'] ?? 'Failed to load dorm details',
+            };
+          }
         }
+        
+        print('🏠 [DormService] ❌ Invalid data format');
+        return {
+          'success': false,
+          'error': 'Invalid data format',
+          'message': 'Unexpected response format',
+        };
       } else {
+        print('🏠 [DormService] ❌ HTTP ${response.statusCode}: ${response.body}');
         return {
           'success': false,
           'error': 'HTTP Error',
@@ -224,6 +254,7 @@ class DormService {
         };
       }
     } catch (e) {
+      print('🏠 [DormService] ❌ Exception: $e');
       return {
         'success': false,
         'error': 'Exception',
