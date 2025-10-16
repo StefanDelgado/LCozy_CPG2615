@@ -28,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    print('📱 [LoginScreen] Login button pressed');
     final authProvider = context.read<AuthProvider>();
     
     // Clear previous error
@@ -45,8 +46,9 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    print('📱 [LoginScreen] Calling authProvider.login()');
     // Login via provider
-    await authProvider.login(
+    final success = await authProvider.login(
       _emailController.text,
       _passwordController.text,
       'auto', // Role will be determined by backend
@@ -54,7 +56,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!mounted) return;
 
-    if (authProvider.isAuthenticated) {
+    print('📱 [LoginScreen] Login result: $success');
+    print('📱 [LoginScreen] Auth state - isAuthenticated: ${authProvider.isAuthenticated}');
+    print('📱 [LoginScreen] Auth state - userEmail: ${authProvider.userEmail}');
+    print('📱 [LoginScreen] Auth state - userRole: ${authProvider.userRole}');
+
+    if (success && authProvider.isAuthenticated) {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -68,6 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
 
+      print('📱 [LoginScreen] Navigating to dashboard...');
       if (authProvider.isOwner) {
         Navigator.pushReplacement(
           context,
@@ -89,10 +97,12 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       }
-    } else if (authProvider.error != null) {
+    } else {
+      // Login failed - show error
+      print('📱 [LoginScreen] Login failed: ${authProvider.error}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error!),
+          content: Text(authProvider.error ?? 'Login failed'),
           backgroundColor: Colors.red,
         ),
       );

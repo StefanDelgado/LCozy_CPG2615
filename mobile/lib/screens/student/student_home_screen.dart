@@ -8,7 +8,7 @@ import '../../widgets/student/home/quick_action_button.dart';
 import '../../widgets/student/home/empty_bookings_widget.dart';
 // Temporary imports from legacy structure
 import 'browse_dorms_screen.dart';
-import '../../legacy/MobileScreen/student_payments.dart';
+import 'student_payments_screen.dart';
 import 'student_profile_screen.dart';
 import '../shared/chat_list_screen.dart';
 
@@ -91,8 +91,13 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           ),
         );
         break;
-      case 2: // Bookings
-        Navigator.pushNamed(context, '/student_reservations');
+      case 2: // Payments
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StudentPaymentsScreen(userEmail: widget.userEmail),
+          ),
+        );
         break;
       case 3: // Messages
         Navigator.push(
@@ -175,7 +180,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Browse'),
-        BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Bookings'),
+        BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Payment'),
         BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],

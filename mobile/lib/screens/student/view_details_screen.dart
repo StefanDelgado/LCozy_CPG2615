@@ -70,6 +70,8 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
         final reviewsData = result['reviews'] ?? [];
         
         print('📱 [ViewDetails] Dorm data: ${dormData != null ? "loaded" : "null"}');
+        print('📱 [ViewDetails] Dorm data keys: ${dormData?.keys.toList()}');
+        print('📱 [ViewDetails] Owner data: ${dormData?['owner']}');
         print('📱 [ViewDetails] Rooms count: ${roomsData.length}');
         print('📱 [ViewDetails] Reviews count: ${reviewsData.length}');
         
@@ -143,21 +145,50 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
   }
 
   void _navigateToChat() {
-    // Extract owner information
+    print('🔍 [Chat Navigation] Starting...');
+    print('🔍 [Chat Navigation] dormDetails: $dormDetails');
+    
+    // Extract owner information from nested owner object
     final owner = dormDetails['owner'] as Map<String, dynamic>?;
-    final ownerEmail = owner?['email']?.toString() ?? dormDetails['owner_email']?.toString();
-    final ownerId = owner?['user_id'] as int? ?? dormDetails['owner_id'] as int?;
-    final ownerName = owner?['name']?.toString() ?? dormDetails['owner_name']?.toString() ?? 'Owner';
-    final dormId = dormDetails['dorm_id'] as int? ?? int.tryParse(widget.property['dorm_id'] ?? '');
+    print('🔍 [Chat Navigation] owner object: $owner');
+    
+    final ownerEmail = owner?['email']?.toString();
+    final ownerId = owner?['owner_id'] as int?;  // Changed from user_id to owner_id
+    final ownerName = owner?['name']?.toString() ?? 'Owner';
+    final dormId = dormDetails['dorm_id'] as int?;
     final dormName = dormDetails['name']?.toString() ?? widget.property['name'] ?? '';
     
-    if (ownerEmail == null || ownerEmail.isEmpty || ownerId == null || dormId == null) {
+    print('🔍 [Chat Navigation] ownerEmail: $ownerEmail');
+    print('🔍 [Chat Navigation] ownerId: $ownerId');
+    print('🔍 [Chat Navigation] ownerName: $ownerName');
+    print('🔍 [Chat Navigation] dormId: $dormId');
+    print('🔍 [Chat Navigation] dormName: $dormName');
+    
+    if (ownerEmail == null || ownerEmail.isEmpty) {
+      print('❌ [Chat Navigation] Owner email is missing');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Owner information not available')),
+        const SnackBar(content: Text('Owner email not available')),
+      );
+      return;
+    }
+    
+    if (ownerId == null) {
+      print('❌ [Chat Navigation] Owner ID is missing');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Owner ID not available')),
+      );
+      return;
+    }
+    
+    if (dormId == null) {
+      print('❌ [Chat Navigation] Dorm ID is missing');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dorm ID not available')),
       );
       return;
     }
 
+    print('✅ [Chat Navigation] All data valid, navigating to chat...');
     Navigator.push(
       context,
       MaterialPageRoute(

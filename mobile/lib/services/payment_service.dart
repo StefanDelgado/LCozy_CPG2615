@@ -17,18 +17,27 @@ class PaymentService {
   ///   - error: Error message if request failed
   Future<Map<String, dynamic>> getStudentPayments(String studentEmail) async {
     try {
+      print('📡 [PaymentService] Fetching payments for: $studentEmail');
       final response = await http.get(
         Uri.parse(
           'http://cozydorms.life/modules/mobile-api/student_payments_api.php?student_email=$studentEmail'
         ),
       );
 
+      print('📡 [PaymentService] Response status: ${response.statusCode}');
+      print('📡 [PaymentService] Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print('📡 [PaymentService] Decoded data ok: ${data['ok']}');
+        
         if (data['ok'] == true) {
           return {
             'success': true,
-            'data': data['payments'] ?? [],
+            'data': {
+              'statistics': data['statistics'] ?? {},
+              'payments': data['payments'] ?? [],
+            },
           };
         } else {
           return {
@@ -43,6 +52,7 @@ class PaymentService {
         };
       }
     } catch (e) {
+      print('📡 [PaymentService] ❌ Exception: $e');
       return {
         'success': false,
         'error': 'Network error: ${e.toString()}',

@@ -22,6 +22,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _selectedRole = 'Student';
   bool _isLoading = false;
   String _errorMessage = '';
+  String _emailError = '';
+  String _passwordError = '';
 
   @override
   void dispose() {
@@ -30,6 +32,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  /// Validates email format in real-time
+  void _validateEmail(String email) {
+    setState(() {
+      if (email.isEmpty) {
+        _emailError = '';
+      } else if (!email.contains('@')) {
+        _emailError = 'Email must contain @';
+      } else if (!email.contains('.')) {
+        _emailError = 'Email must contain a domain (e.g., .com)';
+      } else {
+        final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+        if (!emailRegex.hasMatch(email)) {
+          _emailError = 'Please enter a valid email format';
+        } else {
+          _emailError = '';
+        }
+      }
+    });
+  }
+
+  /// Validates password match in real-time
+  void _validatePasswordMatch(String confirmPassword) {
+    setState(() {
+      if (confirmPassword.isEmpty) {
+        _passwordError = '';
+      } else if (_passwordController.text != confirmPassword) {
+        _passwordError = 'Passwords do not match';
+      } else {
+        _passwordError = '';
+      }
+    });
   }
 
   Future<void> _handleRegister() async {
@@ -49,6 +84,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    // Email validation - must contain @ and .
+    final email = _emailController.text.trim();
+    if (!email.contains('@') || !email.contains('.')) {
+      setState(() {
+        _errorMessage = 'Please enter a valid email address (must contain @ and .)';
+      });
+      return;
+    }
+
+    // More strict email validation using regex
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      setState(() {
+        _errorMessage = 'Please enter a valid email address';
+      });
+      return;
+    }
+
+    // Check if passwords match
     if (_passwordController.text != _confirmPasswordController.text) {
       setState(() {
         _errorMessage = 'Passwords do not match.';
@@ -56,6 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    // Check password length
     if (_passwordController.text.length < 6) {
       setState(() {
         _errorMessage = 'Password must be at least 6 characters.';
@@ -207,7 +262,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
+                      onChanged: _validateEmail,
                     ),
+                    if (_emailError.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4, left: 12),
+                        child: Text(
+                          _emailError,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 16),
 
                     // Password Field
@@ -229,7 +296,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
                       textInputAction: TextInputAction.done,
+                      onChanged: _validatePasswordMatch,
                     ),
+                    if (_passwordError.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4, left: 12),
+                        child: Text(
+                          _passwordError,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 16),
 
                     // Error Message

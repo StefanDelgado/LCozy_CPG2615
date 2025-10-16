@@ -50,8 +50,16 @@ class AuthProvider with ChangeNotifier {
   /// 
   /// Updates [error] if login fails.
   Future<bool> login(String email, String password, String role) async {
+    print('🔐 [AuthProvider] Login attempt for: $email');
+    print('🔐 [AuthProvider] Current auth state before login: $_isAuthenticated');
+    
     _setLoading(true);
     _error = null;
+    
+    // CRITICAL: Clear previous authentication state before new login attempt
+    _isAuthenticated = false;
+    _userEmail = null;
+    _userRole = null;
 
     try {
       final result = await AuthService.login(
@@ -59,21 +67,27 @@ class AuthProvider with ChangeNotifier {
         password: password,
       );
 
+      print('🔐 [AuthProvider] Login result: ${result['success']}');
+      print('🔐 [AuthProvider] Login role: ${result['role']}');
+
       if (result['success'] == true) {
         _isAuthenticated = true;
         _userEmail = email;
         _userRole = result['role'] ?? role; // Use role from server
         _error = null;
         _setLoading(false);
+        print('🔐 [AuthProvider] ✅ Login successful');
         return true;
       } else {
         _error = result['error'] ?? 'Login failed';
         _setLoading(false);
+        print('🔐 [AuthProvider] ❌ Login failed: $_error');
         return false;
       }
     } catch (e) {
       _error = 'Login error: ${e.toString()}';
       _setLoading(false);
+      print('🔐 [AuthProvider] ❌ Login exception: $_error');
       return false;
     }
   }
@@ -130,10 +144,16 @@ class AuthProvider with ChangeNotifier {
   /// 
   /// Clears all authentication state and notifies listeners.
   void logout() {
+    print('🔐 [AuthProvider] Logout called');
+    print('🔐 [AuthProvider] Previous auth state: email=$_userEmail, role=$_userRole');
+    
     _isAuthenticated = false;
     _userEmail = null;
     _userRole = null;
     _error = null;
+    _isLoading = false; // Also reset loading state
+    
+    print('🔐 [AuthProvider] ✅ Logout complete - all state cleared');
     notifyListeners();
   }
 
