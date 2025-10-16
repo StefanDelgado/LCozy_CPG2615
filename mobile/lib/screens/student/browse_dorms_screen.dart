@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../../utils/constants.dart';
+import '../../services/dorm_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../student/view_details_screen.dart';
@@ -22,6 +20,7 @@ class BrowseDormsScreen extends StatefulWidget {
 }
 
 class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
+  final DormService _dormService = DormService();
   bool isLoading = true;
   String? error;
   List<Map<String, dynamic>> dorms = [];
@@ -39,18 +38,10 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
     });
 
     try {
-      final uri = Uri.parse(ApiConstants.studentDashboardEndpoint);
-      final rsp = await http.get(uri);
+      final result = await _dormService.getAllDorms();
       
-      if (rsp.statusCode != 200) {
-        throw Exception('Server error: ${rsp.statusCode}');
-      }
-      
-      final data = jsonDecode(rsp.body);
-      
-      if (data is Map && data['ok'] == true && data['dorms'] != null) {
-        var list = List.from(data['dorms']);
-        var items = list.map((e) => Map<String, dynamic>.from(e)).toList();
+      if (result['success']) {
+        var items = List<Map<String, dynamic>>.from(result['data'] ?? []);
         
         // Apply search filter if query provided
         if (widget.searchQuery != null && widget.searchQuery!.trim().isNotEmpty) {
@@ -67,7 +58,7 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
           isLoading = false;
         });
       } else {
-        throw Exception('Invalid response from server');
+        throw Exception(result['message'] ?? 'Failed to load dorms');
       }
     } catch (e) {
       setState(() {

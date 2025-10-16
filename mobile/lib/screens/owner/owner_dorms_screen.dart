@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../../utils/constants.dart';
+import '../../services/dorm_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/owner/dorms/dorm_card.dart';
@@ -22,6 +20,7 @@ class OwnerDormsScreen extends StatefulWidget {
 }
 
 class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
+  final DormService _dormService = DormService();
   bool isLoading = true;
   List<Map<String, dynamic>> dorms = [];
   String? error;
@@ -39,22 +38,15 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner_dorms_api.php?owner_email=${widget.ownerEmail}'),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['ok'] == true) {
-          setState(() {
-            dorms = List<Map<String, dynamic>>.from(data['dorms'] ?? []);
-            isLoading = false;
-          });
-        } else {
-          throw Exception(data['error'] ?? 'Failed to load dorms');
-        }
+      final result = await _dormService.getOwnerDorms(widget.ownerEmail);
+      
+      if (result['success']) {
+        setState(() {
+          dorms = List<Map<String, dynamic>>.from(result['data'] ?? []);
+          isLoading = false;
+        });
       } else {
-        throw Exception('Server error: ${response.statusCode}');
+        throw Exception(result['message'] ?? 'Failed to load dorms');
       }
     } catch (e) {
       setState(() {
@@ -66,33 +58,24 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
 
   Future<void> _addDorm(Map<String, String> dormData) async {
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/add_dorm_api.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'owner_email': widget.ownerEmail,
-          ...dormData,
-        }),
-      );
+      final result = await _dormService.addDorm({
+        'owner_email': widget.ownerEmail,
+        ...dormData,
+      });
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['ok'] == true) {
-          await fetchDorms();
-          
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Dorm added successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        } else {
-          throw Exception(data['error'] ?? 'Failed to add dorm');
+      if (result['success']) {
+        await fetchDorms();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Dorm added successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
         }
       } else {
-        throw Exception('Server error: ${response.statusCode}');
+        throw Exception(result['message'] ?? 'Failed to add dorm');
       }
     } catch (e) {
       if (mounted) {
@@ -248,32 +231,20 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
 
   Future<void> _performDelete(Map<String, dynamic> dorm) async {
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/delete_dorm_api.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'dorm_id': dorm['dorm_id'],
-          'owner_email': widget.ownerEmail,
-        }),
-      );
+      final result = await _dormService.deleteDorm(dorm['dorm_id'].toString());
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['ok'] == true) {
-          await fetchDorms();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Dorm deleted successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        } else {
-          throw Exception(data['error'] ?? 'Failed to delete dorm');
+      if (result['success']) {
+        await fetchDorms();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Dorm deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
         }
       } else {
-        throw Exception('Server error: ${response.statusCode}');
+        throw Exception(result['message'] ?? 'Failed to delete dorm');
       }
     } catch (e) {
       if (mounted) {
