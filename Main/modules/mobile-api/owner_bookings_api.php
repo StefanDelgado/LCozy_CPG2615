@@ -64,10 +64,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE bookings SET status = ? WHERE booking_id = ?");
         $stmt->execute([$new_status, $booking_id]);
 
-        // If approved, mark room as unavailable
+        // If approved, mark room as unavailable AND create payment
         if ($action === 'approve') {
             $stmt = $pdo->prepare("UPDATE rooms SET is_available = 0 WHERE room_id = ?");
             $stmt->execute([$booking['room_id']]);
+            
+            // Get booking details to create payment
+            $stmt = $pdo->prepare("
+                SELECT 
+                    b.student_id,
+                    b.booking_type,
+                    b.start_date,
+                    r.price as base_price,
+                    r.capacity
+                FROM bookings b
+                JOIN rooms r ON b.room_id = r.room_id
+                WHERE b.booking_id = ?
+            ");
+            $stmt->execute([$booking_id]);
+            $booking_details = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($booking_details) {
+                // Calculate payment amount based on booking type
+                $base_price = (float)$booking_details['base_price'];
+                $capacity = (int)$booking_details['capacity'];
+                $booking_type = strtolower($booking_details['booking_type']);
+                
+                if ($booking_type === 'shared' && $capacity > 0) {
+                    $payment_amount = $base_price / $capacity;
+                } else {
+                    $payment_amount = $base_price;
+                }
+                
+                // Set due date (first payment due 7 days from start date or today, whichever is later)
+                $start_date = $booking_details['start_date'];
+                $today = date('Y-m-d');
+                $due_date = max($start_date, date('Y-m-d', strtotime($today . ' +7 days')));
+                
+                // Create payment record
+                $stmt = $pdo->prepare("
+                    INSERT INTO payments (
+                        student_id, 
+                        booking_id, 
+                        owner_id,
+                        amount, 
+                        status, 
+                        payment_date, 
+                        due_date,
+                        created_at
+                    ) VALUES (?, ?, ?, ?, 'pending', NOW(), ?, NOW())
+                ");
+                $stmt->execute([
+                    $booking_details['student_id'],
+                    $booking_id,
+                    $owner['user_id'],
+                    $payment_amount,
+                    $due_date
+                ]);
+                
+                $payment_id = $pdo->lastInsertId();
+                error_log("Payment $payment_id created for booking $booking_id - Amount: $payment_amount, Due: $due_date");
+            } else {
+                error_log("WARNING: Could not create payment - booking details not found for booking $booking_id");
+            }
         }
 
         error_log("Booking $booking_id $new_status successfully");
