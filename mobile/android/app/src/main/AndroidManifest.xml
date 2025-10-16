@@ -2,6 +2,12 @@
     <!-- Internet permission for Google Maps -->
     <uses-permission android:name="android.permission.INTERNET"/>
     
+    <!-- Permissions for image_picker -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    
     <application
         android:label="cozydorm"
         android:icon="@mipmap/ic_launcher">
