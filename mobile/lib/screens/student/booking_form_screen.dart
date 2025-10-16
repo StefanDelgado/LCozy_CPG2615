@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../../utils/constants.dart';
+import '../../services/booking_service.dart';
 
 /// Screen for creating a new booking/reservation
 class BookingFormScreen extends StatefulWidget {
@@ -23,6 +21,7 @@ class BookingFormScreen extends StatefulWidget {
 }
 
 class _BookingFormScreenState extends State<BookingFormScreen> {
+  final BookingService _bookingService = BookingService();
   final _formKey = GlobalKey<FormState>();
   
   Map<String, dynamic>? selectedRoom;
@@ -85,42 +84,18 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     setState(() => isSubmitting = true);
 
     try {
-      // Debug: Booking request details
-      // print('=== BOOKING REQUEST ===');
-      // print('Student Email: ${widget.studentEmail}');
-      // print('Room ID: ${selectedRoom!['room_id']}');
-      // print('Booking Type: $bookingType');
-      
-      final response = await http.post(
-        Uri.parse(ApiConstants.createBookingEndpoint),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'student_email': widget.studentEmail,
-          'room_id': selectedRoom!['room_id'],
-          'booking_type': bookingType,
-          'start_date': '${startDate!.year}-${startDate!.month.toString().padLeft(2, '0')}-${startDate!.day.toString().padLeft(2, '0')}',
-          'end_date': '${endDate!.year}-${endDate!.month.toString().padLeft(2, '0')}-${endDate!.day.toString().padLeft(2, '0')}',
-        }),
-      );
+      final result = await _bookingService.createBooking({
+        'student_email': widget.studentEmail,
+        'room_id': selectedRoom!['room_id'],
+        'booking_type': bookingType,
+        'start_date': '${startDate!.year}-${startDate!.month.toString().padLeft(2, '0')}-${startDate!.day.toString().padLeft(2, '0')}',
+        'end_date': '${endDate!.year}-${endDate!.month.toString().padLeft(2, '0')}-${endDate!.day.toString().padLeft(2, '0')}',
+      });
 
-      // Debug: Response details
-      // print('Booking Response: ${response.statusCode}');
-      // print('Booking Body: ${response.body}');
-
-      // Check if response is valid JSON
-      if (response.body.isEmpty) {
-        throw Exception('Empty response from server');
-      }
-
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        throw Exception('Server error: ${response.statusCode}');
-      }
-
-      final data = jsonDecode(response.body);
-
-      if (data['ok'] == true) {
+      if (result['success']) {
         if (!mounted) return;
         
+        final data = result['data'];
         // Show success dialog
         showDialog(
           context: context,
@@ -137,15 +112,15 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(data['message'] ?? 'Booking request submitted successfully!'),
+                Text(result['message'] ?? 'Booking request submitted successfully!'),
                 const SizedBox(height: 16),
-                if (data['booking'] != null) ...[
+                if (data != null) ...[
                   const Divider(),
                   const SizedBox(height: 8),
-                  _buildInfoRow('Dorm', data['booking']['dorm_name'] ?? ''),
-                  _buildInfoRow('Room', data['booking']['room_type'] ?? ''),
-                  _buildInfoRow('Type', (data['booking']['booking_type'] ?? '').toString().toUpperCase()),
-                  _buildInfoRow('Price', '₱${data['booking']['price'] ?? 0}/month'),
+                  _buildInfoRow('Dorm', data['dorm_name'] ?? ''),
+                  _buildInfoRow('Room', data['room_type'] ?? ''),
+                  _buildInfoRow('Type', (data['booking_type'] ?? '').toString().toUpperCase()),
+                  _buildInfoRow('Price', '₱${data['price'] ?? 0}/month'),
                   _buildInfoRow('Status', 'Pending Approval'),
                 ],
               ],
@@ -162,11 +137,9 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
           ),
         );
       } else {
-        throw Exception(data['error'] ?? 'Booking failed');
+        throw Exception(result['message'] ?? 'Booking failed');
       }
     } catch (e) {
-      // Debug: Error details
-      // print('Booking error: $e');
       if (!mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
