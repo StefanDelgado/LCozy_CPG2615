@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/cors.php';
+require_once __DIR__ . '/geocoding_helper.php';
 
 header('Content-Type: application/json');
 
@@ -25,6 +26,12 @@ try {
     // Prepare update query
     $updateFields = [];
     $params = [];
+    
+    // Auto-geocode if address is being updated but no coordinates provided
+    $shouldGeocode = false;
+    if (isset($data['address']) && !isset($data['latitude']) && !isset($data['longitude'])) {
+        $shouldGeocode = true;
+    }
 
     // Check which fields to update
     if (isset($data['name'])) {
@@ -35,6 +42,18 @@ try {
     if (isset($data['address'])) {
         $updateFields[] = 'address = ?';
         $params[] = $data['address'];
+        
+        // Try to geocode the new address
+        if ($shouldGeocode) {
+            error_log("Auto-geocoding updated address: " . $data['address']);
+            $geocoded = basicGeocodePhilippines($data['address']);
+            
+            if ($geocoded) {
+                $data['latitude'] = $geocoded['latitude'];
+                $data['longitude'] = $geocoded['longitude'];
+                error_log("Geocoded to: {$data['latitude']}, {$data['longitude']}");
+            }
+        }
     }
 
     if (isset($data['description'])) {

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/cors.php';
+require_once __DIR__ . '/geocoding_helper.php';
 
 header('Content-Type: application/json');
 
@@ -35,6 +36,24 @@ try {
         exit;
     }
 
+    // Get coordinates from address if not provided
+    $latitude = $data['latitude'] ?? null;
+    $longitude = $data['longitude'] ?? null;
+    
+    // Auto-geocode if coordinates not provided but address exists
+    if (empty($latitude) && empty($longitude) && !empty($data['address'])) {
+        error_log("Auto-geocoding address: " . $data['address']);
+        $geocoded = basicGeocodePhilippines($data['address']);
+        
+        if ($geocoded) {
+            $latitude = $geocoded['latitude'];
+            $longitude = $geocoded['longitude'];
+            error_log("Geocoded to: $latitude, $longitude");
+        } else {
+            error_log("Geocoding failed, dorm will be saved without coordinates");
+        }
+    }
+
     // Insert new dorm with latitude/longitude
     $stmt = $pdo->prepare("
         INSERT INTO dormitories (
@@ -49,14 +68,15 @@ try {
         $data['address'],
         $data['description'],
         $data['features'] ?? '',
-        $data['latitude'] ?? null,
-        $data['longitude'] ?? null
+        $latitude,
+        $longitude
     ]);
 
     echo json_encode([
         'success' => true,
         'message' => 'Dorm added successfully',
-        'dorm_id' => $pdo->lastInsertId()
+        'dorm_id' => $pdo->lastInsertId(),
+        'geocoded' => !empty($latitude) && !empty($longitude)
     ]);
 
 } catch (Exception $e) {

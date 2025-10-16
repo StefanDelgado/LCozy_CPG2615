@@ -79,27 +79,34 @@ class _BrowseDormsMapScreenState extends State<BrowseDormsMapScreen> {
 
   /// Create markers from dorm data
   Set<Marker> _createMarkers(List<Map<String, dynamic>> dorms) {
-    return dorms.where((dorm) {
+    print('📍 [Map] Creating markers from ${dorms.length} dorms');
+    
+    final markers = dorms.where((dorm) {
       // Only include dorms with valid coordinates
-      return dorm['latitude'] != null && dorm['longitude'] != null;
+      final lat = double.tryParse(dorm['latitude']?.toString() ?? '');
+      final lng = double.tryParse(dorm['longitude']?.toString() ?? '');
+      return lat != null && lng != null && lat != 0.0 && lng != 0.0;
     }).map((dorm) {
-      final lat = double.tryParse(dorm['latitude'].toString());
-      final lng = double.tryParse(dorm['longitude'].toString());
+      final lat = double.parse(dorm['latitude'].toString());
+      final lng = double.parse(dorm['longitude'].toString());
 
-      if (lat == null || lng == null) return null;
+      print('   ✅ Creating marker for: ${dorm['title']} at ($lat, $lng)');
 
       return Marker(
         markerId: MarkerId(dorm['dorm_id'].toString()),
         position: LatLng(lat, lng),
         icon: MapHelpers.createColoredMarker(hue: 30.0), // Orange marker
         infoWindow: InfoWindow(
-          title: dorm['name'] ?? 'Dorm',
-          snippet: '₱${dorm['price_per_month'] ?? dorm['price'] ?? '0'}/month',
+          title: dorm['title'] ?? dorm['name'] ?? 'Dorm',
+          snippet: dorm['min_price']?.toString() ?? '₱0/month',
           onTap: () => _navigateToDormDetails(dorm),
         ),
         onTap: () => _onMarkerTap(dorm),
       );
-    }).whereType<Marker>().toSet();
+    }).toSet();
+    
+    print('📍 [Map] Created ${markers.length} markers');
+    return markers;
   }
 
   /// Handle marker tap
@@ -212,14 +219,23 @@ class _BrowseDormsMapScreenState extends State<BrowseDormsMapScreen> {
           final dorms = dormProvider.allDorms;
           final markers = _createMarkers(dorms);
 
-          // Default to Manila if no dorms with coordinates
-          final initialPosition = dorms.isNotEmpty &&
-                  dorms.any((d) => d['latitude'] != null)
-              ? LatLng(
-                  double.parse(dorms.first['latitude'].toString()),
-                  double.parse(dorms.first['longitude'].toString()),
-                )
-              : MapHelpers.defaultManilaPosition.target;
+          // Find first dorm with valid coordinates, or default to Manila
+          LatLng initialPosition = MapHelpers.defaultManilaPosition.target;
+          
+          for (var dorm in dorms) {
+            final lat = double.tryParse(dorm['latitude']?.toString() ?? '');
+            final lng = double.tryParse(dorm['longitude']?.toString() ?? '');
+            
+            if (lat != null && lng != null && lat != 0.0 && lng != 0.0) {
+              initialPosition = LatLng(lat, lng);
+              print('📍 [Map] Using initial position from dorm: ${dorm['title']} ($lat, $lng)');
+              break;
+            }
+          }
+          
+          if (initialPosition == MapHelpers.defaultManilaPosition.target) {
+            print('⚠️ [Map] No valid dorm locations, using default Manila position');
+          }
 
           return Stack(
             children: [
