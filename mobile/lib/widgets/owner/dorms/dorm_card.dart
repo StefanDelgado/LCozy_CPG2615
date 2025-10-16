@@ -24,6 +24,7 @@ class DormCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header with title and 3-dot menu
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -36,45 +37,109 @@ class DormCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: onEdit,
+                // 3-dot menu
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.grey),
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      onEdit();
+                    } else if (value == 'delete') {
+                      onDelete();
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, color: Colors.blue, size: 20),
+                          SizedBox(width: 12),
+                          Text('Edit Dorm'),
+                        ],
+                      ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: onDelete,
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, color: Colors.red, size: 20),
+                          SizedBox(width: 12),
+                          Text('Delete Dorm'),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              dorm['address'] ?? '',
-              style: TextStyle(color: Colors.grey[600]),
+            
+            // Address
+            Row(
+              children: [
+                Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    dorm['address'] ?? 'No address',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
+            
+            // Description
             Text(
-              dorm['description'] ?? '',
+              dorm['description'] ?? 'No description',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.grey[700], fontSize: 14),
             ),
+            
+            // Features (if available)
+            if (dorm['features'] != null && dorm['features'].toString().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 4,
+                children: _buildFeatureChips(dorm['features'].toString()),
+              ),
+            ],
+            
             const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: onManageRooms,
-              icon: const Icon(Icons.meeting_room),
-              label: const Text('Manage Rooms'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
+            
+            // Manage Rooms Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: onManageRooms,
+                icon: const Icon(Icons.meeting_room),
+                label: const Text('Manage Rooms'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _buildFeatureChips(String features) {
+    final featureList = features.split(',').take(3); // Show max 3 features
+    return featureList.map((feature) {
+      return Chip(
+        label: Text(
+          feature.trim(),
+          style: const TextStyle(fontSize: 11),
+        ),
+        backgroundColor: Colors.orange[50],
+        padding: const EdgeInsets.all(0),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      );
+    }).toList();
   }
 }

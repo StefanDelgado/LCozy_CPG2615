@@ -26,24 +26,32 @@ class DormService {
         '$_baseUrl/modules/mobile-api/owner_dorms_api.php?owner_email=$ownerEmail',
       );
       
+      print('🌐 Calling API: $uri');
       final response = await http.get(uri);
+      print('🌐 Response status: ${response.statusCode}');
+      print('🌐 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print('🌐 Decoded data type: ${data.runtimeType}');
+        print('🌐 Decoded data: $data');
         
         if (data is List) {
+          print('✅ Data is List with ${data.length} items');
           return {
             'success': true,
             'data': data,
             'message': 'Dorms loaded successfully',
           };
         } else if (data is Map && data['error'] != null) {
+          print('❌ Data has error: ${data['error']}');
           return {
             'success': false,
             'error': data['error'],
             'message': data['error'],
           };
         } else {
+          print('⚠️ Data is neither List nor error Map, returning empty');
           return {
             'success': true,
             'data': [],
@@ -51,6 +59,7 @@ class DormService {
           };
         }
       } else {
+        print('❌ HTTP Error: ${response.statusCode}');
         return {
           'success': false,
           'error': 'HTTP Error',
@@ -58,6 +67,7 @@ class DormService {
         };
       }
     } catch (e) {
+      print('❌ Exception: $e');
       return {
         'success': false,
         'error': 'Exception',

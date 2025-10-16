@@ -44,10 +44,8 @@ try {
     ");
     $stmt->execute([$owner['user_id']]);
     
-    echo json_encode([
-        'ok' => true,
-        'dorms' => $stmt->fetchAll(PDO::FETCH_ASSOC)
-    ]);
+    // Return dorms as direct array (expected by mobile app)
+    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 
 } catch (Exception $e) {
     error_log('Owner dorms API error: ' . $e->getMessage());

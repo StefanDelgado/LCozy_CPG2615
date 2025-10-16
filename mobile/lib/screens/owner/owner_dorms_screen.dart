@@ -39,17 +39,25 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
     });
 
     try {
+      print('🔵 Fetching dorms for: ${widget.ownerEmail}');
       final result = await _dormService.getOwnerDorms(widget.ownerEmail);
+      print('🔵 API Result: $result');
       
       if (result['success']) {
+        final dormsList = List<Map<String, dynamic>>.from(result['data'] ?? []);
+        print('🔵 Dorms count: ${dormsList.length}');
+        print('🔵 Dorms data: $dormsList');
+        
         setState(() {
-          dorms = List<Map<String, dynamic>>.from(result['data'] ?? []);
+          dorms = dormsList;
           isLoading = false;
         });
       } else {
+        print('❌ API returned success=false: ${result['message']}');
         throw Exception(result['message'] ?? 'Failed to load dorms');
       }
     } catch (e) {
+      print('❌ Error fetching dorms: $e');
       setState(() {
         error = e.toString();
         isLoading = false;

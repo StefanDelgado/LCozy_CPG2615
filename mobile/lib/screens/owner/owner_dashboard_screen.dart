@@ -5,12 +5,13 @@ import '../../widgets/owner/dashboard/owner_stat_card.dart';
 import '../../widgets/owner/dashboard/owner_quick_action_tile.dart';
 import '../../widgets/owner/dashboard/owner_activity_tile.dart';
 import '../../widgets/owner/dashboard/owner_messages_list.dart';
+// New refactored screens
+import 'owner_dorms_screen.dart';
 // Temporary imports from legacy structure
 import '../../legacy/MobileScreen/ownerbooking.dart';
 import '../../legacy/MobileScreen/ownerpayments.dart';
 import '../../legacy/MobileScreen/ownertenants.dart';
 import '../../legacy/MobileScreen/ownersetting.dart';
-import '../../legacy/MobileScreen/ownerdorms.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
   final String ownerEmail;
