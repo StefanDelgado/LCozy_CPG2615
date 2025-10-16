@@ -15,6 +15,8 @@ try {
             d.cover_image as image,
             d.features,
             d.verified,
+            d.latitude,
+            d.longitude,
             u.email as owner_email,
             u.name as owner_name,
             (
@@ -39,11 +41,13 @@ try {
     $formatted_dorms = array_map(function($dorm) {
         return [
             'dorm_id' => $dorm['dorm_id'],
-            'image' => $dorm['cover_image'] ? "http://cozydorms.life/uploads/{$dorm['cover_image']}" : null,
+            'image' => $dorm['image'] ? "http://cozydorms.life/uploads/dorms/{$dorm['image']}" : null,
             'location' => $dorm['location'],
             'title' => $dorm['title'],
             'desc' => $dorm['desc'],
             'features' => $dorm['features'],
+            'latitude' => $dorm['latitude'],
+            'longitude' => $dorm['longitude'],
             'owner_email' => $dorm['owner_email'],
             'owner_name' => $dorm['owner_name'],
             'available_rooms' => (int)$dorm['available_rooms'],

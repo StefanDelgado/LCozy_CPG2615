@@ -96,10 +96,8 @@ class DormService {
   /// - message: Success or error message
   Future<Map<String, dynamic>> getAllDorms({String? studentEmail}) async {
     try {
-      // Build URI with student_email parameter if provided
-      final uri = studentEmail != null
-          ? Uri.parse('${ApiConstants.studentDashboardEndpoint}?student_email=$studentEmail')
-          : Uri.parse(ApiConstants.studentDashboardEndpoint);
+      // Use student_home_api.php which returns all available dorms
+      final uri = Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/student_home_api.php');
       
       print('🌐 API Call: $uri');
       
@@ -118,11 +116,16 @@ class DormService {
         
         print('📊 Decoded data type: ${data.runtimeType}');
         
+        // student_home_api.php returns {ok: true, dorms: [...]}
         if (data is Map && data['dorms'] != null) {
-          print('✅ Found dorms in Map: ${(data['dorms'] as List).length} dorms');
+          final dormsList = data['dorms'] as List;
+          print('✅ Found dorms in Map: ${dormsList.length} dorms');
+          if (dormsList.isNotEmpty) {
+            print('   First dorm: ${dormsList[0]}');
+          }
           return {
             'success': true,
-            'data': data['dorms'],
+            'data': dormsList,
             'message': 'Dorms loaded successfully',
           };
         } else if (data is List) {
@@ -131,6 +134,13 @@ class DormService {
             'success': true,
             'data': data,
             'message': 'Dorms loaded successfully',
+          };
+        } else if (data is Map && data['ok'] == true && data['dorms'] == null) {
+          print('⚠️ Response OK but no dorms array');
+          return {
+            'success': true,
+            'data': [],
+            'message': 'No dorms available',
           };
         } else if (data is Map) {
           print('⚠️ Map without dorms key. Keys: ${data.keys}');

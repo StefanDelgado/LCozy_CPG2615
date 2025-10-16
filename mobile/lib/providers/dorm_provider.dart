@@ -51,25 +51,35 @@ class DormProvider with ChangeNotifier {
   /// 
   /// Returns `true` if successful, `false` otherwise.
   Future<bool> fetchAllDorms({String? studentEmail}) async {
+    print('🔵 [Provider] fetchAllDorms called with email: $studentEmail');
     _setLoading(true);
     _error = null;
 
     try {
+      print('🔵 [Provider] Calling dormService.getAllDorms...');
       final result = await _dormService.getAllDorms(studentEmail: studentEmail);
+      print('🔵 [Provider] Service returned: ${result.keys}');
 
       if (result['success'] == true) {
-        _allDorms = List<Map<String, dynamic>>.from(result['data'] ?? []);
+        final dormsList = List<Map<String, dynamic>>.from(result['data'] ?? []);
+        print('✅ [Provider] Success! Got ${dormsList.length} dorms');
+        if (dormsList.isNotEmpty) {
+          print('   First dorm: ${dormsList[0]['name']} (ID: ${dormsList[0]['dorm_id']})');
+        }
+        _allDorms = dormsList;
         _error = null;
         _setLoading(false);
         return true;
       } else {
         // Include more detailed error information
         final errorMsg = result['message'] ?? result['error'] ?? 'Failed to load dorms';
+        print('❌ [Provider] Failed: $errorMsg');
         _error = errorMsg;
         _setLoading(false);
         return false;
       }
     } catch (e) {
+      print('❌ [Provider] Exception: $e');
       _error = 'Error loading dorms: ${e.toString()}';
       _setLoading(false);
       return false;

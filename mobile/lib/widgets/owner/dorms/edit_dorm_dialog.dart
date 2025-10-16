@@ -45,14 +45,37 @@ class _EditDormDialogState extends State<EditDormDialog> {
       try {
         final latitude = double.parse(lat.toString());
         final longitude = double.parse(lng.toString());
-        _selectedLocation = LatLng(latitude, longitude);
+        if (latitude != 0.0 && longitude != 0.0) {
+          _selectedLocation = LatLng(latitude, longitude);
+        }
       } catch (e) {
         print('Error parsing location: $e');
         _selectedLocation = null;
       }
     }
     
+    // Use address from dorm data
     _selectedAddress = widget.dorm['address'];
+    
+    // Show hint if location is missing
+    if (_selectedLocation == null && _selectedAddress != null && _selectedAddress!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('📍 Tip: Search the address in the map below to set location'),
+              backgroundColor: Colors.blue,
+              duration: Duration(seconds: 4),
+              action: SnackBarAction(
+                label: 'OK',
+                textColor: Colors.white,
+                onPressed: () {},
+              ),
+            ),
+          );
+        }
+      });
+    }
   }
 
   @override
@@ -200,21 +223,86 @@ class _EditDormDialogState extends State<EditDormDialog> {
                     ),
                     const Spacer(),
                     if (_selectedLocation != null)
-                      Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 20,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
+                            size: 20,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Location Set',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.warning,
+                            color: Colors.orange,
+                            size: 20,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'No Location',
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                   ],
                 ),
                 const SizedBox(height: 4),
+                if (_selectedLocation == null)
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info, color: Colors.orange, size: 16),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Search the address below to set map location',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange[900],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 8),
                 Text(
-                  'Current: ${_selectedAddress ?? "No address"}',
+                  'Address: ${_selectedAddress ?? "No address"}',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
                   ),
                 ),
+                if (_selectedLocation != null)
+                  Text(
+                    'Coordinates: ${_selectedLocation!.latitude.toStringAsFixed(6)}, ${_selectedLocation!.longitude.toStringAsFixed(6)}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[500],
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 
                 LocationPickerWidget(

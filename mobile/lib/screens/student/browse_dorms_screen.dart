@@ -44,9 +44,12 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
   }
 
   Future<void> fetchDorms() async {
+    print('🔵 [Browse] Starting fetchDorms for user: ${widget.userEmail}');
+    
     final dormProvider = context.read<DormProvider>();
     
     // Fetch all dorms with student email
+    print('🔵 [Browse] Calling provider.fetchAllDorms...');
     await dormProvider.fetchAllDorms(studentEmail: widget.userEmail);
     
     if (!mounted) return;
@@ -55,20 +58,31 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
     var items = List<Map<String, dynamic>>.from(dormProvider.allDorms);
     
     // Debug: Print dorm count and first dorm if available
-    print('📊 Fetched ${items.length} dorms');
+    print('📊 [Browse] Fetched ${items.length} dorms from provider');
     if (items.isNotEmpty) {
-      print('📍 First dorm: ${items[0]}');
+      print('📍 [Browse] First dorm details:');
+      print('   - ID: ${items[0]['dorm_id']}');
+      print('   - Name: ${items[0]['name']}');
+      print('   - Address: ${items[0]['address']}');
+      print('   - Latitude: ${items[0]['latitude']}');
+      print('   - Longitude: ${items[0]['longitude']}');
+      print('   - Full data: ${items[0]}');
+    } else {
+      print('⚠️ [Browse] No dorms returned from provider!');
+      print('   - Provider error: ${dormProvider.error}');
+      print('   - Provider loading: ${dormProvider.isLoading}');
     }
     
     // Apply search filter if query provided
     if (widget.searchQuery != null && widget.searchQuery!.trim().isNotEmpty) {
       final q = widget.searchQuery!.toLowerCase();
+      print('🔍 [Browse] Applying search filter: "$q"');
       items = items.where((p) {
-        final t = (p['title'] ?? '').toString().toLowerCase();
-        final l = (p['location'] ?? '').toString().toLowerCase();
+        final t = (p['title'] ?? p['name'] ?? '').toString().toLowerCase();
+        final l = (p['location'] ?? p['address'] ?? '').toString().toLowerCase();
         return t.contains(q) || l.contains(q);
       }).toList();
-      print('🔍 After search filter: ${items.length} dorms');
+      print('🔍 [Browse] After search filter: ${items.length} dorms');
     }
     
     setState(() {
@@ -76,8 +90,11 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
       dorms = items;
     });
     
+    print('✅ [Browse] Set state with ${dorms.length} dorms');
+    
     // Apply Near Me filter if active
     if (_nearMeFilterActive) {
+      print('📍 [Browse] Applying Near Me filter...');
       _applyNearMeFilter();
     }
   }
@@ -100,11 +117,18 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
 
   /// Apply Near Me filter
   Future<void> _applyNearMeFilter() async {
+    print('📍 [Filter] Starting Near Me filter...');
+    print('📍 [Filter] User location: $_userLocation');
+    print('📍 [Filter] Radius: $_radiusKm km');
+    print('📍 [Filter] Total dorms to filter: ${allDorms.length}');
+    
     if (_userLocation == null) {
+      print('📍 [Filter] No user location, fetching...');
       await _getUserLocation();
     }
 
     if (_userLocation == null) {
+      print('❌ [Filter] Could not get user location, disabling filter');
       setState(() {
         _nearMeFilterActive = false;
       });
@@ -116,20 +140,40 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
     });
 
     // Filter dorms within radius
+    int validLocationCount = 0;
+    int invalidLocationCount = 0;
+    
     final filteredDorms = allDorms.where((dorm) {
-      final lat = double.tryParse(dorm['latitude']?.toString() ?? '');
-      final lng = double.tryParse(dorm['longitude']?.toString() ?? '');
+      final latStr = dorm['latitude']?.toString() ?? '';
+      final lngStr = dorm['longitude']?.toString() ?? '';
+      final lat = double.tryParse(latStr);
+      final lng = double.tryParse(lngStr);
 
-      if (lat == null || lng == null) return false;
+      if (lat == null || lng == null || lat == 0.0 || lng == 0.0) {
+        invalidLocationCount++;
+        print('   ⚠️ Dorm "${dorm['name']}" has no valid location (lat: $latStr, lng: $lngStr)');
+        return false;
+      }
 
+      validLocationCount++;
       final dormLocation = LatLng(lat, lng);
       final distance = _locationService.calculateDistance(_userLocation!, dormLocation);
 
       // Add distance to dorm data for display
       dorm['_distance'] = distance;
+      
+      final withinRadius = distance <= _radiusKm;
+      if (withinRadius) {
+        print('   ✅ Dorm "${dorm['name']}" is ${distance.toStringAsFixed(2)} km away (within radius)');
+      }
 
-      return distance <= _radiusKm;
+      return withinRadius;
     }).toList();
+
+    print('📊 [Filter] Results:');
+    print('   - Valid locations: $validLocationCount');
+    print('   - Invalid locations: $invalidLocationCount');
+    print('   - Within radius: ${filteredDorms.length}');
 
     // Sort by distance
     filteredDorms.sort((a, b) {
@@ -141,6 +185,8 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
     setState(() {
       dorms = filteredDorms;
     });
+    
+    print('✅ [Filter] Applied Near Me filter, showing ${dorms.length} dorms');
   }
 
   /// Clear Near Me filter
