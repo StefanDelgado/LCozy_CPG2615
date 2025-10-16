@@ -42,9 +42,9 @@ $trends = $pdo->query("
 $top_dorms = $pdo->query("
     SELECT 
         dormitories.name,
-        COUNT(bookings.booking_id) as total_bookings,
-        COALESCE(AVG(reviews.rating), 0) as avg_rating,
-        COUNT(DISTINCT reviews.id) as review_count
+        COUNT(bookings.booking_id) AS total_bookings,
+        COALESCE(AVG(reviews.rating), 0) AS avg_rating,
+        COUNT(DISTINCT reviews.review_id) AS review_count
     FROM dormitories
     LEFT JOIN rooms ON rooms.dorm_id = dormitories.dorm_id
     LEFT JOIN bookings ON bookings.room_id = rooms.room_id
