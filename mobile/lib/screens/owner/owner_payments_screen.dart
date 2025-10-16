@@ -34,6 +34,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
   String? _error;
   String _selectedFilter = 'All';
   String _searchQuery = '';
+  final Set<int> _processingPayments = {};
 
   // Data
   Map<String, dynamic> _stats = {};
@@ -83,9 +84,21 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
 
     // Apply status filter
     if (_selectedFilter != 'All') {
-      filtered = filtered.where((p) => 
-        p['status'].toString().toLowerCase() == _selectedFilter.toLowerCase()
-      ).toList();
+      filtered = filtered.where((p) {
+        final status = p['status'].toString().toLowerCase();
+        final filter = _selectedFilter.toLowerCase();
+        
+        // Handle different status names
+        if (filter == 'completed') {
+          return status == 'completed' || status == 'paid';
+        } else if (filter == 'pending') {
+          return status == 'pending' || status == 'submitted';
+        } else if (filter == 'failed') {
+          return status == 'failed' || status == 'rejected';
+        }
+        
+        return status == filter;
+      }).toList();
     }
 
     // Apply search filter
@@ -116,23 +129,277 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
   }
 
   /// Handles marking a payment as paid manually
-  void _onMarkAsPaid(Map<String, dynamic> payment) {
-    // TODO: Implement mark as paid functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Marking payment as paid for ${payment['tenant_name']}...'),
-        duration: const Duration(seconds: 2),
+  Future<void> _onMarkAsPaid(Map<String, dynamic> payment) async {
+    final paymentId = payment['payment_id'];
+    
+    if (_processingPayments.contains(paymentId)) return;
+    
+    setState(() => _processingPayments.add(paymentId));
+    
+    try {
+      final result = await _paymentService.completePayment(
+        paymentId,
+        widget.ownerEmail,
+      );
+
+      if (!mounted) return;
+
+      if (result['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Payment marked as paid'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        
+        // Refresh payments
+        await _fetchPayments();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to mark payment as paid'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _processingPayments.remove(paymentId));
+      }
+    }
+  }
+
+  /// Handles rejecting a payment
+  Future<void> _onRejectPayment(Map<String, dynamic> payment) async {
+    final paymentId = payment['payment_id'];
+    
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Payment'),
+        content: Text(
+          'Are you sure you want to reject the payment from ${payment['tenant_name']}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Reject'),
+          ),
+        ],
       ),
     );
+
+    if (confirmed != true) return;
+    if (_processingPayments.contains(paymentId)) return;
+    
+    setState(() => _processingPayments.add(paymentId));
+    
+    try {
+      final result = await _paymentService.rejectPayment(
+        paymentId,
+        widget.ownerEmail,
+      );
+
+      if (!mounted) return;
+
+      if (result['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Payment rejected'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        
+        // Refresh payments
+        await _fetchPayments();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to reject payment'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _processingPayments.remove(paymentId));
+      }
+    }
   }
 
   /// Handles viewing payment receipt
   void _onViewReceipt(Map<String, dynamic> payment) {
-    // TODO: Implement view receipt functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Viewing receipt for ${payment['tenant_name']}...'),
-        duration: const Duration(seconds: 2),
+    final receiptImage = payment['receipt_image'];
+    
+    if (receiptImage == null || receiptImage.toString().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No receipt available for this payment'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Show receipt in a dialog
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBar(
+              title: const Text('Payment Receipt'),
+              backgroundColor: _orange,
+              leading: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildReceiptInfo('Tenant', payment['tenant_name']),
+                      _buildReceiptInfo('Dorm', payment['dorm_name']),
+                      _buildReceiptInfo('Room', payment['room_type']),
+                      _buildReceiptInfo('Amount', '₱${payment['amount']}'),
+                      _buildReceiptInfo('Due Date', payment['due_date']),
+                      _buildReceiptInfo('Status', payment['status']),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Receipt Image:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Image.network(
+                        'http://cozydorms.life/uploads/receipts/$receiptImage',
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            padding: const EdgeInsets.all(32),
+                            color: Colors.grey[200],
+                            child: const Column(
+                              children: [
+                                Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                                SizedBox(height: 8),
+                                Text('Failed to load receipt image'),
+                              ],
+                            ),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            padding: const EdgeInsets.all(32),
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  if (payment['status'].toString().toLowerCase() == 'pending')
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _onRejectPayment(payment);
+                          },
+                          icon: const Icon(Icons.close),
+                          label: const Text('Reject'),
+                        ),
+                      ),
+                    ),
+                  if (payment['status'].toString().toLowerCase() == 'pending')
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _onMarkAsPaid(payment);
+                          },
+                          icon: const Icon(Icons.check),
+                          label: const Text('Complete'),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReceiptInfo(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              '$label:',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: Text(value ?? 'N/A'),
+          ),
+        ],
       ),
     );
   }
@@ -305,6 +572,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
           payment: payment,
           onMarkAsPaid: () => _onMarkAsPaid(payment),
           onViewReceipt: () => _onViewReceipt(payment),
+          onReject: () => _onRejectPayment(payment),
         );
       },
     );
