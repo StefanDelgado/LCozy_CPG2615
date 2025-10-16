@@ -9,6 +9,7 @@ import '../../widgets/student/home/empty_bookings_widget.dart';
 // Temporary imports from legacy structure
 import 'browse_dorms_screen.dart';
 import '../../legacy/MobileScreen/student_payments.dart';
+import 'student_profile_screen.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   final String userName;
@@ -96,8 +97,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         Navigator.pushNamed(context, '/student_messages');
         break;
       case 4: // Profile
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile feature coming soon')),
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StudentProfileScreen(
+              studentName: widget.userName,
+              studentEmail: widget.userEmail,
+            ),
+          ),
         );
         break;
     }

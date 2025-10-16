@@ -4,6 +4,7 @@ import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/owner/dorms/dorm_card.dart';
 import '../../widgets/owner/dorms/add_dorm_dialog.dart';
+import '../../widgets/owner/dorms/edit_dorm_dialog.dart';
 import 'room_management_screen.dart';
 
 /// Screen for managing owner's dormitories
@@ -197,10 +198,44 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
   }
 
   void _editDorm(Map<String, dynamic> dorm) {
-    // TODO: Implement edit functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit feature coming soon')),
+    showDialog(
+      context: context,
+      builder: (context) => EditDormDialog(
+        dorm: dorm,
+        onUpdate: _updateDorm,
+      ),
     );
+  }
+
+  Future<void> _updateDorm(String dormId, Map<String, String> dormData) async {
+    try {
+      final result = await _dormService.updateDorm(dormId, dormData);
+
+      if (result['success']) {
+        await fetchDorms();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Dorm updated successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception(result['message'] ?? 'Failed to update dorm');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      rethrow;
+    }
   }
 
   void _deleteDorm(Map<String, dynamic> dorm) {

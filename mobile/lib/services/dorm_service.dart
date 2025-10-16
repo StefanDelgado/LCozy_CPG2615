@@ -304,10 +304,16 @@ class DormService {
     }
   }
 
-  /// Updates an existing dorm (Future implementation)
+  /// Updates an existing dorm
   /// 
   /// [dormId] - ID of the dorm to update
-  /// [dormData] - Map containing updated dorm information
+  /// [dormData] - Map containing updated dorm information:
+  ///   - name: String
+  ///   - address: String
+  ///   - description: String (optional)
+  ///   - features: String (optional)
+  ///   - latitude: String (optional)
+  ///   - longitude: String (optional)
   /// 
   /// Returns a Map with:
   /// - success: true if successful, false otherwise
@@ -317,11 +323,48 @@ class DormService {
     String dormId,
     Map<String, dynamic> dormData,
   ) async {
-    // TODO: Implement when update API endpoint is available
-    return {
-      'success': false,
-      'error': 'Not Implemented',
-      'message': 'Update dorm functionality not yet implemented',
-    };
+    try {
+      final uri = Uri.parse('$_baseUrl/modules/mobile-api/update_dorm_api.php');
+      
+      final body = {
+        'dorm_id': dormId,
+        ...dormData,
+      };
+      
+      final response = await http.post(
+        uri,
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['success'] == true) {
+          return {
+            'success': true,
+            'data': data,
+            'message': data['message'] ?? 'Dorm updated successfully',
+          };
+        } else {
+          return {
+            'success': false,
+            'error': data['error'] ?? 'Unknown error',
+            'message': data['message'] ?? 'Failed to update dorm',
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'error': 'HTTP Error',
+          'message': 'Failed to update dorm. Status: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Exception',
+        'message': 'Error updating dorm: ${e.toString()}',
+      };
+    }
   }
 }
