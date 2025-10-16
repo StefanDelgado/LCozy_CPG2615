@@ -65,7 +65,6 @@ $payment_stats = $pdo->query("
     GROUP BY status
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-$page_title = "Reports & Analytics";
 require_once __DIR__ . '/../partials/header.php';
 ?>
 
