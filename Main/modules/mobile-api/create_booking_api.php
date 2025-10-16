@@ -134,7 +134,7 @@ try {
         $pdo->prepare("UPDATE rooms SET status = 'occupied' WHERE room_id = ?")->execute([$room_id]);
     }
 
-    // Get booking details to return
+    // Get booking details to return with calculated price
     $stmt = $pdo->prepare("
         SELECT 
             b.booking_id,
@@ -144,7 +144,8 @@ try {
             b.booking_type,
             d.name as dorm_name,
             r.room_type,
-            r.price
+            r.price as base_price,
+            r.capacity
         FROM bookings b
         JOIN rooms r ON b.room_id = r.room_id
         JOIN dormitories d ON r.dorm_id = d.dorm_id
@@ -152,6 +153,18 @@ try {
     ");
     $stmt->execute([$booking_id]);
     $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Calculate price based on booking type
+    $base_price = (float)$booking['base_price'];
+    $capacity = (int)$booking['capacity'];
+    
+    if ($booking_type === 'shared' && $capacity > 0) {
+        // For shared booking, divide price by room capacity
+        $calculated_price = $base_price / $capacity;
+    } else {
+        // For whole room booking, use full price
+        $calculated_price = $base_price;
+    }
 
     echo json_encode([
         'ok' => true,
@@ -164,7 +177,9 @@ try {
             'booking_type' => $booking['booking_type'],
             'dorm_name' => $booking['dorm_name'],
             'room_type' => $booking['room_type'],
-            'price' => (float)$booking['price']
+            'base_price' => $base_price,
+            'capacity' => $capacity,
+            'price' => $calculated_price
         ]
     ]);
 

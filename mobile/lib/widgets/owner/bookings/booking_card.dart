@@ -21,6 +21,7 @@ class BookingCard extends StatelessWidget {
     final requestedAt = booking['requested_at']?.toString() ?? '';
     final dormName = booking['dorm_name']?.toString() ?? 'Unknown Dorm';
     final roomType = booking['room_type']?.toString() ?? 'Unknown Room';
+    final bookingType = booking['booking_type']?.toString() ?? 'Shared';
     final duration = booking['duration']?.toString() ?? 'Not specified';
     final price = booking['price']?.toString() ?? '₱0';
     final status = (booking['status'] ?? '').toString().toLowerCase();
@@ -59,6 +60,7 @@ class BookingCard extends StatelessWidget {
             // Booking Details
             _InfoRow(label: 'Dorm', value: dormName),
             _InfoRow(label: 'Room', value: roomType),
+            _InfoRow(label: 'Type', value: bookingType),
             _InfoRow(label: 'Duration', value: duration),
             _InfoRow(label: 'Price', value: price),
             

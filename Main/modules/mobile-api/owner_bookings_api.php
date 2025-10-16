@@ -118,7 +118,8 @@ try {
             COALESCE(b.status, 'pending') as status, -- Default to pending if NULL
             d.name as dorm,
             r.room_type,
-            r.price,
+            r.price as base_price,
+            r.capacity,
             b.booking_type,
             b.start_date,
             b.end_date,
@@ -159,6 +160,19 @@ try {
             }
         }
         
+        // Calculate price based on booking type
+        $base_price = (float)$b['base_price'];
+        $capacity = (int)$b['capacity'];
+        $booking_type = strtolower($b['booking_type'] ?? 'shared');
+        
+        if ($booking_type === 'shared' && $capacity > 0) {
+            // For shared booking, divide price by room capacity
+            $calculated_price = $base_price / $capacity;
+        } else {
+            // For whole room booking, use full price
+            $calculated_price = $base_price;
+        }
+        
         return [
             'id' => $b['id'],
             'booking_id' => $b['id'], // Add booking_id for consistency
@@ -169,11 +183,13 @@ try {
             'dorm' => $b['dorm'], // Keep for backward compatibility
             'dorm_name' => $b['dorm'], // Add dorm_name for consistency with widget
             'room_type' => $b['room_type'],
-            'booking_type' => ucfirst($b['booking_type'] ?? 'shared'), // 'Whole' or 'Shared'
+            'booking_type' => ucfirst($booking_type), // 'Whole' or 'Shared'
             'duration' => $duration,
             'start_date' => $b['start_date'],
             'end_date' => $b['end_date'] ?? null,
-            'price' => '₱' . number_format($b['price'], 2),
+            'base_price' => $base_price,
+            'capacity' => $capacity,
+            'price' => '₱' . number_format($calculated_price, 2),
             'message' => $b['message'] ?? 'No additional message'
         ];
     }, $bookings);

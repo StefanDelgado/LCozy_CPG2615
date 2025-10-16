@@ -165,14 +165,27 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     }
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, String value, {bool highlight = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            label, 
+            style: TextStyle(
+              color: highlight ? Colors.green[700] : Colors.grey,
+              fontWeight: highlight ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+          Text(
+            value, 
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: highlight ? Colors.green[700] : Colors.black,
+              fontSize: highlight ? 16 : 14,
+            ),
+          ),
         ],
       ),
     );
@@ -421,7 +434,20 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                               const Divider(),
                               _buildInfoRow('Room Type', selectedRoom!['room_type']),
                               _buildInfoRow('Booking Type', bookingType.toUpperCase()),
-                              _buildInfoRow('Monthly Rate', '₱${selectedRoom!['price']}'),
+                              _buildInfoRow('Room Capacity', '${selectedRoom!['capacity']} person(s)'),
+                              _buildInfoRow('Base Price', '₱${selectedRoom!['price']}/month'),
+                              if (bookingType == 'shared' && selectedRoom!['capacity'] != null && selectedRoom!['capacity'] > 0)
+                                _buildInfoRow(
+                                  'Your Share',
+                                  '₱${(selectedRoom!['price'] / selectedRoom!['capacity']).toStringAsFixed(2)}/month',
+                                  highlight: true,
+                                )
+                              else
+                                _buildInfoRow(
+                                  'Total Price',
+                                  '₱${selectedRoom!['price']}/month',
+                                  highlight: true,
+                                ),
                               _buildInfoRow(
                                 'Duration',
                                 '${endDate!.difference(startDate!).inDays} days',
