@@ -119,8 +119,9 @@ try {
             d.name as dorm,
             r.room_type,
             r.price,
-            b.booking_type as duration,
+            b.booking_type,
             b.start_date,
+            b.end_date,
             b.notes as message
         FROM bookings b
         JOIN rooms r ON b.room_id = r.room_id
@@ -138,6 +139,26 @@ try {
 
     // Format data for mobile app
     $formatted = array_map(function($b) {
+        // Calculate duration from start_date and end_date
+        $duration = 'Not specified';
+        if (!empty($b['start_date']) && !empty($b['end_date'])) {
+            $start = new DateTime($b['start_date']);
+            $end = new DateTime($b['end_date']);
+            $interval = $start->diff($end);
+            
+            $months = $interval->m + ($interval->y * 12);
+            $days = $interval->d;
+            
+            if ($months > 0) {
+                $duration = $months . ' month' . ($months > 1 ? 's' : '');
+                if ($days > 0) {
+                    $duration .= ' ' . $days . ' day' . ($days > 1 ? 's' : '');
+                }
+            } else if ($days > 0) {
+                $duration = $days . ' day' . ($days > 1 ? 's' : '');
+            }
+        }
+        
         return [
             'id' => $b['id'],
             'booking_id' => $b['id'], // Add booking_id for consistency
@@ -145,10 +166,13 @@ try {
             'student_name' => $b['student_name'],
             'requested_at' => timeAgo($b['requested_at']),
             'status' => ucfirst(strtolower($b['status'])),
-            'dorm' => $b['dorm'],
+            'dorm' => $b['dorm'], // Keep for backward compatibility
+            'dorm_name' => $b['dorm'], // Add dorm_name for consistency with widget
             'room_type' => $b['room_type'],
-            'duration' => $b['duration'] ?? 'Not specified',
+            'booking_type' => ucfirst($b['booking_type'] ?? 'shared'), // 'Whole' or 'Shared'
+            'duration' => $duration,
             'start_date' => $b['start_date'],
+            'end_date' => $b['end_date'] ?? null,
             'price' => '₱' . number_format($b['price'], 2),
             'message' => $b['message'] ?? 'No additional message'
         ];

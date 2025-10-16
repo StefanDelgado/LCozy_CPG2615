@@ -5,12 +5,14 @@ class BookingCard extends StatelessWidget {
   final Map<String, dynamic> booking;
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
+  final bool isProcessing;
 
   const BookingCard({
     super.key,
     required this.booking,
     this.onApprove,
     this.onReject,
+    this.isProcessing = false,
   });
 
   @override
@@ -70,7 +72,7 @@ class BookingCard extends StatelessWidget {
                     if (onReject != null)
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: onReject,
+                          onPressed: isProcessing ? null : onReject,
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red,
                             side: const BorderSide(color: Colors.red),
@@ -79,7 +81,16 @@ class BookingCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          icon: const Icon(Icons.cancel, size: 20),
+                          icon: isProcessing 
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                                ),
+                              )
+                            : const Icon(Icons.cancel, size: 20),
                           label: const Text('Reject'),
                         ),
                       ),
@@ -92,7 +103,7 @@ class BookingCard extends StatelessWidget {
                     if (onApprove != null)
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: onApprove,
+                          onPressed: isProcessing ? null : onApprove,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
                             foregroundColor: Colors.white,
@@ -101,7 +112,16 @@ class BookingCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          icon: const Icon(Icons.check_circle, size: 20),
+                          icon: isProcessing 
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.check_circle, size: 20),
                           label: const Text('Approve'),
                         ),
                       ),

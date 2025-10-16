@@ -29,6 +29,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
   
   // UI State
   bool _isLoading = true;
+  bool _isProcessing = false; // Track if approve/reject is in progress
   String? _error;
   int _selectedTab = 0;
 
@@ -73,80 +74,185 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
 
   /// Approves a booking
   Future<void> _approveBooking(Map<String, dynamic> booking) async {
-    print('📋 [OwnerBooking] Approve booking clicked');
-    print('📋 [OwnerBooking] Booking data: $booking');
+    print('📋 [OwnerBooking] ========================================');
+    print('📋 [OwnerBooking] APPROVE BOOKING CLICKED');
+    print('📋 [OwnerBooking] ========================================');
+    
+    // Prevent multiple clicks
+    if (_isProcessing) {
+      print('📋 [OwnerBooking] ⚠️ Already processing a booking action, ignoring click');
+      return;
+    }
+    
+    print('📋 [OwnerBooking] Full booking data: $booking');
     print('📋 [OwnerBooking] Owner email: ${widget.ownerEmail}');
+    print('📋 [OwnerBooking] Context mounted: $mounted');
 
     final bookingId = booking['booking_id'] ?? booking['id'];
+    print('📋 [OwnerBooking] Extracted booking_id: $bookingId (type: ${bookingId.runtimeType})');
+    
     if (bookingId == null) {
-      print('📋 [OwnerBooking] ❌ Booking ID is null');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: Booking ID is missing'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      print('📋 [OwnerBooking] ❌ CRITICAL: Booking ID is null!');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error: Booking ID is missing'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
       return;
     }
 
-    print('📋 [OwnerBooking] Booking ID: $bookingId');
+    setState(() {
+      _isProcessing = true;
+    });
+
+    print('📋 [OwnerBooking] Starting approval process...');
+    print('📋 [OwnerBooking] Calling updateBookingStatus with:');
+    print('📋 [OwnerBooking]   - bookingId: $bookingId');
+    print('📋 [OwnerBooking]   - action: approve');
+    print('📋 [OwnerBooking]   - ownerEmail: ${widget.ownerEmail}');
+
+    // Show loading indicator
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 16),
+              Text('Processing approval...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+    }
 
     try {
+      print('📋 [OwnerBooking] ⏳ Awaiting API response...');
+      
       final result = await _bookingService.updateBookingStatus(
         bookingId: bookingId.toString(),
         action: 'approve',
         ownerEmail: widget.ownerEmail,
       );
 
-      print('📋 [OwnerBooking] Update result: $result');
+      // Clear loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
 
-      if (result['success']) {
+      print('📋 [OwnerBooking] ========================================');
+      print('📋 [OwnerBooking] API RESPONSE RECEIVED');
+      print('📋 [OwnerBooking] ========================================');
+      print('📋 [OwnerBooking] Full result: $result');
+      print('📋 [OwnerBooking] Success: ${result['success']}');
+      print('📋 [OwnerBooking] Message: ${result['message']}');
+
+      if (result['success'] == true) {
+        print('📋 [OwnerBooking] ✅ Approval successful!');
         if (mounted) {
+          print('📋 [OwnerBooking] Showing success message...');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(result['message'] ?? 'Booking approved successfully'),
               backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
             ),
           );
+          print('📋 [OwnerBooking] Refreshing bookings list...');
           _fetchBookings(); // Refresh the list
+        } else {
+          print('📋 [OwnerBooking] ⚠️ Context not mounted, skipping UI updates');
         }
       } else {
-        throw Exception(result['message'] ?? 'Failed to approve booking');
+        print('📋 [OwnerBooking] ❌ Approval failed: ${result['message']}');
+        final errorMessage = result['message'] ?? 'Failed to approve booking';
+        print('📋 [OwnerBooking] Throwing exception: $errorMessage');
+        throw Exception(errorMessage);
       }
-    } catch (e) {
-      print('📋 [OwnerBooking] ❌ Error: $e');
+    } catch (e, stackTrace) {
+      // Clear loading indicator
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+      
+      print('📋 [OwnerBooking] ========================================');
+      print('📋 [OwnerBooking] EXCEPTION CAUGHT');
+      print('📋 [OwnerBooking] ========================================');
+      print('📋 [OwnerBooking] ❌ Error type: ${e.runtimeType}');
+      print('📋 [OwnerBooking] ❌ Error message: $e');
+      print('📋 [OwnerBooking] ❌ Stack trace: $stackTrace');
+      
+      if (mounted) {
+        print('📋 [OwnerBooking] Showing error message to user...');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
+        print('📋 [OwnerBooking] Error message shown');
+      } else {
+        print('📋 [OwnerBooking] ⚠️ Context not mounted, cannot show error message');
       }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+      print('📋 [OwnerBooking] ========================================');
+      print('📋 [OwnerBooking] APPROVE BOOKING COMPLETE');
+      print('📋 [OwnerBooking] ========================================');
     }
   }
 
   /// Rejects a booking
   Future<void> _rejectBooking(Map<String, dynamic> booking) async {
-    print('📋 [OwnerBooking] Reject booking clicked');
-    print('📋 [OwnerBooking] Booking data: $booking');
+    print('📋 [OwnerBooking] ========================================');
+    print('📋 [OwnerBooking] REJECT BOOKING CLICKED');
+    print('📋 [OwnerBooking] ========================================');
+    
+    // Prevent multiple clicks
+    if (_isProcessing) {
+      print('📋 [OwnerBooking] ⚠️ Already processing a booking action, ignoring click');
+      return;
+    }
+    
+    print('📋 [OwnerBooking] Full booking data: $booking');
     print('📋 [OwnerBooking] Owner email: ${widget.ownerEmail}');
 
     final bookingId = booking['booking_id'] ?? booking['id'];
+    print('📋 [OwnerBooking] Extracted booking_id: $bookingId (type: ${bookingId.runtimeType})');
+    
     if (bookingId == null) {
-      print('📋 [OwnerBooking] ❌ Booking ID is null');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: Booking ID is missing'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      print('📋 [OwnerBooking] ❌ CRITICAL: Booking ID is null!');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error: Booking ID is missing'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
       return;
     }
 
-    print('📋 [OwnerBooking] Booking ID: $bookingId');
-
     // Show confirmation dialog
+    print('📋 [OwnerBooking] Showing confirmation dialog...');
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -154,11 +260,17 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
         content: Text('Are you sure you want to reject the booking request from ${booking['student_name'] ?? 'this student'}?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () {
+              print('📋 [OwnerBooking] User cancelled rejection');
+              Navigator.pop(context, false);
+            },
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () {
+              print('📋 [OwnerBooking] User confirmed rejection');
+              Navigator.pop(context, true);
+            },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Reject'),
           ),
@@ -171,38 +283,117 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
       return;
     }
 
+    setState(() {
+      _isProcessing = true;
+    });
+
+    print('📋 [OwnerBooking] Starting rejection process...');
+    print('📋 [OwnerBooking] Calling updateBookingStatus with:');
+    print('📋 [OwnerBooking]   - bookingId: $bookingId');
+    print('📋 [OwnerBooking]   - action: reject');
+    print('📋 [OwnerBooking]   - ownerEmail: ${widget.ownerEmail}');
+
+    // Show loading indicator
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 16),
+              Text('Processing rejection...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+    }
+
     try {
+      print('📋 [OwnerBooking] ⏳ Awaiting API response...');
+      
       final result = await _bookingService.updateBookingStatus(
         bookingId: bookingId.toString(),
         action: 'reject',
         ownerEmail: widget.ownerEmail,
       );
 
-      print('📋 [OwnerBooking] Update result: $result');
+      // Clear loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
 
-      if (result['success']) {
+      print('📋 [OwnerBooking] ========================================');
+      print('📋 [OwnerBooking] API RESPONSE RECEIVED');
+      print('📋 [OwnerBooking] ========================================');
+      print('📋 [OwnerBooking] Full result: $result');
+      print('📋 [OwnerBooking] Success: ${result['success']}');
+      print('📋 [OwnerBooking] Message: ${result['message']}');
+
+      if (result['success'] == true) {
+        print('📋 [OwnerBooking] ✅ Rejection successful!');
         if (mounted) {
+          print('📋 [OwnerBooking] Showing success message...');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(result['message'] ?? 'Booking rejected successfully'),
               backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 3),
             ),
           );
+          print('📋 [OwnerBooking] Refreshing bookings list...');
           _fetchBookings(); // Refresh the list
+        } else {
+          print('📋 [OwnerBooking] ⚠️ Context not mounted, skipping UI updates');
         }
       } else {
-        throw Exception(result['message'] ?? 'Failed to reject booking');
+        print('📋 [OwnerBooking] ❌ Rejection failed: ${result['message']}');
+        final errorMessage = result['message'] ?? 'Failed to reject booking';
+        print('📋 [OwnerBooking] Throwing exception: $errorMessage');
+        throw Exception(errorMessage);
       }
-    } catch (e) {
-      print('📋 [OwnerBooking] ❌ Error: $e');
+    } catch (e, stackTrace) {
+      // Clear loading indicator
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+      
+      print('📋 [OwnerBooking] ========================================');
+      print('📋 [OwnerBooking] EXCEPTION CAUGHT');
+      print('📋 [OwnerBooking] ========================================');
+      print('📋 [OwnerBooking] ❌ Error type: ${e.runtimeType}');
+      print('📋 [OwnerBooking] ❌ Error message: $e');
+      print('📋 [OwnerBooking] ❌ Stack trace: $stackTrace');
+      
+      if (mounted) {
+        print('📋 [OwnerBooking] Showing error message to user...');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
+        print('📋 [OwnerBooking] Error message shown');
+      } else {
+        print('📋 [OwnerBooking] ⚠️ Context not mounted, cannot show error message');
       }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+      print('📋 [OwnerBooking] ========================================');
+      print('📋 [OwnerBooking] REJECT BOOKING COMPLETE');
+      print('📋 [OwnerBooking] ========================================');
     }
   }
 
@@ -338,6 +529,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
             booking: booking,
             onApprove: () => _approveBooking(booking),
             onReject: () => _rejectBooking(booking),
+            isProcessing: _isProcessing,
           );
         },
       ),
