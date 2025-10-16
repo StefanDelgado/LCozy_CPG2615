@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
@@ -73,7 +74,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Messages'),
-        backgroundColor: const Color(0xFFFF9800),
+        backgroundColor: AppTheme.primary,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -138,7 +139,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: const Color(0xFFFF9800),
+          backgroundColor: AppTheme.primary,
           child: Text(
             conversation['other_user_name']?.substring(0, 1).toUpperCase() ?? '?',
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -359,7 +360,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
-        backgroundColor: const Color(0xFFFF9800),
+        backgroundColor: AppTheme.primary,
       ),
       body: Column(
         children: [
@@ -434,7 +435,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 const SizedBox(width: 8),
                 CircleAvatar(
-                  backgroundColor: const Color(0xFFFF9800),
+                  backgroundColor: AppTheme.primary,
                   child: isSending
                       ? const SizedBox(
                           width: 20,
@@ -472,7 +473,7 @@ class _ChatScreenState extends State<ChatScreen> {
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         decoration: BoxDecoration(
-          color: isMine ? const Color(0xFFFF9800) : Colors.grey[300],
+          color: isMine ? AppTheme.primary : Colors.grey[300],
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),

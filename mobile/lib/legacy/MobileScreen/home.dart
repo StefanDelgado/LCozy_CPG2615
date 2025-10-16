@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'search.dart';
 import 'profile.dart';
 import 'student_owner_chat.dart';
@@ -24,7 +25,7 @@ class HomeScreen extends StatefulWidget {
 
 // ==================== HomeScreen State ====================
 class _HomeScreenState extends State<HomeScreen> {
-  final orange = Color(0xFFFF9800);
+  final purple = AppTheme.primary;
 
   int _selectedIndex = 0;
   String dormSearch = '';
@@ -130,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
-        selectedItemColor: orange,
+        selectedItemColor: purple,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
@@ -184,7 +185,7 @@ class NotificationTabContent extends StatelessWidget {
         'desc': 'Your payment for Urban Dorms is due tomorrow.',
         'time': '1 hr ago',
         'icon': Icons.payment,
-        'color': Color(0xFFFF9800),
+        'color': AppTheme.primary,
       },
       {
         'title': 'Special Offer',

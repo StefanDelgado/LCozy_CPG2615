@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'viewdetails.dart';
@@ -145,7 +146,7 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
                           const SizedBox(height: 6),
                           Row(
                             children: [
-                              if (minPrice != null && minPrice != '') Text(minPrice, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                              if (minPrice != null && minPrice != '') Text(minPrice, style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
                               const Spacer(),
                               Text('$available rooms', style: const TextStyle(fontSize: 12, color: Colors.black54)),
                             ],
@@ -165,7 +166,7 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.searchQuery == null || widget.searchQuery!.isEmpty ? 'Browse Dorms' : 'Search: ${widget.searchQuery}'),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
       ),
       body: RefreshIndicator(
         onRefresh: fetchDorms,

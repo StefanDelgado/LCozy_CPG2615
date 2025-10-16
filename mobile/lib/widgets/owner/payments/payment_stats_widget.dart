@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 class PaymentStatsWidget extends StatelessWidget {
   final Map<String, dynamic> stats;
@@ -26,7 +27,7 @@ class PaymentStatsWidget extends StatelessWidget {
               value: '${monthlyRevenue.toStringAsFixed(2)}',
               sublabel: 'This month',
               color: Colors.white,
-              textColor: Colors.orange,
+              textColor: AppTheme.primary,
               icon: Icons.payments,
             ),
           ),
@@ -36,9 +37,10 @@ class PaymentStatsWidget extends StatelessWidget {
               label: 'Pending',
               value: '${pendingAmount.toStringAsFixed(2)}',
               sublabel: 'Outstanding',
-              color: const Color(0xFFFFB74D),
-              textColor: Colors.white,
+              color: Colors.white, // White background like Total Revenue
+              textColor: AppTheme.primary, // Purple text
               icon: Icons.access_time,
+              hasBorder: true, // Add border
             ),
           ),
         ],
@@ -54,6 +56,7 @@ class _StatCard extends StatelessWidget {
   final Color color;
   final Color textColor;
   final IconData icon;
+  final bool hasBorder;
 
   const _StatCard({
     required this.label,
@@ -62,6 +65,7 @@ class _StatCard extends StatelessWidget {
     required this.color,
     required this.textColor,
     required this.icon,
+    this.hasBorder = false,
   });
 
   @override
@@ -72,6 +76,10 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(16),
+        border: hasBorder ? Border.all(
+          color: AppTheme.primary,
+          width: 2,
+        ) : null,
       ),
       child: Center(
         child: Column(

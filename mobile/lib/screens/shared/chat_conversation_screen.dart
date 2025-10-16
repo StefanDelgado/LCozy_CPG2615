@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'dart:async';
 import '../../services/chat_service.dart';
 import '../../widgets/common/error_display_widget.dart';
@@ -148,7 +149,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
             ),
           ],
         ),
-        backgroundColor: const Color(0xFFFF9800),
+        backgroundColor: AppTheme.primary,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -246,7 +247,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                 ),
                 const SizedBox(width: 8),
                 CircleAvatar(
-                  backgroundColor: const Color(0xFFFF9800),
+                  backgroundColor: AppTheme.primary,
                   child: _isSending
                       ? const SizedBox(
                           width: 20,
@@ -285,7 +286,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         decoration: BoxDecoration(
-          color: isMine ? const Color(0xFFFF9800) : Colors.grey[300],
+          color: isMine ? AppTheme.primary : Colors.grey[300],
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),

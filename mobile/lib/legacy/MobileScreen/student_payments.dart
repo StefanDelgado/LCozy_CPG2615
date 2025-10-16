@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
@@ -148,7 +149,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
       case 'paid':
         return Colors.green;
       case 'pending':
-        return Colors.orange;
+        return AppTheme.primary;
       case 'submitted':
         return Colors.blue;
       case 'rejected':
@@ -182,7 +183,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Payments'),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
       ),
       body: isLoading
@@ -223,7 +224,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
                                       'Pending',
                                       '${statistics['pending_count'] ?? 0}',
                                       Icons.schedule,
-                                      Colors.orange,
+                                      AppTheme.primary,
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -392,7 +393,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.orange,
+                color: AppTheme.primary,
               ),
             ),
             const SizedBox(height: 8),
@@ -477,7 +478,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
                   icon: const Icon(Icons.upload_file),
                   label: const Text('Upload Receipt'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
+                    backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -511,7 +512,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
                   icon: const Icon(Icons.receipt),
                   label: const Text('View Receipt'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.orange,
+                    foregroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),

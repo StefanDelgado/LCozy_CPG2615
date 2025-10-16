@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 /// Custom info window widget for dorm markers on the map.
 /// 
@@ -69,7 +70,7 @@ class DormMarkerInfoWindow extends StatelessWidget {
                     const Icon(
                       Icons.payments,
                       size: 16,
-                      color: Color(0xFFFF9800),
+                      color: AppTheme.primary,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -77,7 +78,7 @@ class DormMarkerInfoWindow extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFFFF9800),
+                        color: AppTheme.primary,
                       ),
                     ),
                   ],

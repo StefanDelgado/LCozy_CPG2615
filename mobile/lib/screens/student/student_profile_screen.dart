@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 import '../../widgets/owner/settings/settings_list_tile.dart';
 
@@ -14,7 +15,7 @@ class StudentProfileScreen extends StatelessWidget {
   final String studentEmail;
   final String avatarUrl;
 
-  static const Color _orange = Color(0xFFFF9800);
+  static const Color _orange = AppTheme.primary;
 
   const StudentProfileScreen({
     super.key,

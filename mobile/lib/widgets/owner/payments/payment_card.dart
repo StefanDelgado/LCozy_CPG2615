@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 /// Payment card widget displaying payment details
 class PaymentCard extends StatelessWidget {
@@ -62,7 +63,7 @@ class PaymentCard extends StatelessWidget {
       children: [
         Icon(
           isCompleted ? Icons.check_circle : isPending ? Icons.access_time : Icons.error,
-          color: isCompleted ? Colors.green : isPending ? Colors.orange : Colors.red,
+          color: isCompleted ? Colors.green : isPending ? AppTheme.primary : Colors.red,
           size: 22,
         ),
         const SizedBox(width: 8),
@@ -71,7 +72,7 @@ class PaymentCard extends StatelessWidget {
         Text(
           '₱${amount.toStringAsFixed(2)}',
           style: TextStyle(
-            color: isCompleted ? Colors.green : isPending ? Colors.orange : Colors.red,
+            color: isCompleted ? Colors.green : isPending ? AppTheme.primary : Colors.red,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
@@ -126,7 +127,7 @@ class PaymentCard extends StatelessWidget {
                 color: isCompleted
                     ? Colors.green.withValues(alpha: 0.15)
                     : isPending
-                        ? Colors.orange.withValues(alpha: 0.15)
+                        ? AppTheme.primary.withValues(alpha: 0.15)
                         : Colors.red.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -136,7 +137,7 @@ class PaymentCard extends StatelessWidget {
                   color: isCompleted
                       ? Colors.green
                       : isPending
-                          ? Colors.orange
+                          ? AppTheme.primary
                           : Colors.red,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,

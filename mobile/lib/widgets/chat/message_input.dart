@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 /// Message input widget
 /// Text field with send button for composing messages
@@ -67,7 +68,7 @@ class _MessageInputState extends State<MessageInput> {
           ),
           const SizedBox(width: 8),
           CircleAvatar(
-            backgroundColor: const Color(0xFFFF9800),
+            backgroundColor: AppTheme.primary,
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.white),
               onPressed: _handleSend,

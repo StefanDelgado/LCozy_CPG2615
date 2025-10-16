@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import '../../../utils/helpers.dart';
 
 class ReviewsTab extends StatelessWidget {
@@ -63,7 +64,7 @@ class ReviewsTab extends StatelessWidget {
                     Text(
                       Helpers.safeText(review['stars'], '⭐'),
                       style: const TextStyle(
-                        color: Colors.orange,
+                        color: AppTheme.primary,
                         fontSize: 14,
                       ),
                     ),

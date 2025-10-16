@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 class BookingCard extends StatelessWidget {
   final Map<String, dynamic> booking;
@@ -11,7 +12,7 @@ class BookingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = booking['status'] ?? 'pending';
-    final statusColor = status == 'approved' ? Colors.green : Colors.orange;
+    final statusColor = status == 'approved' ? Colors.green : AppTheme.primary;
     final dorm = booking['dorm'] ?? {};
     final room = booking['room'] ?? {};
     final daysUntil = booking['days_until_checkin'] ?? 0;
@@ -94,7 +95,7 @@ class BookingCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF9800),
+                  color: AppTheme.primary,
                 ),
               ),
               if (daysUntil > 0)

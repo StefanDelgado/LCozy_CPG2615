@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -59,7 +60,7 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final orange = const Color(0xFFFF9800);
+    final purple = AppTheme.primary;
     return Scaffold(
       backgroundColor: const Color(0xFFFDF6F0),
       body: SafeArea(
@@ -69,7 +70,7 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
             Container(
               padding: const EdgeInsets.only(left: 8, right: 20, top: 18, bottom: 18),
               decoration: BoxDecoration(
-                color: orange,
+                color: purple,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24),
@@ -113,7 +114,7 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
                 height: 54,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [orange, orange.withOpacity(0.85)],
+                    colors: [purple, purple.withOpacity(0.85)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
@@ -183,7 +184,7 @@ class _TenantsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final orange = const Color(0xFFFF9800);
+    final purple = AppTheme.primary;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -202,7 +203,7 @@ class _TenantsTab extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    color: selected ? orange : Colors.white,
+                    color: selected ? purple : Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -213,7 +214,7 @@ class _TenantsTab extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
                       decoration: BoxDecoration(
-                        color: orange,
+                        color: purple,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -317,12 +318,12 @@ class TenantCard extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                backgroundColor: Colors.orange[50],
+                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                 radius: 26,
                 child: Text(
                   getInitials(tenantName),
                   style: TextStyle(
-                    color: Colors.orange[700],
+                    color: AppTheme.primaryDark,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -355,13 +356,13 @@ class TenantCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: paymentStatus == 'paid' 
                       ? green.withOpacity(0.12)
-                      : Colors.orange.withOpacity(0.12),
+                      : AppTheme.primary.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     paymentStatus.toUpperCase(),
                     style: TextStyle(
-                      color: paymentStatus == 'paid' ? green : Colors.orange,
+                      color: paymentStatus == 'paid' ? green : AppTheme.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),

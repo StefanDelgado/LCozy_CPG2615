@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 class DormCard extends StatelessWidget {
   final Map<String, dynamic> dorm;
@@ -116,7 +117,7 @@ class DormCard extends StatelessWidget {
                 icon: const Icon(Icons.meeting_room),
                 label: const Text('Manage Rooms'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -136,7 +137,7 @@ class DormCard extends StatelessWidget {
           feature.trim(),
           style: const TextStyle(fontSize: 11),
         ),
-        backgroundColor: Colors.orange[50],
+        backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
         padding: const EdgeInsets.all(0),
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import '../../services/booking_service.dart';
 
 /// Screen for creating a new booking/reservation
@@ -193,13 +194,13 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final orange = const Color(0xFFFF9800);
+    final purple = AppTheme.primary;
     final availableRooms = widget.rooms.where((room) => room['is_available'] == true).toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Book Dorm Room'),
-        backgroundColor: orange,
+        backgroundColor: purple,
       ),
       body: availableRooms.isEmpty
           ? Center(
@@ -326,7 +327,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: orange,
+                                    color: purple,
                                   ),
                                 ),
                               ],
@@ -353,7 +354,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                             value: 'shared',
                             groupValue: bookingType,
                             onChanged: (value) => setState(() => bookingType = value!),
-                            activeColor: orange,
+                            activeColor: purple,
                           ),
                         ),
                         Expanded(
@@ -363,7 +364,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                             value: 'whole',
                             groupValue: bookingType,
                             onChanged: (value) => setState(() => bookingType = value!),
-                            activeColor: orange,
+                            activeColor: purple,
                           ),
                         ),
                       ],
@@ -471,7 +472,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       child: ElevatedButton(
                         onPressed: isSubmitting ? null : _submitBooking,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: orange,
+                          backgroundColor: purple,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

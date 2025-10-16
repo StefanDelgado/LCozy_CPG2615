@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -65,13 +66,13 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
 
   @override 
   Widget build(BuildContext context) {
-    final orange = const Color(0xFFFF9800);
+    final purple = AppTheme.primary;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F6FB),
       // ----------- APPBAR SECTION -----------
       appBar: AppBar(
-        backgroundColor: orange,
+        backgroundColor: purple,
         elevation: 0,
         title: const Text(
           "Payment History",
@@ -95,7 +96,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
             children: [
               // ----------- STAT CARDS SECTION -----------
               Container(
-                color: orange,
+                color: purple,
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                 child: Row(
                   children: [
@@ -105,7 +106,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
                         value: "₱${(double.parse(stats['monthly_revenue']?.toString() ?? '0')).toStringAsFixed(2)}",
                         sublabel: "This month",
                         color: Colors.white,
-                        textColor: Colors.orange,
+                        textColor: AppTheme.primary,
                         icon: Icons.payments,
                       ),
                     ),
@@ -266,7 +267,7 @@ class _FilterChip extends StatelessWidget {
       margin: const EdgeInsets.only(right: 8),
       child: Chip(
         label: Text(label, style: TextStyle(color: selected ? Colors.white : Colors.black87)),
-        backgroundColor: selected ? Colors.orange : const Color(0xFFF5F5F5),
+        backgroundColor: selected ? AppTheme.primary : const Color(0xFFF5F5F5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
@@ -312,7 +313,7 @@ class _PaymentCard extends StatelessWidget {
               children: [
                 Icon(
                   isCompleted ? Icons.check_circle : Icons.access_time,
-                  color: isCompleted ? Colors.green : Colors.orange,
+                  color: isCompleted ? Colors.green : AppTheme.primary,
                   size: 22,
                 ),
                 const SizedBox(width: 8),
@@ -321,7 +322,7 @@ class _PaymentCard extends StatelessWidget {
                 Text(
                   amount,
                   style: TextStyle(
-                    color: isCompleted ? Colors.green : Colors.orange,
+                    color: isCompleted ? Colors.green : AppTheme.primary,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -366,7 +367,7 @@ class _PaymentCard extends StatelessWidget {
                     color: isCompleted
                         ? Colors.green.withOpacity(0.15)
                         : isPending
-                            ? Colors.orange.withOpacity(0.15)
+                            ? AppTheme.primary.withOpacity(0.15)
                             : Colors.red.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -376,7 +377,7 @@ class _PaymentCard extends StatelessWidget {
                       color: isCompleted
                           ? Colors.green
                           : isPending
-                              ? Colors.orange
+                              ? AppTheme.primary
                               : Colors.red,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'browse_dorms.dart';
@@ -102,7 +103,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final orange = const Color(0xFFFF9800);
+    final purple = AppTheme.primary;
     final scaffoldBg = const Color(0xFFF9F6FB);
 
     return Scaffold(
@@ -111,7 +112,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         currentIndex: _selectedIndex,
         onTap: _onNavTap,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: orange,
+        selectedItemColor: purple,
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -124,13 +125,13 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Orange header
+            // purple header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [orange, orange.withOpacity(0.8)],
+                  colors: [purple, purple.withOpacity(0.8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -221,7 +222,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                                   // Stats row
                                   Row(
                                     children: [
-                                      _miniStat('Active', '${dashboardData['active_reservations'] ?? 0}', orange),
+                                      _miniStat('Active', '${dashboardData['active_reservations'] ?? 0}', purple),
                                       _miniStat('Due', '₱${dashboardData['payments_due'] ?? 0}', Colors.redAccent),
                                       _miniStat('Messages', '${dashboardData['unread_messages'] ?? 0}', Colors.green),
                                     ],
@@ -370,7 +371,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   Widget _buildBookingCard(Map<String, dynamic> booking) {
     final status = booking['status'] ?? 'pending';
-    final statusColor = status == 'approved' ? Colors.green : Colors.orange;
+    final statusColor = status == 'approved' ? Colors.green : AppTheme.primary;
     final dorm = booking['dorm'] ?? {};
     final room = booking['room'] ?? {};
     final daysUntil = booking['days_until_checkin'] ?? 0;
@@ -453,7 +454,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF9800),
+                  color: AppTheme.primary,
                 ),
               ),
               if (daysUntil > 0)
@@ -488,7 +489,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           ),
           child: Column(
             children: [
-              Icon(icon, color: const Color(0xFFFF9800)),
+              Icon(icon, color: AppTheme.primary),
               const SizedBox(height: 8),
               Text(
                 label,

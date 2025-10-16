@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:flutter/services.dart';
 import '../../services/room_service.dart';
 import '../../widgets/common/loading_widget.dart';
@@ -210,7 +211,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.dorm['name']} - Rooms'),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
       ),
       body: RefreshIndicator(
         onRefresh: fetchRooms,
@@ -218,7 +219,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddRoomDialog,
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
         child: const Icon(Icons.add),
       ),
     );

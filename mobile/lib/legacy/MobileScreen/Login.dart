@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:http/io_client.dart';
 import 'dart:convert';
 import 'ownerdashboard.dart';
@@ -136,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
   // ========== UI SECTION ==========
   @override
   Widget build(BuildContext context) {
-    final orangeColor = Color(0xFFFF9800);
+    final orangeColor = AppTheme.primary;
 
     return Scaffold(
       backgroundColor: Colors.white,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 class TenantCard extends StatelessWidget {
   final Map<String, dynamic> tenant;
@@ -8,7 +9,7 @@ class TenantCard extends StatelessWidget {
   final VoidCallback? onManagePayment;
 
   static const Color _green = Color(0xFF27AE60);
-  static const Color _orange = Color(0xFFFF9800);
+  static const Color _orange = AppTheme.primary;
 
   const TenantCard({
     super.key,
@@ -99,12 +100,12 @@ class TenantCard extends StatelessWidget {
     return Row(
       children: [
         CircleAvatar(
-          backgroundColor: Colors.orange[50],
+          backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
           radius: 26,
           child: Text(
             _getInitials(tenantName),
             style: TextStyle(
-              color: Colors.orange[700],
+              color: AppTheme.primaryDark,
               fontWeight: FontWeight.bold,
             ),
           ),

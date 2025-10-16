@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 /// Reusable button for authentication screens
 /// Supports primary and secondary styles with loading state
@@ -18,7 +19,7 @@ class AuthButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final orangeColor = const Color(0xFFFF9800);
+    final orangeColor = AppTheme.primary;
 
     if (isPrimary) {
       return SizedBox(

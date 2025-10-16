@@ -4,6 +4,7 @@ import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_display_widget.dart';
 import '../../widgets/owner/bookings/booking_tab_button.dart';
 import '../../widgets/owner/bookings/booking_card.dart';
+import '../../../utils/app_theme.dart';
 
 /// Screen for managing booking requests
 /// 
@@ -35,10 +36,6 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
 
   // Data
   List<Map<String, dynamic>> _bookings = [];
-
-  // Theme
-  static const Color _orange = Color(0xFFFF9800);
-  static const Color _background = Color(0xFFFDF6F0);
 
   @override
   void initState() {
@@ -344,7 +341,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(result['message'] ?? 'Booking rejected successfully'),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppTheme.primary,
               duration: const Duration(seconds: 3),
             ),
           );
@@ -417,10 +414,10 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _background,
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
         title: const Text('Booking Requests'),
-        backgroundColor: _orange,
+        backgroundColor: AppTheme.primary,
       ),
       body: Column(
         children: [
@@ -518,7 +515,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
 
     return RefreshIndicator(
       onRefresh: _fetchBookings,
-      color: _orange,
+      color: AppTheme.primary,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: filteredBookings.length,

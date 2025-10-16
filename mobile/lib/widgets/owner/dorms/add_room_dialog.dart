@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:flutter/services.dart';
 
 /// Dialog for adding or editing a room
@@ -166,7 +167,7 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
         ElevatedButton(
           onPressed: _isSubmitting ? null : _handleSubmit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
+            backgroundColor: AppTheme.primary,
           ),
           child: _isSubmitting
               ? const SizedBox(

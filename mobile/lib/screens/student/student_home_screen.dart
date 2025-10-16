@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../services/booking_service.dart';
+import '../../../utils/app_theme.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart' show ErrorDisplayWidget;
-import '../../widgets/student/home/dashboard_stat_card.dart';
+import '../../widgets/owner/dashboard/owner_stat_card.dart';
 import '../../widgets/student/home/booking_card.dart';
 import '../../widgets/student/home/quick_action_button.dart';
 import '../../widgets/student/home/empty_bookings_widget.dart';
@@ -32,9 +33,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   Map<String, dynamic> dashboardData = {};
   String error = '';
   int _selectedIndex = 0;
-  
-  static const Color _orange = Color(0xFFFF9800);
-  static const Color _scaffoldBg = Color(0xFFF9F6FB);
 
   @override
   void initState() {
@@ -153,7 +151,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             _buildHeader(),
             Expanded(
               child: Container(
-                color: _scaffoldBg,
+                color: AppTheme.scaffoldBg,
                 child: isLoading
                     ? const LoadingWidget(message: 'Loading dashboard...')
                     : error.isNotEmpty
@@ -175,8 +173,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       currentIndex: _selectedIndex,
       onTap: _onNavTap,
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: _orange,
-      unselectedItemColor: Colors.grey,
+      selectedItemColor: AppTheme.primary,
+      unselectedItemColor: AppTheme.muted,
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Browse'),
@@ -191,48 +189,74 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [_orange, _orange.withValues(alpha: 0.8)],
+          colors: [Color(0xFF6B21A8), Color(0xFF7C3AED)], // Darker purple gradient
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Welcome back!',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Welcome back!',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.userName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                widget.userName,
-                style: const TextStyle(
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
                   color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  size: 28,
                 ),
+                onPressed: () {},
               ),
             ],
           ),
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_outlined,
-              color: Colors.white,
-              size: 28,
-            ),
-            onPressed: () {},
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              OwnerStatCard(
+                icon: Icons.bookmark,
+                value: "${dashboardData['active_reservations'] ?? 0}",
+                label: "Active",
+              ),
+              OwnerStatCard(
+                icon: Icons.payment,
+                value: "₱${dashboardData['payments_due'] ?? 0}",
+                label: "Due",
+              ),
+              OwnerStatCard(
+                icon: Icons.message,
+                value: "${dashboardData['unread_messages'] ?? 0}",
+                label: "Messages",
+              ),
+            ],
           ),
         ],
       ),
@@ -250,36 +274,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStatsRow(),
-            const SizedBox(height: 24),
             _buildActiveBookingsSection(activeBookings),
             const SizedBox(height: 24),
             _buildQuickActionsSection(),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildStatsRow() {
-    return Row(
-      children: [
-        DashboardStatCard(
-          label: 'Active',
-          value: '${dashboardData['active_reservations'] ?? 0}',
-          color: _orange,
-        ),
-        DashboardStatCard(
-          label: 'Due',
-          value: '₱${dashboardData['payments_due'] ?? 0}',
-          color: Colors.redAccent,
-        ),
-        DashboardStatCard(
-          label: 'Messages',
-          value: '${dashboardData['unread_messages'] ?? 0}',
-          color: Colors.green,
-        ),
-      ],
     );
   }
 

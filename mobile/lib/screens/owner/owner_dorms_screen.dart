@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import '../../services/dorm_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
@@ -125,7 +126,7 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Dorms'),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
       ),
       body: RefreshIndicator(
         onRefresh: fetchDorms,
@@ -133,7 +134,7 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddDormDialog,
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
         child: const Icon(Icons.add),
       ),
     );

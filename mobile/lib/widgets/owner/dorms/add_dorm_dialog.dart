@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../location_picker_widget.dart';
 
@@ -180,7 +181,7 @@ class _AddDormDialogState extends State<AddDormDialog> {
         ElevatedButton(
           onPressed: _isSubmitting ? null : _handleSubmit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
+            backgroundColor: AppTheme.primary,
           ),
           child: _isSubmitting
               ? const SizedBox(

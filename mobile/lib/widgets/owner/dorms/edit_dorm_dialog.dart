@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../location_picker_widget.dart';
 
@@ -97,7 +98,7 @@ class _EditDormDialogState extends State<EditDormDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a valid location on the map'),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppTheme.primary,
         ),
       );
       return;
@@ -218,7 +219,7 @@ class _EditDormDialogState extends State<EditDormDialog> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFFF9800),
+                        color: AppTheme.primary,
                       ),
                     ),
                     const Spacer(),
@@ -246,14 +247,14 @@ class _EditDormDialogState extends State<EditDormDialog> {
                         children: [
                           Icon(
                             Icons.warning,
-                            color: Colors.orange,
+                            color: AppTheme.primary,
                             size: 20,
                           ),
                           SizedBox(width: 4),
                           Text(
                             'No Location',
                             style: TextStyle(
-                              color: Colors.orange,
+                              color: AppTheme.primary,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -267,20 +268,20 @@ class _EditDormDialogState extends State<EditDormDialog> {
                   Container(
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
+                      color: AppTheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                      border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info, color: Colors.orange, size: 16),
+                        Icon(Icons.info, color: AppTheme.primary, size: 16),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Search the address below to set map location',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.orange[900],
+                              color: AppTheme.primaryDark,
                             ),
                           ),
                         ),
@@ -334,7 +335,7 @@ class _EditDormDialogState extends State<EditDormDialog> {
         ElevatedButton(
           onPressed: _isSubmitting ? null : _handleSubmit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
+            backgroundColor: AppTheme.primary,
           ),
           child: _isSubmitting
               ? const SizedBox(

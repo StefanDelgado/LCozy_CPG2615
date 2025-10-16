@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 class BookingTabButton extends StatelessWidget {
   final String label;
@@ -17,7 +18,7 @@ class BookingTabButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? const Color(0xFFFF9800) : Colors.grey[200],
+        backgroundColor: isSelected ? AppTheme.primary : Colors.grey[200],
         foregroundColor: isSelected ? Colors.white : Colors.black87,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

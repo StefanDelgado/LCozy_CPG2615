@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../providers/dorm_provider.dart';
@@ -13,7 +14,7 @@ import '../student/view_details_screen.dart';
 /// 
 /// Features:
 /// - Display all dorms as markers
-/// - Custom orange markers for dorms
+/// - Custom purple markers for dorms
 /// - Tap marker to view dorm details
 /// - Current location button
 /// - Center map on all dorms
@@ -95,7 +96,7 @@ class _BrowseDormsMapScreenState extends State<BrowseDormsMapScreen> {
       return Marker(
         markerId: MarkerId(dorm['dorm_id'].toString()),
         position: LatLng(lat, lng),
-        icon: MapHelpers.createColoredMarker(hue: 30.0), // Orange marker
+        icon: MapHelpers.createColoredMarker(hue: 30.0), // Purple marker
         infoWindow: InfoWindow(
           title: dorm['title'] ?? dorm['name'] ?? 'Dorm',
           snippet: dorm['min_price']?.toString() ?? '₱0/month',
@@ -285,7 +286,7 @@ class _BrowseDormsMapScreenState extends State<BrowseDormsMapScreen> {
                     children: [
                       const Icon(
                         Icons.location_on,
-                        color: Color(0xFFFF9800),
+                        color: AppTheme.primary,
                         size: 20,
                       ),
                       const SizedBox(width: 6),
