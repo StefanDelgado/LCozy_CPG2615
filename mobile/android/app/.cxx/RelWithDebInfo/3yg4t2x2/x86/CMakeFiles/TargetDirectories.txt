@@ -1,0 +1,2 @@
+C:/xampp/htdocs/WebDesign_BSITA-2/2nd sem/Joshan_System/LCozy_CPG2615/mobile/android/app/.cxx/RelWithDebInfo/3yg4t2x2/x86/CMakeFiles/edit_cache.dir
+C:/xampp/htdocs/WebDesign_BSITA-2/2nd sem/Joshan_System/LCozy_CPG2615/mobile/android/app/.cxx/RelWithDebInfo/3yg4t2x2/x86/CMakeFiles/rebuild_cache.dir

@@ -31,6 +31,7 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
   
   // Near Me filter state
   bool _nearMeFilterActive = false;
+  bool _isLoadingLocation = false;
   double _radiusKm = 5.0; // Default 5km
   LatLng? _userLocation;
 
@@ -101,15 +102,36 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
 
   /// Get user's current location
   Future<void> _getUserLocation() async {
+    print('📍 [Browse] Getting user location...');
+    setState(() {
+      _isLoadingLocation = true;
+    });
+    
     try {
       final position = await _locationService.getCurrentLocation();
       setState(() {
         _userLocation = LatLng(position.latitude, position.longitude);
+        _isLoadingLocation = false;
       });
+      print('📍 [Browse] ✅ User location set: ${_userLocation!.latitude}, ${_userLocation!.longitude}');
     } catch (e) {
+      print('📍 [Browse] ❌ Error getting location: $e');
+      setState(() {
+        _isLoadingLocation = false;
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not get location: ${e.toString()}')),
+          SnackBar(
+            content: Text('Could not get location: ${e.toString()}'),
+            duration: Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Settings',
+              onPressed: () {
+                // Open app settings
+                print('📍 [Browse] User requested to open settings');
+              },
+            ),
+          ),
         );
       }
     }
@@ -157,14 +179,17 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
 
       validLocationCount++;
       final dormLocation = LatLng(lat, lng);
-      final distance = _locationService.calculateDistance(_userLocation!, dormLocation);
+      final distanceInMeters = _locationService.calculateDistance(_userLocation!, dormLocation);
+      final distanceInKm = distanceInMeters / 1000; // Convert meters to kilometers
 
-      // Add distance to dorm data for display
-      dorm['_distance'] = distance;
+      // Add distance to dorm data for display (in km)
+      dorm['_distance'] = distanceInKm;
       
-      final withinRadius = distance <= _radiusKm;
+      final withinRadius = distanceInKm <= _radiusKm;
       if (withinRadius) {
-        print('   ✅ Dorm "${dorm['name']}" is ${distance.toStringAsFixed(2)} km away (within radius)');
+        print('   ✅ Dorm "${dorm['title'] ?? dorm['name']}" is ${distanceInKm.toStringAsFixed(2)} km away (within radius)');
+      } else {
+        print('   ❌ Dorm "${dorm['title'] ?? dorm['name']}" is ${distanceInKm.toStringAsFixed(2)} km away (outside ${_radiusKm.toStringAsFixed(1)} km radius)');
       }
 
       return withinRadius;
@@ -278,17 +303,28 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
         actions: [
           // Near Me filter button
           IconButton(
-            icon: Icon(
-              _nearMeFilterActive ? Icons.location_on : Icons.location_searching,
-            ),
+            icon: _isLoadingLocation
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Icon(
+                    _nearMeFilterActive ? Icons.location_on : Icons.location_searching,
+                  ),
             tooltip: 'Near Me',
-            onPressed: () {
-              if (_nearMeFilterActive) {
-                _clearNearMeFilter();
-              } else {
-                _showRadiusPickerDialog();
-              }
-            },
+            onPressed: _isLoadingLocation
+                ? null
+                : () {
+                    if (_nearMeFilterActive) {
+                      _clearNearMeFilter();
+                    } else {
+                      _showRadiusPickerDialog();
+                    }
+                  },
           ),
           // Map view toggle button
           IconButton(

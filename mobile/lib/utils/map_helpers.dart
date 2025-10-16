@@ -18,15 +18,15 @@ class MapHelpers {
   /// - 1000m or more: Returns "X.X km"
   /// 
   /// Examples:
-  /// - 500 → "500 m"
-  /// - 1500 → "1.5 km"
-  /// - 12345 → "12.3 km"
-  static String formatDistance(double distanceInMeters) {
-    if (distanceInMeters < 1000) {
-      return '${distanceInMeters.toStringAsFixed(0)} m';
+  /// - 0.5 → "500 m"
+  /// - 1.5 → "1.5 km"
+  /// - 12.3 → "12.3 km"
+  static String formatDistance(double distanceInKm) {
+    if (distanceInKm < 1) {
+      final meters = (distanceInKm * 1000).toStringAsFixed(0);
+      return '$meters m';
     } else {
-      double km = distanceInMeters / 1000;
-      return '${km.toStringAsFixed(1)} km';
+      return '${distanceInKm.toStringAsFixed(1)} km';
     }
   }
 

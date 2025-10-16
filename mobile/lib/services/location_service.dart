@@ -32,16 +32,24 @@ class LocationService {
   /// }
   /// ```
   Future<Position> getCurrentLocation() async {
+    print('🌍 [LocationService] Starting getCurrentLocation...');
+    
     // Check if location services are enabled
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    print('🌍 [LocationService] Location services enabled: $serviceEnabled');
     if (!serviceEnabled) {
       throw Exception('Location services are disabled. Please enable location in settings.');
     }
 
     // Check permission status
     LocationPermission permission = await Geolocator.checkPermission();
+    print('🌍 [LocationService] Initial permission status: $permission');
+    
     if (permission == LocationPermission.denied) {
+      print('🌍 [LocationService] Requesting permission...');
       permission = await Geolocator.requestPermission();
+      print('🌍 [LocationService] Permission after request: $permission');
+      
       if (permission == LocationPermission.denied) {
         throw Exception('Location permission denied. Please grant location access.');
       }
@@ -54,9 +62,35 @@ class LocationService {
     }
 
     // Get current position
-    return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+    print('🌍 [LocationService] Getting current position...');
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: Duration(seconds: 10),
+      );
+      print('🌍 [LocationService] ✅ Location obtained: ${position.latitude}, ${position.longitude}');
+      return position;
+    } catch (e) {
+      print('🌍 [LocationService] ❌ Error getting position: $e');
+      
+      // Try with lower accuracy if high accuracy failed
+      if (e.toString().contains('timeout') || e.toString().contains('time')) {
+        print('🌍 [LocationService] Retrying with lower accuracy...');
+        try {
+          final position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 5),
+          );
+          print('🌍 [LocationService] ✅ Location obtained (medium accuracy): ${position.latitude}, ${position.longitude}');
+          return position;
+        } catch (e2) {
+          print('🌍 [LocationService] ❌ Retry also failed: $e2');
+          rethrow;
+        }
+      }
+      
+      rethrow;
+    }
   }
 
   /// Check if location permissions are granted.
