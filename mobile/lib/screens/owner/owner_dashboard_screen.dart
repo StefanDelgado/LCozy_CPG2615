@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../../services/dashboard_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/owner/dashboard/owner_stat_card.dart';
 import '../../widgets/owner/dashboard/owner_quick_action_tile.dart';
@@ -28,6 +27,8 @@ class OwnerDashboardScreen extends StatefulWidget {
 }
 
 class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
+  final DashboardService _dashboardService = DashboardService();
+  
   int _selectedIndex = 0;
   Map<String, dynamic> dashboardData = {};
   bool isLoading = true;
@@ -43,22 +44,15 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
   Future<void> fetchDashboardData() async {
     try {
-      final response = await http.get(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/owner_dashboard_api.php?owner_email=${widget.ownerEmail}'),
-      );
+      final result = await _dashboardService.getOwnerDashboard(widget.ownerEmail);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['ok'] == true && data['stats'] != null) {
-          setState(() {
-            dashboardData = data;
-            isLoading = false;
-          });
-        } else {
-          throw Exception(data['error'] ?? 'Invalid response format');
-        }
+      if (result['success'] == true) {
+        setState(() {
+          dashboardData = result['data'];
+          isLoading = false;
+        });
       } else {
-        throw Exception('Server error: ${response.statusCode}');
+        throw Exception(result['error'] ?? 'Failed to load dashboard data');
       }
     } catch (e) {
       setState(() {
