@@ -43,6 +43,15 @@ class DormService {
             'data': data,
             'message': 'Dorms loaded successfully',
           };
+        } else if (data is Map && data['dorms'] != null) {
+          // Handle {ok: true, dorms: [...]} format
+          final dormsList = data['dorms'] as List;
+          print('✅ Data has dorms array with ${dormsList.length} items');
+          return {
+            'success': true,
+            'data': dormsList,
+            'message': 'Dorms loaded successfully',
+          };
         } else if (data is Map && data['error'] != null) {
           print('❌ Data has error: ${data['error']}');
           return {
