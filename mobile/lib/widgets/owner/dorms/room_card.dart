@@ -16,9 +16,14 @@ class RoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAvailable = room['is_available'] == true || room['is_available'] == 1;
-    final capacity = room['capacity']?.toString() ?? '0';
+    // Check status field from API (vacant, occupied, maintenance, etc.)
+    final status = room['status']?.toString().toLowerCase() ?? 'unknown';
+    final isVacant = status == 'vacant' || status == 'available';
+    
+    final capacity = int.tryParse(room['capacity']?.toString() ?? '0') ?? 0;
+    final currentOccupants = int.tryParse(room['current_occupants']?.toString() ?? '0') ?? 0;
     final price = room['price']?.toString() ?? '0';
+    final roomNumber = room['room_number']?.toString() ?? '';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -35,12 +40,27 @@ class RoomCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        room['room_type'] ?? 'Unknown Type',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            room['room_type'] ?? 'Unknown Type',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (roomNumber.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '#$roomNumber',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -48,7 +68,7 @@ class RoomCard extends StatelessWidget {
                           const Icon(Icons.people, size: 16, color: Colors.grey),
                           const SizedBox(width: 4),
                           Text(
-                            'Capacity: $capacity',
+                            'Occupants: $currentOccupants / $capacity',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -94,21 +114,21 @@ class RoomCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isAvailable 
+                    color: isVacant 
                         ? Colors.green.withValues(alpha: 0.1)
                         : Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isAvailable ? Colors.green : Colors.red,
+                      color: isVacant ? Colors.green : Colors.red,
                       width: 1,
                     ),
                   ),
                   child: Text(
-                    isAvailable ? 'Available' : 'Occupied',
+                    isVacant ? 'Vacant' : status.toUpperCase(),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: isAvailable ? Colors.green : Colors.red,
+                      color: isVacant ? Colors.green : Colors.red,
                     ),
                   ),
                 ),
