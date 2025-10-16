@@ -57,13 +57,12 @@ $top_dorms = $pdo->query("
 // Revenue by payment type
 $payment_stats = $pdo->query("
     SELECT 
-        payment_method,
-        COUNT(*) as count,
-        SUM(amount) as total,
-        AVG(amount) as average
-    FROM payments 
-    WHERE status = 'paid'
-    GROUP BY payment_method
+        status,
+        COUNT(*) AS count,
+        SUM(amount) AS total,
+        AVG(amount) AS average
+    FROM payments
+    GROUP BY status
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 $page_title = "Reports & Analytics";
