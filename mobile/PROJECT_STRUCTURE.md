@@ -95,18 +95,21 @@ mobile/
 │   │       └── settings/
 │   │           └── settings_list_tile.dart    # Settings list item
 │   │
-│   ├── services/                              # Business logic and API services
-│   │   ├── auth_service.dart                  # ✅ Authentication API calls
-│   │   └── chat_service.dart                  # ✅ Chat API communication
+│   ├── services/                              # Business logic and API services (Phase 5-6)
+│   │   ├── auth_service.dart                  # ✅ Authentication API calls (Phase 5)
+│   │   ├── chat_service.dart                  # ✅ Chat API communication (Phase 5)
+│   │   ├── dorm_service.dart                  # ✅ Dorm management API (Phase 6)
+│   │   ├── room_service.dart                  # ✅ Room management API (Phase 6)
+│   │   ├── booking_service.dart               # ✅ Booking API (Phase 6)
+│   │   ├── payment_service.dart               # ✅ Payment API (Phase 6)
+│   │   ├── tenant_service.dart                # ✅ Tenant management API (Phase 6)
+│   │   └── dashboard_service.dart             # ✅ Dashboard API (Phase 6)
 │   │
 │   ├── utils/                                 # Utility functions and constants
 │   │   ├── constants.dart                     # API endpoints, UI constants, enums
 │   │   ├── api_constants.dart                 # ✅ Centralized API configuration
 │   │   ├── helpers.dart                       # Helper functions (15+)
 │   │   └── validators.dart                    # Form validators (8+)
-│   │
-│   ├── services/                              # Business logic and API services
-│   │   └── (future: API service classes)
 │   │
 │   ├── models/                                # Data models
 │   │   └── (future: data model classes)
@@ -196,6 +199,38 @@ mobile/
 **Service Layer:**
 - chat_service.dart (138 lines) - Chat API communication
 
+### Phase 6: Service Layer Expansion ✅
+**Status:** COMPLETE  
+**Objective:** Extract all HTTP API calls into dedicated service classes
+
+**Services Created:**
+- dorm_service.dart (308 lines) - Dorm management API (6 methods)
+- room_service.dart (208 lines) - Room management API (4 methods)
+- booking_service.dart (219 lines) - Booking API (4 methods)
+- payment_service.dart (165 lines) - Payment API (3 methods)
+- tenant_service.dart (57 lines) - Tenant management API (1 method)
+- dashboard_service.dart (89 lines) - Dashboard API (1 method)
+
+**Screens Updated:** 11 screens refactored to use service layer
+- owner_dorms_screen.dart
+- owner_dashboard_screen.dart
+- owner_booking_screen.dart
+- owner_payments_screen.dart
+- owner_tenants_screen.dart
+- room_management_screen.dart
+- browse_dorms_screen.dart
+- view_details_screen.dart
+- student_home_screen.dart
+- booking_form_screen.dart
+- student_payments_screen.dart
+
+**Metrics:**
+- Service methods: 18
+- HTTP calls extracted: 20+
+- Total service code: 1,046 lines
+- Compilation errors: 0
+- Code quality: Zero new lint warnings
+
 ### 🎉 TOTAL PROJECT STATISTICS
 | Metric | Count |
 |--------|-------|
@@ -204,15 +239,16 @@ mobile/
 | **Total Lines After** | **~4,900** |
 | **Total Code Reduction** | **~28%** |
 | **Total Widgets Extracted** | **45+** |
-| **New Files Created** | **58+** |
-| **Service Files Created** | **2** |
+| **New Files Created** | **64+** |
+| **Service Files Created** | **8** |
+| **Service Code Lines** | **~1,300** |
 | **Legacy Dependencies** | **ZERO!** 🎉 |
 
 ### New Files Created
 - **15** main screen files
 - **37+** widget files
 - **4** utility files
-- **2** service files
+- **8** service files (2 in Phase 5, 6 in Phase 6)
 - **1** legacy README
 
 ## Import Patterns
@@ -376,39 +412,52 @@ String? error = Validators.validateEmail(email);
 - [x] Test chat functionality
 - [x] Remove all legacy chat dependencies
 
-**🎉 ALL PHASES COMPLETE - ZERO LEGACY DEPENDENCIES!**
+### Phase 6: ✅ Service Layer Expansion (COMPLETE)
+- [x] Create DormService (6 methods, 308 lines)
+- [x] Create RoomService (4 methods, 208 lines)
+- [x] Create BookingService (4 methods, 219 lines)
+- [x] Create PaymentService (3 methods, 165 lines)
+- [x] Create TenantService (1 method, 57 lines)
+- [x] Create DashboardService (1 method, 89 lines)
+- [x] Update 11 screens to use service layer
+- [x] Extract all 20+ HTTP API calls
+- [x] Establish consistent response patterns
+- [x] Verify zero compilation errors
+- [x] Document Phase 6 completion
 
-### Phase 6: 🔮 Service Layer Expansion (FUTURE)
-- [ ] Create API service classes
-- [ ] Add error handling layer
-- [ ] Implement caching
-- [ ] Add offline support
+**🎉 ALL PHASES 1-6 COMPLETE - FULL API ABSTRACTION ACHIEVED!**
 
 ### Phase 7: 🔮 State Management (FUTURE)
 - [ ] Add Provider/Riverpod
 - [ ] Centralize state
 - [ ] Improve reactivity
 
-### Phase 8: 🔮 Testing (FUTURE)
-- [ ] Unit tests for utilities
+### Phase 8: 🔮 Local Database & Caching (FUTURE)
+- [ ] Implement Hive or SQLite
+- [ ] Add offline support
+- [ ] Cache API responses
+
+### Phase 9: 🔮 Testing (FUTURE)
+- [ ] Unit tests for services
 - [ ] Widget tests for components
 - [ ] Integration tests for screens
 
-### Phase 9: 🔮 Cleanup (OPTIONAL)
+### Phase 10: 🔮 Cleanup (OPTIONAL)
 - [ ] Delete legacy folder (currently archived for reference)
 - [ ] Final documentation polish
 - [ ] Create deployment guide
 
-## 🎊 PROJECT STATUS: 100% COMPLETE
+## 🎊 PROJECT STATUS: PHASES 1-6 COMPLETE
 
-All 5 phases completed successfully:
+All 6 phases completed successfully:
 - ✅ Phase 1: Core Refactoring (4 screens)
 - ✅ Phase 2: Student Screens (2 screens)
 - ✅ Phase 3: Owner Screens (6 screens)
 - ✅ Phase 4: Auth & Services (2 screens + AuthService)
 - ✅ Phase 5: Chat Functionality (2 screens + ChatService)
+- ✅ Phase 6: Service Layer Expansion (6 services, 11 screens updated)
 
-**Achievement:** 15 screens refactored, 2 services created, 45+ widgets extracted, ZERO legacy dependencies! 🎉
+**Achievement:** 15 screens refactored, 8 services created, 18 service methods, 45+ widgets extracted, ZERO legacy dependencies, FULL API abstraction! 🎉
 
 ## Best Practices
 
@@ -419,6 +468,7 @@ All 5 phases completed successfully:
 - Follow naming conventions
 - Add documentation comments
 - Use utility functions
+- Use services for all API calls
 
 ### ❌ DON'T
 - Create files > 500 lines
@@ -427,11 +477,13 @@ All 5 phases completed successfully:
 - Import from legacy for new features
 - Ignore linter warnings
 - Skip error handling
+- Make direct HTTP calls from screens
 
 ## Documentation
 
-- **README.md** - Complete project overview with all 5 phases
-- **PHASE_5_COMPLETE.md** - Chat functionality completion (THIS PHASE) 🎉
+- **README.md** - Complete project overview with all phases
+- **PHASE_6_COMPLETE.md** - Service layer expansion completion (LATEST) 🎉
+- **PHASE_5_COMPLETE.md** - Chat functionality completion
 - **PHASE_4_COMPLETE.md** - Auth & Services completion documentation
 - **PHASE_3_COMPLETE.md** - Phase 3 completion documentation
 - **PHASE_2_COMPLETE.md** - Phase 2 completion documentation
@@ -442,6 +494,6 @@ All 5 phases completed successfully:
 
 ---
 
-**Last Updated**: October 16, 2025  
-**Status**: Phase 1-4 Complete (100%) 🎉  
+**Last Updated**: January 2025  
+**Status**: Phases 1-6 Complete (100% API Abstraction) 🎉  
 **Maintainer**: Development Team

@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import '../../utils/api_constants.dart';
+import '../../services/payment_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_display_widget.dart';
 import '../../widgets/owner/payments/payment_stats_widget.dart';
@@ -30,6 +27,8 @@ class OwnerPaymentsScreen extends StatefulWidget {
 }
 
 class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
+  final PaymentService _paymentService = PaymentService();
+  
   // UI State
   bool _isLoading = true;
   String? _error;
@@ -58,28 +57,17 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
     });
 
     try {
-      final uri = Uri.parse(
-        '${ApiConstants.baseUrl}/modules/mobile-api/owner_payments_api.php'
-      ).replace(queryParameters: {
-        'owner_email': widget.ownerEmail,
-      });
+      final result = await _paymentService.getOwnerPayments(widget.ownerEmail);
 
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        
-        if (data['ok'] == true) {
-          setState(() {
-            _stats = data['stats'] ?? {};
-            _payments = data['payments'] ?? [];
-            _isLoading = false;
-          });
-        } else {
-          throw Exception(data['error'] ?? 'Failed to load payments');
-        }
+      if (result['success']) {
+        final data = result['data'];
+        setState(() {
+          _stats = data['stats'] ?? {};
+          _payments = data['payments'] ?? [];
+          _isLoading = false;
+        });
       } else {
-        throw Exception('Server error: ${response.statusCode}');
+        throw Exception(result['error'] ?? 'Failed to load payments');
       }
     } catch (e) {
       setState(() {

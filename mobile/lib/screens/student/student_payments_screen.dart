@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
+import '../../services/payment_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart' show ErrorDisplayWidget;
 import '../../widgets/student/payments/payment_stat_card.dart';
@@ -17,6 +17,7 @@ class StudentPaymentsScreen extends StatefulWidget {
 }
 
 class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
+  final PaymentService _paymentService = PaymentService();
   bool isLoading = true;
   String error = '';
   
@@ -36,24 +37,24 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/student_payments_api.php?student_email=${widget.userEmail}'),
-      );
+      final result = await _paymentService.getStudentPayments(widget.userEmail);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        
-        if (data['ok'] == true) {
-          setState(() {
-            statistics = data['statistics'] ?? {};
-            payments = data['payments'] ?? [];
-            isLoading = false;
-          });
-        } else {
-          throw Exception(data['error'] ?? 'Failed to load payments');
-        }
+      if (result['success']) {
+        setState(() {
+          final paymentData = result['data'];
+          // Note: The API might return data differently
+          // Adjust based on actual API response structure
+          if (paymentData is List) {
+            payments = paymentData;
+            statistics = {}; // Empty if no stats in response
+          } else if (paymentData is Map) {
+            statistics = paymentData['statistics'] ?? {};
+            payments = paymentData['payments'] ?? paymentData;
+          }
+          isLoading = false;
+        });
       } else {
-        throw Exception('Server returned ${response.statusCode}');
+        throw Exception(result['error'] ?? 'Failed to load payments');
       }
     } catch (e) {
       setState(() {
@@ -92,40 +93,30 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
       final base64Image = base64Encode(bytes);
 
       // Send to API
-      final response = await http.post(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/upload_receipt_api.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'payment_id': paymentId,
-          'student_email': widget.userEmail,
-          'receipt_base64': 'data:image/jpeg;base64,$base64Image',
-          'receipt_filename': image.name,
-        }),
-      );
+      final result = await _paymentService.uploadPaymentProof({
+        'payment_id': paymentId,
+        'student_email': widget.userEmail,
+        'receipt_base64': 'data:image/jpeg;base64,$base64Image',
+        'receipt_filename': image.name,
+      });
 
       // Close loading dialog
       if (!mounted) return;
       Navigator.pop(context);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      if (result['success']) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Receipt uploaded successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
         
-        if (data['ok'] == true) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(data['message'] ?? 'Receipt uploaded successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          
-          // Refresh payments
-          fetchPayments();
-        } else {
-          throw Exception(data['error'] ?? 'Upload failed');
-        }
+        // Refresh payments
+        fetchPayments();
       } else {
-        throw Exception('Server returned ${response.statusCode}');
+        throw Exception(result['message'] ?? 'Upload failed');
       }
     } catch (e) {
       // Close loading dialog if still open

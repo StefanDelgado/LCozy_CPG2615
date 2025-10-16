@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import '../../utils/api_constants.dart';
+import '../../services/tenant_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_display_widget.dart';
 import '../../widgets/owner/tenants/tenant_tab_selector.dart';
@@ -28,6 +25,8 @@ class OwnerTenantsScreen extends StatefulWidget {
 }
 
 class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
+  final TenantService _tenantService = TenantService();
+  
   // UI State
   int _selectedTab = 0;
   bool _isLoading = true;
@@ -55,32 +54,21 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
     });
 
     try {
-      final uri = Uri.parse(
-        '${ApiConstants.baseUrl}/modules/mobile-api/owner_tenants_api.php'
-      ).replace(queryParameters: {
-        'owner_email': widget.ownerEmail,
-      });
+      final result = await _tenantService.getOwnerTenants(widget.ownerEmail);
 
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        
-        if (data['ok'] == true) {
-          setState(() {
-            _currentTenants = List<Map<String, dynamic>>.from(
-              data['current_tenants'] ?? []
-            );
-            _pastTenants = List<Map<String, dynamic>>.from(
-              data['past_tenants'] ?? []
-            );
-            _isLoading = false;
-          });
-        } else {
-          throw Exception(data['error'] ?? 'Failed to load tenants');
-        }
+      if (result['success'] == true) {
+        final data = result['data'];
+        setState(() {
+          _currentTenants = List<Map<String, dynamic>>.from(
+            data['tenants']?.where((t) => t['status'] == 'active') ?? []
+          );
+          _pastTenants = List<Map<String, dynamic>>.from(
+            data['tenants']?.where((t) => t['status'] != 'active') ?? []
+          );
+          _isLoading = false;
+        });
       } else {
-        throw Exception('Server error: ${response.statusCode}');
+        throw Exception(result['error'] ?? 'Failed to load tenants');
       }
     } catch (e) {
       setState(() {
