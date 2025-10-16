@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import '../../utils/api_constants.dart';
+import '../../services/booking_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_display_widget.dart';
 import '../../widgets/owner/bookings/booking_tab_button.dart';
@@ -28,6 +25,8 @@ class OwnerBookingScreen extends StatefulWidget {
 }
 
 class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
+  final BookingService _bookingService = BookingService();
+  
   // UI State
   bool _isLoading = true;
   String? _error;
@@ -54,30 +53,15 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
     });
 
     try {
-      final uri = Uri.parse(
-        '${ApiConstants.baseUrl}/modules/mobile-api/owner_bookings_api.php'
-      ).replace(queryParameters: {
-        'owner_email': widget.ownerEmail,
-      });
+      final result = await _bookingService.getOwnerBookings(widget.ownerEmail);
 
-      final response = await http.get(
-        uri,
-        headers: {'Accept': 'application/json'},
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        
-        if (data['ok'] == true) {
-          setState(() {
-            _bookings = List<Map<String, dynamic>>.from(data['bookings'] ?? []);
-            _isLoading = false;
-          });
-        } else {
-          throw Exception(data['error'] ?? 'Failed to load bookings');
-        }
+      if (result['success']) {
+        setState(() {
+          _bookings = List<Map<String, dynamic>>.from(result['data'] ?? []);
+          _isLoading = false;
+        });
       } else {
-        throw Exception('Server error: ${response.statusCode}');
+        throw Exception(result['error'] ?? 'Failed to load bookings');
       }
     } catch (e) {
       setState(() {
@@ -93,29 +77,24 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
     if (bookingId == null) return;
 
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner_bookings_api.php'),
-        body: {
-          'action': 'approve',
-          'booking_id': bookingId.toString(),
-          'owner_email': widget.ownerEmail,
-        },
+      final result = await _bookingService.updateBookingStatus(
+        bookingId: bookingId.toString(),
+        action: 'approve',
+        ownerEmail: widget.ownerEmail,
       );
 
-      final data = jsonDecode(response.body);
-      
-      if (data['ok'] == true) {
+      if (result['success']) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Booking approved successfully'),
+            SnackBar(
+              content: Text(result['message'] ?? 'Booking approved successfully'),
               backgroundColor: Colors.green,
             ),
           );
           _fetchBookings(); // Refresh the list
         }
       } else {
-        throw Exception(data['error'] ?? 'Failed to approve booking');
+        throw Exception(result['message'] ?? 'Failed to approve booking');
       }
     } catch (e) {
       if (mounted) {

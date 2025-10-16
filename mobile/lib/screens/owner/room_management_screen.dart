@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../../utils/constants.dart';
+import '../../services/room_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/owner/dorms/room_card.dart';
@@ -24,6 +22,7 @@ class RoomManagementScreen extends StatefulWidget {
 }
 
 class _RoomManagementScreenState extends State<RoomManagementScreen> {
+  final RoomService _roomService = RoomService();
   List<Map<String, dynamic>> rooms = [];
   bool isLoading = true;
   String? error;
@@ -41,22 +40,17 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/fetch_rooms.php?dorm_id=${widget.dorm['dorm_id']}'),
+      final result = await _roomService.getRoomsByDorm(
+        int.parse(widget.dorm['dorm_id'].toString()),
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['ok'] == true) {
-          setState(() {
-            rooms = List<Map<String, dynamic>>.from(data['rooms'] ?? []);
-            isLoading = false;
-          });
-        } else {
-          throw Exception(data['error'] ?? 'Failed to load rooms');
-        }
+      if (result['success']) {
+        setState(() {
+          rooms = List<Map<String, dynamic>>.from(result['data'] ?? []);
+          isLoading = false;
+        });
       } else {
-        throw Exception('Server error: ${response.statusCode}');
+        throw Exception(result['error'] ?? 'Failed to load rooms');
       }
     } catch (e) {
       setState(() {
@@ -68,33 +62,24 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
 
   Future<void> _addRoom(Map<String, dynamic> roomData) async {
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/add_room_api.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'owner_email': widget.ownerEmail,
-          'dorm_id': widget.dorm['dorm_id'],
-          ...roomData,
-        }),
-      );
+      final result = await _roomService.addRoom({
+        'owner_email': widget.ownerEmail,
+        'dorm_id': widget.dorm['dorm_id'],
+        ...roomData,
+      });
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['ok'] == true) {
-          await fetchRooms();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Room added successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        } else {
-          throw Exception(data['error'] ?? 'Failed to add room');
+      if (result['success']) {
+        await fetchRooms();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Room added successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
         }
       } else {
-        throw Exception('Server error: ${response.statusCode}');
+        throw Exception(result['message'] ?? 'Failed to add room');
       }
     } catch (e) {
       if (mounted) {
@@ -111,33 +96,26 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
 
   Future<void> _editRoom(Map<String, dynamic> room, Map<String, dynamic> roomData) async {
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/edit_room_api.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      final result = await _roomService.updateRoom(
+        int.parse(room['room_id'].toString()),
+        {
           'owner_email': widget.ownerEmail,
-          'room_id': room['room_id'],
           ...roomData,
-        }),
+        },
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['ok'] == true) {
-          await fetchRooms();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Room updated successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        } else {
-          throw Exception(data['error'] ?? 'Failed to update room');
+      if (result['success']) {
+        await fetchRooms();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Room updated successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
         }
       } else {
-        throw Exception('Server error: ${response.statusCode}');
+        throw Exception(result['message'] ?? 'Failed to update room');
       }
     } catch (e) {
       if (mounted) {
@@ -177,32 +155,22 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     if (confirm != true) return;
 
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/delete_room_api.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'owner_email': widget.ownerEmail,
-          'room_id': room['room_id'],
-        }),
+      final result = await _roomService.deleteRoom(
+        int.parse(room['room_id'].toString()),
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['ok'] == true) {
-          await fetchRooms();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Room deleted successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        } else {
-          throw Exception(data['error'] ?? 'Failed to delete room');
+      if (result['success']) {
+        await fetchRooms();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Room deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
         }
       } else {
-        throw Exception('Server error: ${response.statusCode}');
+        throw Exception(result['message'] ?? 'Failed to delete room');
       }
     } catch (e) {
       if (mounted) {

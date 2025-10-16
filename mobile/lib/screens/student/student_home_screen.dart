@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../../services/booking_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart' show ErrorDisplayWidget;
 import '../../widgets/student/home/dashboard_stat_card.dart';
@@ -26,6 +25,7 @@ class StudentHomeScreen extends StatefulWidget {
 }
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
+  final BookingService _bookingService = BookingService();
   bool isLoading = true;
   Map<String, dynamic> dashboardData = {};
   String error = '';
@@ -47,22 +47,20 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/student_dashboard_api.php?student_email=${Uri.encodeComponent(widget.userEmail)}'),
-      );
+      final result = await _bookingService.getStudentBookings(widget.userEmail);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['ok'] == true && data['stats'] != null) {
+      if (result['success']) {
+        final data = result['data'];
+        if (data['stats'] != null) {
           setState(() {
             dashboardData = data['stats'];
             isLoading = false;
           });
         } else {
-          throw Exception(data['error'] ?? 'Invalid response format');
+          throw Exception('Invalid response format');
         }
       } else {
-        throw Exception('Server returned ${response.statusCode}');
+        throw Exception(result['error'] ?? 'Failed to load dashboard');
       }
     } catch (e) {
       setState(() {
