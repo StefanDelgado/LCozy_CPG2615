@@ -4,9 +4,9 @@ class EmptyBookingsWidget extends StatelessWidget {
   final VoidCallback onBrowseDorms;
 
   const EmptyBookingsWidget({
-    Key? key,
+    super.key,
     required this.onBrowseDorms,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

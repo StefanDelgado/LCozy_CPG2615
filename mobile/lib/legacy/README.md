@@ -22,8 +22,8 @@ Original mobile screen files (18 files):
 - `student_home.dart` - Original student dashboard (⚠️ Refactored to `screens/student/student_home_screen.dart`)
 - `student_payments.dart` - Original payments screen (⚠️ Refactored to `screens/student/student_payments_screen.dart`)
 - `viewdetails.dart` - Original dorm details (⚠️ Refactored to `screens/student/view_details_screen.dart`)
-- `browse_dorms.dart` - Dorm browsing screen
-- `booking_form.dart` - Booking form screen
+- `browse_dorms.dart` - Dorm browsing screen (⚠️ Refactored to `screens/student/browse_dorms_screen.dart`)
+- `booking_form.dart` - Booking form screen (⚠️ Refactored to `screens/student/booking_form_screen.dart`)
 - `student_owner_chat.dart` - Chat functionality
 
 #### Owner Screens
@@ -57,17 +57,25 @@ The following files have been completely refactored and replaced with new implem
    - Reduced from 525 to 280 lines (-47%)
    - Extracted 2 widgets to `lib/widgets/student/payments/`
 
+4. **browse_dorms.dart** → `lib/screens/student/browse_dorms_screen.dart`
+   - Enhanced UI with better dorm cards
+   - Added loading and error widgets
+   - Improved image handling with fallback icons
+
+5. **booking_form.dart** → `lib/screens/student/booking_form_screen.dart`
+   - Removed debug print statements (production-ready)
+   - Fixed deprecated APIs
+   - Uses API constants
+
 ### ✅ Owner Screens
-4. **ownerdashboard.dart** → `lib/screens/owner/owner_dashboard_screen.dart`
+6. **ownerdashboard.dart** → `lib/screens/owner/owner_dashboard_screen.dart`
    - Reduced from 732 to 420 lines (-43%)
    - Extracted 4 widgets to `lib/widgets/owner/dashboard/`
 
 ## Temporary Dependencies
 
 The new refactored screens still import from legacy for:
-- `booking_form.dart` - Used by view details screen
-- `browse_dorms.dart` - Used by student home screen
-- `student_owner_chat.dart` - Used by multiple screens
+- `student_owner_chat.dart` - Used by multiple screens (chat functionality)
 - `ownerbooking.dart`, `ownerpayments.dart`, `ownertenants.dart`, `ownersetting.dart`, `ownerdorms.dart` - Used by owner dashboard
 
 ## Migration Plan
@@ -79,8 +87,14 @@ The new refactored screens still import from legacy for:
 - [x] Refactor ownerdashboard.dart
 - [x] Move old files to legacy/
 
-### Phase 2: Future Work
-- [ ] Refactor remaining owner screens (ownerdorms, ownertenants, etc.)
+### Phase 2: ✅ Completed
+- [x] Refactor browse_dorms.dart → browse_dorms_screen.dart
+- [x] Refactor booking_form.dart → booking_form_screen.dart
+- [x] Update all student screen imports
+- [x] Fix all lint warnings and errors
+
+### Phase 3: Future Work
+- [ ] Refactor remaining owner screens (ownerdorms, ownertenants, ownerpayments, ownerbooking)
 - [ ] Move authentication screens to `screens/auth/`
 - [ ] Move shared screens to `screens/shared/`
 - [ ] Create proper chat screen wrapper

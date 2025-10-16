@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-// Temporary imports from legacy structure
-import '../../../legacy/MobileScreen/student_owner_chat.dart';
+import '../../../screens/shared/chat_conversation_screen.dart';
 
 class OwnerMessagesList extends StatefulWidget {
   final String ownerEmail;
 
   const OwnerMessagesList({
-    Key? key,
+    super.key,
     required this.ownerEmail,
-  }) : super(key: key);
+  });
 
   @override
   State<OwnerMessagesList> createState() => _OwnerMessagesListState();
@@ -93,7 +92,7 @@ class _OwnerMessagesListState extends State<OwnerMessagesList> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => StudentOwnerChatScreen(
+                        builder: (context) => ChatConversationScreen(
                           currentUserEmail: widget.ownerEmail,
                           otherUserEmail: otherUserEmail,
                           currentUserRole: "owner",

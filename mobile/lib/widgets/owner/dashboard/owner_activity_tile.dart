@@ -9,14 +9,14 @@ class OwnerActivityTile extends StatelessWidget {
   final String time;
 
   const OwnerActivityTile({
-    Key? key,
+    super.key,
     required this.icon,
     required this.iconBg,
     required this.iconColor,
     required this.title,
     required this.subtitle,
     required this.time,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class OwnerActivityTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

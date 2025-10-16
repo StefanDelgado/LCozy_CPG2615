@@ -20,7 +20,7 @@ class ApiConstants {
   // Upload paths
   static const String uploadsPath = '$baseUrl/uploads';
   static const String receiptsPath = '$uploadsPath/receipts';
-  static const String dormImagesPath = '$uploadsPath';
+  static const String dormImagesPath = uploadsPath;
 }
 
 /// UI Constants

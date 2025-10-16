@@ -8,7 +8,7 @@ import '../../widgets/student/home/booking_card.dart';
 import '../../widgets/student/home/quick_action_button.dart';
 import '../../widgets/student/home/empty_bookings_widget.dart';
 // Temporary imports from legacy structure
-import '../../legacy/MobileScreen/browse_dorms.dart';
+import 'browse_dorms_screen.dart';
 import '../../legacy/MobileScreen/student_payments.dart';
 
 class StudentHomeScreen extends StatefulWidget {
@@ -16,10 +16,10 @@ class StudentHomeScreen extends StatefulWidget {
   final String userEmail;
 
   const StudentHomeScreen({
-    Key? key, 
+    super.key, 
     required this.userName,
     required this.userEmail,
-  }) : super(key: key);
+  });
 
   @override
   State<StudentHomeScreen> createState() => _StudentHomeScreenState();
@@ -174,7 +174,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_orange, _orange.withOpacity(0.8)],
+          colors: [_orange, _orange.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

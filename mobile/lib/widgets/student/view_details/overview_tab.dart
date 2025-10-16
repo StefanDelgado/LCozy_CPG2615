@@ -8,10 +8,10 @@ class OverviewTab extends StatelessWidget {
   final List<String> features;
 
   const OverviewTab({
-    Key? key,
+    super.key,
     required this.dormDetails,
     required this.features,
-  }) : super(key: key);
+  });
 
   double _parseDouble(dynamic value, double defaultValue) {
     return Helpers.parseDouble(value, defaultValue);

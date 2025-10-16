@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../../services/dorm_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart' show ErrorDisplayWidget;
 import '../../widgets/student/view_details/overview_tab.dart';
@@ -8,10 +7,8 @@ import '../../widgets/student/view_details/rooms_tab.dart';
 import '../../widgets/student/view_details/reviews_tab.dart';
 import '../../widgets/student/view_details/contact_tab.dart';
 import '../../widgets/student/view_details/stat_chip.dart';
-import '../../utils/constants.dart';
-// Temporary imports from legacy structure
-import '../../legacy/MobileScreen/student_owner_chat.dart';
-import '../../legacy/MobileScreen/booking_form.dart';
+import '../shared/chat_conversation_screen.dart';
+import 'booking_form_screen.dart';
 
 class ViewDetailsScreen extends StatefulWidget {
   final Map<String, String> property;
@@ -28,6 +25,7 @@ class ViewDetailsScreen extends StatefulWidget {
 }
 
 class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTickerProviderStateMixin {
+  final DormService _dormService = DormService();
   bool isLoading = true;
   String error = '';
   Map<String, dynamic> dormDetails = {};
@@ -58,36 +56,29 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/mobile-api/get_dorm_details.php?dorm_id=${widget.property['dorm_id']}'),
+      final result = await _dormService.getDormDetails(
+        widget.property['dorm_id'] ?? '',
       );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success']) {
-          setState(() {
-            dormDetails = data['dorm'];
-            _rooms = data['rooms'] ?? [];
-            _reviews = data['reviews'] ?? [];
-            _images = (data['images'] as List?)?.map((e) => e.toString()).toList() ?? [];
-            
-            // Parse features from comma-separated string
-            final featuresString = dormDetails['features']?.toString() ?? '';
-            _features = featuresString.isNotEmpty 
-                ? featuresString.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
-                : [];
-            
-            isLoading = false;
-          });
-        } else {
-          setState(() {
-            error = data['message'] ?? 'Failed to load dorm details';
-            isLoading = false;
-          });
-        }
+      if (result['success']) {
+        final data = result['data'];
+        setState(() {
+          dormDetails = data['dorm'] ?? data;
+          _rooms = data['rooms'] ?? [];
+          _reviews = data['reviews'] ?? [];
+          _images = (data['images'] as List?)?.map((e) => e.toString()).toList() ?? [];
+          
+          // Parse features from comma-separated string
+          final featuresString = dormDetails['features']?.toString() ?? '';
+          _features = featuresString.isNotEmpty 
+              ? featuresString.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
+              : [];
+          
+          isLoading = false;
+        });
       } else {
         setState(() {
-          error = 'Server error. Please try again later.';
+          error = result['message'] ?? 'Failed to load dorm details';
           isLoading = false;
         });
       }
@@ -132,7 +123,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => StudentOwnerChatScreen(
+        builder: (context) => ChatConversationScreen(
           currentUserEmail: widget.userEmail,
           otherUserEmail: ownerEmail,
           currentUserRole: 'student',
@@ -318,7 +309,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
+              color: Colors.grey.withValues(alpha: 0.3),
               spreadRadius: 1,
               blurRadius: 5,
               offset: const Offset(0, -3),
