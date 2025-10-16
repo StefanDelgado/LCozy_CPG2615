@@ -73,8 +73,23 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
 
   /// Approves a booking
   Future<void> _approveBooking(Map<String, dynamic> booking) async {
-    final bookingId = booking['booking_id'];
-    if (bookingId == null) return;
+    print('📋 [OwnerBooking] Approve booking clicked');
+    print('📋 [OwnerBooking] Booking data: $booking');
+    print('📋 [OwnerBooking] Owner email: ${widget.ownerEmail}');
+
+    final bookingId = booking['booking_id'] ?? booking['id'];
+    if (bookingId == null) {
+      print('📋 [OwnerBooking] ❌ Booking ID is null');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: Booking ID is missing'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    print('📋 [OwnerBooking] Booking ID: $bookingId');
 
     try {
       final result = await _bookingService.updateBookingStatus(
@@ -82,6 +97,8 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
         action: 'approve',
         ownerEmail: widget.ownerEmail,
       );
+
+      print('📋 [OwnerBooking] Update result: $result');
 
       if (result['success']) {
         if (mounted) {
@@ -97,6 +114,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
         throw Exception(result['message'] ?? 'Failed to approve booking');
       }
     } catch (e) {
+      print('📋 [OwnerBooking] ❌ Error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -197,6 +197,11 @@ class BookingService {
     required String ownerEmail,
   }) async {
     try {
+      print('📋 [BookingService] Updating booking status...');
+      print('📋 [BookingService] Booking ID: $bookingId');
+      print('📋 [BookingService] Action: $action');
+      print('📋 [BookingService] Owner Email: $ownerEmail');
+
       final response = await http.post(
         Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner_bookings_api.php'),
         body: {
@@ -206,26 +211,33 @@ class BookingService {
         },
       );
 
+      print('📋 [BookingService] Response status: ${response.statusCode}');
+      print('📋 [BookingService] Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['ok'] == true) {
+          print('📋 [BookingService] ✅ Booking updated successfully');
           return {
             'success': true,
             'message': data['message'] ?? 'Booking updated successfully',
           };
         } else {
+          print('📋 [BookingService] ❌ Update failed: ${data['error']}');
           return {
             'success': false,
             'message': data['error'] ?? 'Failed to update booking',
           };
         }
       } else {
+        print('📋 [BookingService] ❌ Server error: ${response.statusCode}');
         return {
           'success': false,
           'message': 'Server error: ${response.statusCode}',
         };
       }
     } catch (e) {
+      print('📋 [BookingService] ❌ Exception: $e');
       return {
         'success': false,
         'message': 'Network error: ${e.toString()}',
