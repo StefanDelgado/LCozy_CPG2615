@@ -64,9 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE bookings SET status = ? WHERE booking_id = ?");
         $stmt->execute([$new_status, $booking_id]);
 
-        // If approved, mark room as unavailable AND create payment
+        // If approved, mark room as occupied AND create payment
         if ($action === 'approve') {
-            $stmt = $pdo->prepare("UPDATE rooms SET is_available = 0 WHERE room_id = ?");
+            $stmt = $pdo->prepare("UPDATE rooms SET status = 'occupied' WHERE room_id = ?");
             $stmt->execute([$booking['room_id']]);
             
             // Get booking details to create payment
