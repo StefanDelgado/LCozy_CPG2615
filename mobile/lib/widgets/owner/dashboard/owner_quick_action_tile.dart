@@ -10,7 +10,7 @@ class OwnerQuickActionTile extends StatelessWidget {
   final VoidCallback onTap;
 
   const OwnerQuickActionTile({
-    Key? key,
+    super.key,
     required this.icon,
     required this.label,
     required this.color,
@@ -18,7 +18,7 @@ class OwnerQuickActionTile extends StatelessWidget {
     required this.borderColor,
     required this.textColor,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +30,11 @@ class OwnerQuickActionTile extends StatelessWidget {
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            border: Border.all(color: borderColor.withOpacity(0.5), width: 1.3),
+            border: Border.all(color: borderColor.withValues(alpha: 0.5), width: 1.3),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: borderColor.withOpacity(0.08),
+                color: borderColor.withValues(alpha: 0.08),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -49,7 +49,7 @@ class OwnerQuickActionTile extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: borderColor.withOpacity(0.10),
+                      color: borderColor.withValues(alpha: 0.10),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),

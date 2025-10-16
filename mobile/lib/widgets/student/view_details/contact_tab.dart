@@ -7,11 +7,11 @@ class ContactTab extends StatelessWidget {
   final VoidCallback onSendMessage;
 
   const ContactTab({
-    Key? key,
+    super.key,
     required this.owner,
     required this.currentUserEmail,
     required this.onSendMessage,
-  }) : super(key: key);
+  });
 
   Widget _buildContactRow(IconData icon, String label, String value) {
     return Padding(

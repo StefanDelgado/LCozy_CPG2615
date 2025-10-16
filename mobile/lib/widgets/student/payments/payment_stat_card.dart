@@ -7,12 +7,12 @@ class PaymentStatCard extends StatelessWidget {
   final Color color;
 
   const PaymentStatCard({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     required this.icon,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

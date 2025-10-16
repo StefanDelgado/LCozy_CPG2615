@@ -5,10 +5,10 @@ class PaymentCard extends StatelessWidget {
   final VoidCallback onUploadReceipt;
 
   const PaymentCard({
-    Key? key,
+    super.key,
     required this.payment,
     required this.onUploadReceipt,
-  }) : super(key: key);
+  });
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -77,7 +77,7 @@ class PaymentCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(status).withOpacity(0.1),
+                    color: _getStatusColor(status).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -174,7 +174,7 @@ class PaymentCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -198,7 +198,7 @@ class PaymentCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(

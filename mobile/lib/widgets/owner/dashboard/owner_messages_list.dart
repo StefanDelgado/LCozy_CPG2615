@@ -8,9 +8,9 @@ class OwnerMessagesList extends StatefulWidget {
   final String ownerEmail;
 
   const OwnerMessagesList({
-    Key? key,
+    super.key,
     required this.ownerEmail,
-  }) : super(key: key);
+  });
 
   @override
   State<OwnerMessagesList> createState() => _OwnerMessagesListState();

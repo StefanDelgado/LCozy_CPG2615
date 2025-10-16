@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class ErrorDisplayWidget extends StatelessWidget {
-  final String error;
+  final String message;
   final VoidCallback? onRetry;
 
   const ErrorDisplayWidget({
     super.key,
-    required this.error,
+    required this.message,
     this.onRetry,
   });
 
@@ -14,28 +14,32 @@ class ErrorDisplayWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline,
               size: 64,
-              color: Colors.red,
+              color: Colors.red[300],
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Oops! Something went wrong',
+            Text(
+              'Error',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              error,
+              message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 24),
@@ -44,7 +48,7 @@ class ErrorDisplayWidget extends StatelessWidget {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: const Color(0xFFFF9800),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

@@ -11,7 +11,7 @@ import '../../widgets/student/view_details/stat_chip.dart';
 import '../../utils/constants.dart';
 // Temporary imports from legacy structure
 import '../../legacy/MobileScreen/student_owner_chat.dart';
-import '../../legacy/MobileScreen/booking_form.dart';
+import 'booking_form_screen.dart';
 
 class ViewDetailsScreen extends StatefulWidget {
   final Map<String, String> property;
@@ -318,7 +318,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
+              color: Colors.grey.withValues(alpha: 0.3),
               spreadRadius: 1,
               blurRadius: 5,
               offset: const Offset(0, -3),

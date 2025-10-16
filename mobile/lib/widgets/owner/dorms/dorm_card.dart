@@ -7,12 +7,12 @@ class DormCard extends StatelessWidget {
   final VoidCallback onDelete;
 
   const DormCard({
-    Key? key,
+    super.key,
     required this.dorm,
     required this.onManageRooms,
     required this.onEdit,
     required this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -10,7 +10,7 @@ import '../../widgets/student/payments/payment_card.dart';
 class StudentPaymentsScreen extends StatefulWidget {
   final String userEmail;
 
-  const StudentPaymentsScreen({Key? key, required this.userEmail}) : super(key: key);
+  const StudentPaymentsScreen({super.key, required this.userEmail});
 
   @override
   State<StudentPaymentsScreen> createState() => _StudentPaymentsScreenState();

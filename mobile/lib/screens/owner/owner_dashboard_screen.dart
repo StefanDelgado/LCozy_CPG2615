@@ -18,10 +18,10 @@ class OwnerDashboardScreen extends StatefulWidget {
   final String ownerRole;
 
   const OwnerDashboardScreen({
-    Key? key,
+    super.key,
     required this.ownerEmail,
     required this.ownerRole,
-  }) : super(key: key);
+  });
 
   @override
   State<OwnerDashboardScreen> createState() => _OwnerDashboardScreenState();
@@ -210,10 +210,10 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFFFFF6E5),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.orange.withOpacity(0.15), width: 1.3),
+          border: Border.all(color: Colors.orange.withValues(alpha: 0.15), width: 1.3),
           boxShadow: [
             BoxShadow(
-              color: Colors.orange.withOpacity(0.07),
+              color: Colors.orange.withValues(alpha: 0.07),
               blurRadius: 14,
               offset: const Offset(0, 4),
             ),

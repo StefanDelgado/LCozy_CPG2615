@@ -5,9 +5,9 @@ class ReviewsTab extends StatelessWidget {
   final List<dynamic> reviews;
 
   const ReviewsTab({
-    Key? key,
+    super.key,
     required this.reviews,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

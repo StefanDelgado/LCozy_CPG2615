@@ -5,9 +5,9 @@ class RoomsTab extends StatelessWidget {
   final List<dynamic> rooms;
 
   const RoomsTab({
-    Key? key,
+    super.key,
     required this.rooms,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -47,8 +47,8 @@ class RoomsTab extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: isAvailable 
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : Colors.red.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -83,7 +83,7 @@ class RoomsTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  Helpers.formatCurrency(room['price'])+'/month',
+                  '${Helpers.formatCurrency(room['price'])}/month',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
