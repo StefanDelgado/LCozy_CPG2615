@@ -68,32 +68,60 @@ class DormService {
 
   /// Fetches all available dorms for students
   /// 
+  /// Parameters:
+  /// - [studentEmail]: Email of the student (optional, but recommended)
+  /// 
   /// Returns a Map with:
   /// - success: true if successful, false otherwise
   /// - data: List of dorms or null
   /// - message: Success or error message
-  Future<Map<String, dynamic>> getAllDorms() async {
+  Future<Map<String, dynamic>> getAllDorms({String? studentEmail}) async {
     try {
-      final uri = Uri.parse(ApiConstants.studentDashboardEndpoint);
+      // Build URI with student_email parameter if provided
+      final uri = studentEmail != null
+          ? Uri.parse('${ApiConstants.studentDashboardEndpoint}?student_email=$studentEmail')
+          : Uri.parse(ApiConstants.studentDashboardEndpoint);
       
-      final response = await http.get(uri);
+      print('🌐 API Call: $uri');
+      
+      final response = await http.get(uri).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception('Request timeout - Please check your internet connection');
+        },
+      );
+
+      print('📡 Response Status: ${response.statusCode}');
+      print('📦 Response Body: ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         
+        print('📊 Decoded data type: ${data.runtimeType}');
+        
         if (data is Map && data['dorms'] != null) {
+          print('✅ Found dorms in Map: ${(data['dorms'] as List).length} dorms');
           return {
             'success': true,
             'data': data['dorms'],
             'message': 'Dorms loaded successfully',
           };
         } else if (data is List) {
+          print('✅ Found dorms as List: ${data.length} dorms');
           return {
             'success': true,
             'data': data,
             'message': 'Dorms loaded successfully',
           };
+        } else if (data is Map) {
+          print('⚠️ Map without dorms key. Keys: ${data.keys}');
+          return {
+            'success': true,
+            'data': [],
+            'message': 'No dorms available',
+          };
         } else {
+          print('⚠️ Unknown data format');
           return {
             'success': true,
             'data': [],
@@ -103,15 +131,26 @@ class DormService {
       } else {
         return {
           'success': false,
-          'error': 'HTTP Error',
-          'message': 'Failed to load dorms. Status: ${response.statusCode}',
+          'error': 'HTTP Error ${response.statusCode}',
+          'message': 'Failed to load dorms. Status: ${response.statusCode}\nResponse: ${response.body.substring(0, response.body.length > 100 ? 100 : response.body.length)}',
         };
       }
     } catch (e) {
+      // Provide more specific error messages
+      String errorMessage = 'Error loading dorms: ${e.toString()}';
+      
+      if (e.toString().contains('SocketException') || e.toString().contains('Failed host lookup')) {
+        errorMessage = 'Network error: Cannot connect to server. Please check your internet connection.';
+      } else if (e.toString().contains('timeout')) {
+        errorMessage = 'Request timeout: Server is taking too long to respond.';
+      } else if (e.toString().contains('FormatException')) {
+        errorMessage = 'Data format error: Invalid response from server.';
+      }
+      
       return {
         'success': false,
         'error': 'Exception',
-        'message': 'Error loading dorms: ${e.toString()}',
+        'message': errorMessage,
       };
     }
   }

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../services/dorm_service.dart';
+import 'package:provider/provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../providers/dorm_provider.dart';
+import '../../services/location_service.dart';
+import '../../utils/map_helpers.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../student/view_details_screen.dart';
@@ -20,52 +24,199 @@ class BrowseDormsScreen extends StatefulWidget {
 }
 
 class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
-  final DormService _dormService = DormService();
-  bool isLoading = true;
-  String? error;
+  final LocationService _locationService = LocationService();
+  
   List<Map<String, dynamic>> dorms = [];
+  List<Map<String, dynamic>> allDorms = []; // Keep original list
+  
+  // Near Me filter state
+  bool _nearMeFilterActive = false;
+  double _radiusKm = 5.0; // Default 5km
+  LatLng? _userLocation;
 
   @override
   void initState() {
     super.initState();
-    fetchDorms();
+    // Load dorms from provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchDorms();
+    });
   }
 
   Future<void> fetchDorms() async {
+    final dormProvider = context.read<DormProvider>();
+    
+    // Fetch all dorms with student email
+    await dormProvider.fetchAllDorms(studentEmail: widget.userEmail);
+    
+    if (!mounted) return;
+    
+    // Get dorms from provider
+    var items = List<Map<String, dynamic>>.from(dormProvider.allDorms);
+    
+    // Debug: Print dorm count and first dorm if available
+    print('📊 Fetched ${items.length} dorms');
+    if (items.isNotEmpty) {
+      print('📍 First dorm: ${items[0]}');
+    }
+    
+    // Apply search filter if query provided
+    if (widget.searchQuery != null && widget.searchQuery!.trim().isNotEmpty) {
+      final q = widget.searchQuery!.toLowerCase();
+      items = items.where((p) {
+        final t = (p['title'] ?? '').toString().toLowerCase();
+        final l = (p['location'] ?? '').toString().toLowerCase();
+        return t.contains(q) || l.contains(q);
+      }).toList();
+      print('🔍 After search filter: ${items.length} dorms');
+    }
+    
     setState(() {
-      isLoading = true;
-      error = null;
+      allDorms = items; // Store original list
+      dorms = items;
+    });
+    
+    // Apply Near Me filter if active
+    if (_nearMeFilterActive) {
+      _applyNearMeFilter();
+    }
+  }
+
+  /// Get user's current location
+  Future<void> _getUserLocation() async {
+    try {
+      final position = await _locationService.getCurrentLocation();
+      setState(() {
+        _userLocation = LatLng(position.latitude, position.longitude);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not get location: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  /// Apply Near Me filter
+  Future<void> _applyNearMeFilter() async {
+    if (_userLocation == null) {
+      await _getUserLocation();
+    }
+
+    if (_userLocation == null) {
+      setState(() {
+        _nearMeFilterActive = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _nearMeFilterActive = true;
     });
 
-    try {
-      final result = await _dormService.getAllDorms();
-      
-      if (result['success']) {
-        var items = List<Map<String, dynamic>>.from(result['data'] ?? []);
-        
-        // Apply search filter if query provided
-        if (widget.searchQuery != null && widget.searchQuery!.trim().isNotEmpty) {
-          final q = widget.searchQuery!.toLowerCase();
-          items = items.where((p) {
-            final t = (p['title'] ?? '').toString().toLowerCase();
-            final l = (p['location'] ?? '').toString().toLowerCase();
-            return t.contains(q) || l.contains(q);
-          }).toList();
-        }
-        
-        setState(() {
-          dorms = items;
-          isLoading = false;
-        });
-      } else {
-        throw Exception(result['message'] ?? 'Failed to load dorms');
+    // Filter dorms within radius
+    final filteredDorms = allDorms.where((dorm) {
+      final lat = double.tryParse(dorm['latitude']?.toString() ?? '');
+      final lng = double.tryParse(dorm['longitude']?.toString() ?? '');
+
+      if (lat == null || lng == null) return false;
+
+      final dormLocation = LatLng(lat, lng);
+      final distance = _locationService.calculateDistance(_userLocation!, dormLocation);
+
+      // Add distance to dorm data for display
+      dorm['_distance'] = distance;
+
+      return distance <= _radiusKm;
+    }).toList();
+
+    // Sort by distance
+    filteredDorms.sort((a, b) {
+      final distA = a['_distance'] as double? ?? 999999;
+      final distB = b['_distance'] as double? ?? 999999;
+      return distA.compareTo(distB);
+    });
+
+    setState(() {
+      dorms = filteredDorms;
+    });
+  }
+
+  /// Clear Near Me filter
+  void _clearNearMeFilter() {
+    setState(() {
+      _nearMeFilterActive = false;
+      dorms = allDorms;
+      // Remove distance data
+      for (var dorm in dorms) {
+        dorm.remove('_distance');
       }
-    } catch (e) {
-      setState(() {
-        error = e.toString();
-        isLoading = false;
-      });
-    }
+    });
+  }
+
+  /// Show radius picker dialog
+  void _showRadiusPickerDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Search Radius'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${_radiusKm.toStringAsFixed(1)} km',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF8B5CF6),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Slider(
+                value: _radiusKm,
+                min: 1.0,
+                max: 20.0,
+                divisions: 19,
+                label: '${_radiusKm.toStringAsFixed(1)} km',
+                activeColor: const Color(0xFF8B5CF6),
+                onChanged: (value) {
+                  setDialogState(() {
+                    _radiusKm = value;
+                  });
+                  setState(() {
+                    _radiusKm = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Show dorms within this radius',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _applyNearMeFilter();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Apply'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -78,26 +229,111 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
             : 'Search: ${widget.searchQuery}'
         ),
         backgroundColor: Colors.orange,
+        actions: [
+          // Near Me filter button
+          IconButton(
+            icon: Icon(
+              _nearMeFilterActive ? Icons.location_on : Icons.location_searching,
+            ),
+            tooltip: 'Near Me',
+            onPressed: () {
+              if (_nearMeFilterActive) {
+                _clearNearMeFilter();
+              } else {
+                _showRadiusPickerDialog();
+              }
+            },
+          ),
+          // Map view toggle button
+          IconButton(
+            icon: const Icon(Icons.map),
+            tooltip: 'Map View',
+            onPressed: () {
+              Navigator.pushNamed(context, '/browse_dorms_map');
+            },
+          ),
+        ],
       ),
-      body: RefreshIndicator(
-        onRefresh: fetchDorms,
-        child: _buildContent(),
+      body: Column(
+        children: [
+          // Near Me Filter Indicator
+          if (_nearMeFilterActive)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: const Color(0xFF8B5CF6).withOpacity(0.1),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.location_on,
+                    color: Color(0xFF8B5CF6),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Showing dorms within ${_radiusKm.toStringAsFixed(1)} km',
+                      style: const TextStyle(
+                        color: Color(0xFF8B5CF6),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _showRadiusPickerDialog,
+                    icon: const Icon(Icons.tune, size: 16),
+                    label: const Text('Adjust'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF8B5CF6),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    color: const Color(0xFF8B5CF6),
+                    onPressed: _clearNearMeFilter,
+                    tooltip: 'Clear filter',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+          // Content
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: fetchDorms,
+              child: _buildContent(),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildContent() {
-    if (isLoading) {
-      return const LoadingWidget();
-    }
-    
-    if (error != null) {
-      return ErrorDisplayWidget(
-        error: error!,
-        onRetry: fetchDorms,
-      );
-    }
-    
+    return Consumer<DormProvider>(
+      builder: (context, dormProvider, child) {
+        if (dormProvider.isLoading && dorms.isEmpty) {
+          return const LoadingWidget();
+        }
+        
+        if (dormProvider.error != null && dorms.isEmpty) {
+          return ErrorDisplayWidget(
+            error: dormProvider.error!,
+            onRetry: fetchDorms,
+          );
+        }
+        
+        if (dorms.isEmpty) {
+          return _buildEmptyState();
+        }
+        
+        return _buildDormList();
+      },
+    );
+  }
+
+  Widget _buildEmptyState() {
     if (dorms.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -114,7 +350,10 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
         ],
       );
     }
-    
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildDormList() {
     return ListView.builder(
       padding: const EdgeInsets.all(12),
       physics: const AlwaysScrollableScrollPhysics(),
@@ -129,6 +368,7 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
     final location = dorm['location'] ?? '';
     final minPrice = dorm['min_price'] ?? '';
     final available = dorm['available_rooms']?.toString() ?? '0';
+    final distance = dorm['_distance'] as double?;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -138,6 +378,39 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
         borderRadius: BorderRadius.circular(12),
         child: Row(
           children: [
+            // Distance Badge (if Near Me filter active)
+            if (distance != null)
+              Container(
+                width: 60,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B5CF6),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.near_me,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      MapHelpers.formatDistance(distance),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
             _buildDormImage(image),
             Expanded(
               child: Padding(

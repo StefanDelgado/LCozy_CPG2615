@@ -2,6 +2,10 @@
     <!-- Internet permission for Google Maps -->
     <uses-permission android:name="android.permission.INTERNET"/>
     
+    <!-- Location permissions for GPS and "Near Me" features -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    
     <!-- Permissions for image_picker -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
@@ -10,7 +14,8 @@
     
     <application
         android:label="cozydorm"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
 
         <!-- Google Maps API Key -->
         <meta-data
