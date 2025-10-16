@@ -9,8 +9,7 @@ import '../../widgets/student/view_details/reviews_tab.dart';
 import '../../widgets/student/view_details/contact_tab.dart';
 import '../../widgets/student/view_details/stat_chip.dart';
 import '../../utils/constants.dart';
-// Temporary imports from legacy structure
-import '../../legacy/MobileScreen/student_owner_chat.dart';
+import '../shared/chat_conversation_screen.dart';
 import 'booking_form_screen.dart';
 
 class ViewDetailsScreen extends StatefulWidget {
@@ -132,7 +131,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => StudentOwnerChatScreen(
+        builder: (context) => ChatConversationScreen(
           currentUserEmail: widget.userEmail,
           otherUserEmail: ownerEmail,
           currentUserRole: 'student',
