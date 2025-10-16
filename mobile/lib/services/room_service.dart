@@ -140,6 +140,8 @@ class RoomService {
   /// Parameters:
   /// - [roomId]: The ID of the room to update
   /// - [roomData]: Map containing updated room information
+  ///   Required fields:
+  ///   - owner_email: Email of the owner (for authorization)
   ///   Possible fields:
   ///   - room_number: Updated room number
   ///   - room_type: Updated room type
@@ -214,19 +216,23 @@ class RoomService {
   /// 
   /// Parameters:
   /// - [roomId]: The ID of the room to delete
+  /// - [ownerEmail]: Email of the owner (for authorization)
   /// 
   /// Returns:
   /// - Map with keys:
   ///   - success: boolean indicating if the room was deleted
   ///   - message: Success or error message
-  Future<Map<String, dynamic>> deleteRoom(int roomId) async {
+  Future<Map<String, dynamic>> deleteRoom(int roomId, String ownerEmail) async {
     try {
-      print('🗑️ Deleting room $roomId');
+      print('🗑️ Deleting room $roomId for owner $ownerEmail');
       
       final response = await http.post(
         Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/delete_room_api.php'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'room_id': roomId}),
+        body: jsonEncode({
+          'room_id': roomId,
+          'owner_email': ownerEmail,
+        }),
       );
 
       print('🗑️ Response status: ${response.statusCode}');

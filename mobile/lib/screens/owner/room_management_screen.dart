@@ -157,6 +157,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     try {
       final result = await _roomService.deleteRoom(
         int.parse(room['room_id'].toString()),
+        widget.ownerEmail,
       );
 
       if (result['success']) {
