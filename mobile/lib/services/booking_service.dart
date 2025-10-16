@@ -118,34 +118,61 @@ class BookingService {
   ///   - message: Success or error message
   ///   - data: Created booking data if successful
   Future<Map<String, dynamic>> createBooking(Map<String, dynamic> bookingData) async {
+    print('📝 [Booking] ========== CREATE BOOKING START ==========');
+    print('📝 [Booking] Input data: $bookingData');
+    print('📝 [Booking] Student email: ${bookingData['student_email']}');
+    print('📝 [Booking] Dorm ID: ${bookingData['dorm_id']}');
+    print('📝 [Booking] Room ID: ${bookingData['room_id']}');
+    print('📝 [Booking] Booking type: ${bookingData['booking_type']}');
+    print('📝 [Booking] Check-in date: ${bookingData['check_in_date']}');
+    print('📝 [Booking] Check-out date: ${bookingData['check_out_date']}');
+    
     try {
+      final url = ApiConstants.createBookingEndpoint;
+      print('📝 [Booking] Request URL: $url');
+      print('📝 [Booking] Request headers: Content-Type: application/json');
+      print('📝 [Booking] Request body (JSON): ${jsonEncode(bookingData)}');
+      
       final response = await http.post(
-        Uri.parse(ApiConstants.createBookingEndpoint),
+        Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(bookingData),
       );
 
+      print('📝 [Booking] Response status: ${response.statusCode}');
+      print('📝 [Booking] Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
+        print('📝 [Booking] Parsed response data: $data');
+        print('📝 [Booking] OK flag: ${data['ok']}');
+        
+        // PHP API returns 'ok' not 'success'
+        if (data['ok'] == true) {
+          print('📝 [Booking] ✅ Booking created successfully!');
           return {
             'success': true,
             'message': data['message'] ?? 'Booking created successfully',
             'data': data['booking'],
           };
         } else {
+          print('📝 [Booking] ❌ API returned ok=false');
+          print('📝 [Booking] Error message: ${data['error'] ?? data['message']}');
           return {
             'success': false,
-            'message': data['message'] ?? 'Failed to create booking',
+            'message': data['error'] ?? data['message'] ?? 'Failed to create booking',
           };
         }
       } else {
+        print('📝 [Booking] ❌ Server error - HTTP ${response.statusCode}');
         return {
           'success': false,
           'message': 'Server error: ${response.statusCode}',
         };
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('📝 [Booking] ❌ Exception caught: $e');
+      print('📝 [Booking] ❌ Stack trace: $stackTrace');
       return {
         'success': false,
         'message': 'Network error: ${e.toString()}',
@@ -170,6 +197,11 @@ class BookingService {
     required String ownerEmail,
   }) async {
     try {
+      print('📋 [BookingService] Updating booking status...');
+      print('📋 [BookingService] Booking ID: $bookingId');
+      print('📋 [BookingService] Action: $action');
+      print('📋 [BookingService] Owner Email: $ownerEmail');
+
       final response = await http.post(
         Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner_bookings_api.php'),
         body: {
@@ -179,26 +211,33 @@ class BookingService {
         },
       );
 
+      print('📋 [BookingService] Response status: ${response.statusCode}');
+      print('📋 [BookingService] Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['ok'] == true) {
+          print('📋 [BookingService] ✅ Booking updated successfully');
           return {
             'success': true,
             'message': data['message'] ?? 'Booking updated successfully',
           };
         } else {
+          print('📋 [BookingService] ❌ Update failed: ${data['error']}');
           return {
             'success': false,
             'message': data['error'] ?? 'Failed to update booking',
           };
         }
       } else {
+        print('📋 [BookingService] ❌ Server error: ${response.statusCode}');
         return {
           'success': false,
           'message': 'Server error: ${response.statusCode}',
         };
       }
     } catch (e) {
+      print('📋 [BookingService] ❌ Exception: $e');
       return {
         'success': false,
         'message': 'Network error: ${e.toString()}',

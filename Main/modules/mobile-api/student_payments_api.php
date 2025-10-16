@@ -36,7 +36,30 @@ try {
 
     $student_id = $student['user_id'];
 
+    // Log the student information
+    error_log("=== STUDENT PAYMENTS API DEBUG ===");
+    error_log("Student Email: $student_email");
+    error_log("Student ID: $student_id");
+
+    // First, check how many payments exist for this student
+    $count_stmt = $pdo->prepare("SELECT COUNT(*) as total FROM payments WHERE student_id = ?");
+    $count_stmt->execute([$student_id]);
+    $count_result = $count_stmt->fetch(PDO::FETCH_ASSOC);
+    error_log("Total payments in payments table for this student: " . $count_result['total']);
+
+    // Check payments without joins to see if join is causing the issue
+    $raw_stmt = $pdo->prepare("
+        SELECT payment_id, booking_id, amount, status, due_date
+        FROM payments 
+        WHERE student_id = ?
+        ORDER BY created_at DESC
+    ");
+    $raw_stmt->execute([$student_id]);
+    $raw_payments = $raw_stmt->fetchAll(PDO::FETCH_ASSOC);
+    error_log("Raw payments (no joins): " . json_encode($raw_payments));
+
     // Fetch payments with booking and room details
+    // Using LEFT JOINs to ensure all payments are returned even if related data is missing
     $stmt = $pdo->prepare("
         SELECT 
             p.payment_id, 
@@ -58,9 +81,9 @@ try {
             u.email AS owner_email,
             u.phone AS owner_phone
         FROM payments p
-        JOIN bookings b ON p.booking_id = b.booking_id
-        JOIN rooms r ON b.room_id = r.room_id
-        JOIN dormitories d ON r.dorm_id = d.dorm_id
+        LEFT JOIN bookings b ON p.booking_id = b.booking_id
+        LEFT JOIN rooms r ON b.room_id = r.room_id
+        LEFT JOIN dormitories d ON r.dorm_id = d.dorm_id
         LEFT JOIN users u ON p.owner_id = u.user_id
         WHERE p.student_id = ?
         ORDER BY p.created_at DESC
@@ -68,6 +91,12 @@ try {
 
     $stmt->execute([$student_id]);
     $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    error_log("Payments after joins: " . count($payments));
+    if (count($payments) < $count_result['total']) {
+        error_log("WARNING: JOIN is filtering out payments!");
+        error_log("Missing: " . ($count_result['total'] - count($payments)) . " payment(s)");
+    }
 
     // Calculate payment statistics
     $total_due = 0;
@@ -78,6 +107,12 @@ try {
     $current_date = date('Y-m-d');
 
     foreach ($payments as &$payment) {
+        // Provide defaults for NULL values from LEFT JOINs
+        $payment['dorm_name'] = $payment['dorm_name'] ?? 'Unknown Dorm';
+        $payment['dorm_address'] = $payment['dorm_address'] ?? 'N/A';
+        $payment['room_type'] = $payment['room_type'] ?? 'Unknown Room';
+        $payment['room_number'] = $payment['room_number'] ?? null;
+        
         // Check if overdue
         $is_overdue = ($payment['status'] === 'pending' && $payment['due_date'] < $current_date);
         
@@ -121,6 +156,11 @@ try {
             $payment['due_status'] = null;
         }
     }
+
+    error_log("Final payment count being returned: " . count($payments));
+    error_log("Payment IDs being returned: " . implode(', ', array_column($payments, 'payment_id')));
+    error_log("Statistics: Pending=$pending_count, Overdue=$overdue_count, Total_due=$total_due, Paid=$paid_amount");
+    error_log("=== END STUDENT PAYMENTS API DEBUG ===");
 
     echo json_encode([
         'ok' => true,

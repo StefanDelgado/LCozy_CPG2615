@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 class BookingCard extends StatelessWidget {
   final Map<String, dynamic> booking;
   final VoidCallback? onApprove;
+  final VoidCallback? onReject;
+  final bool isProcessing;
 
   const BookingCard({
     super.key,
     required this.booking,
     this.onApprove,
+    this.onReject,
+    this.isProcessing = false,
   });
 
   @override
@@ -17,6 +21,7 @@ class BookingCard extends StatelessWidget {
     final requestedAt = booking['requested_at']?.toString() ?? '';
     final dormName = booking['dorm_name']?.toString() ?? 'Unknown Dorm';
     final roomType = booking['room_type']?.toString() ?? 'Unknown Room';
+    final bookingType = booking['booking_type']?.toString() ?? 'Shared';
     final duration = booking['duration']?.toString() ?? 'Not specified';
     final price = booking['price']?.toString() ?? '₱0';
     final status = (booking['status'] ?? '').toString().toLowerCase();
@@ -55,28 +60,74 @@ class BookingCard extends StatelessWidget {
             // Booking Details
             _InfoRow(label: 'Dorm', value: dormName),
             _InfoRow(label: 'Room', value: roomType),
+            _InfoRow(label: 'Type', value: bookingType),
             _InfoRow(label: 'Duration', value: duration),
             _InfoRow(label: 'Price', value: price),
             
-            // Approve Button (only for pending bookings)
-            if (isPending && onApprove != null)
+            // Action Buttons (only for pending bookings)
+            if (isPending && (onApprove != null || onReject != null))
               Padding(
                 padding: const EdgeInsets.only(top: 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: onApprove,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  children: [
+                    // Reject Button
+                    if (onReject != null)
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: isProcessing ? null : onReject,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red,
+                            side: const BorderSide(color: Colors.red),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          icon: isProcessing 
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                                ),
+                              )
+                            : const Icon(Icons.cancel, size: 20),
+                          label: const Text('Reject'),
+                        ),
                       ),
-                    ),
-                    icon: const Icon(Icons.check_circle),
-                    label: const Text('Approve Booking'),
-                  ),
+                    
+                    // Spacing between buttons
+                    if (onReject != null && onApprove != null)
+                      const SizedBox(width: 12),
+                    
+                    // Approve Button
+                    if (onApprove != null)
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: isProcessing ? null : onApprove,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          icon: isProcessing 
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.check_circle, size: 20),
+                          label: const Text('Approve'),
+                        ),
+                      ),
+                  ],
                 ),
               ),
           ],

@@ -26,24 +26,41 @@ class DormService {
         '$_baseUrl/modules/mobile-api/owner_dorms_api.php?owner_email=$ownerEmail',
       );
       
+      print('🌐 Calling API: $uri');
       final response = await http.get(uri);
+      print('🌐 Response status: ${response.statusCode}');
+      print('🌐 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print('🌐 Decoded data type: ${data.runtimeType}');
+        print('🌐 Decoded data: $data');
         
         if (data is List) {
+          print('✅ Data is List with ${data.length} items');
           return {
             'success': true,
             'data': data,
             'message': 'Dorms loaded successfully',
           };
+        } else if (data is Map && data['dorms'] != null) {
+          // Handle {ok: true, dorms: [...]} format
+          final dormsList = data['dorms'] as List;
+          print('✅ Data has dorms array with ${dormsList.length} items');
+          return {
+            'success': true,
+            'data': dormsList,
+            'message': 'Dorms loaded successfully',
+          };
         } else if (data is Map && data['error'] != null) {
+          print('❌ Data has error: ${data['error']}');
           return {
             'success': false,
             'error': data['error'],
             'message': data['error'],
           };
         } else {
+          print('⚠️ Data is neither List nor error Map, returning empty');
           return {
             'success': true,
             'data': [],
@@ -51,6 +68,7 @@ class DormService {
           };
         }
       } else {
+        print('❌ HTTP Error: ${response.statusCode}');
         return {
           'success': false,
           'error': 'HTTP Error',
@@ -58,6 +76,7 @@ class DormService {
         };
       }
     } catch (e) {
+      print('❌ Exception: $e');
       return {
         'success': false,
         'error': 'Exception',
@@ -68,32 +87,70 @@ class DormService {
 
   /// Fetches all available dorms for students
   /// 
+  /// Parameters:
+  /// - [studentEmail]: Email of the student (optional, but recommended)
+  /// 
   /// Returns a Map with:
   /// - success: true if successful, false otherwise
   /// - data: List of dorms or null
   /// - message: Success or error message
-  Future<Map<String, dynamic>> getAllDorms() async {
+  Future<Map<String, dynamic>> getAllDorms({String? studentEmail}) async {
     try {
-      final uri = Uri.parse(ApiConstants.studentDashboardEndpoint);
+      // Use student_home_api.php which returns all available dorms
+      final uri = Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/student_home_api.php');
       
-      final response = await http.get(uri);
+      print('🌐 API Call: $uri');
+      
+      final response = await http.get(uri).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception('Request timeout - Please check your internet connection');
+        },
+      );
+
+      print('📡 Response Status: ${response.statusCode}');
+      print('📦 Response Body: ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         
+        print('📊 Decoded data type: ${data.runtimeType}');
+        
+        // student_home_api.php returns {ok: true, dorms: [...]}
         if (data is Map && data['dorms'] != null) {
+          final dormsList = data['dorms'] as List;
+          print('✅ Found dorms in Map: ${dormsList.length} dorms');
+          if (dormsList.isNotEmpty) {
+            print('   First dorm: ${dormsList[0]}');
+          }
           return {
             'success': true,
-            'data': data['dorms'],
+            'data': dormsList,
             'message': 'Dorms loaded successfully',
           };
         } else if (data is List) {
+          print('✅ Found dorms as List: ${data.length} dorms');
           return {
             'success': true,
             'data': data,
             'message': 'Dorms loaded successfully',
           };
+        } else if (data is Map && data['ok'] == true && data['dorms'] == null) {
+          print('⚠️ Response OK but no dorms array');
+          return {
+            'success': true,
+            'data': [],
+            'message': 'No dorms available',
+          };
+        } else if (data is Map) {
+          print('⚠️ Map without dorms key. Keys: ${data.keys}');
+          return {
+            'success': true,
+            'data': [],
+            'message': 'No dorms available',
+          };
         } else {
+          print('⚠️ Unknown data format');
           return {
             'success': true,
             'data': [],
@@ -103,15 +160,26 @@ class DormService {
       } else {
         return {
           'success': false,
-          'error': 'HTTP Error',
-          'message': 'Failed to load dorms. Status: ${response.statusCode}',
+          'error': 'HTTP Error ${response.statusCode}',
+          'message': 'Failed to load dorms. Status: ${response.statusCode}\nResponse: ${response.body.substring(0, response.body.length > 100 ? 100 : response.body.length)}',
         };
       }
     } catch (e) {
+      // Provide more specific error messages
+      String errorMessage = 'Error loading dorms: ${e.toString()}';
+      
+      if (e.toString().contains('SocketException') || e.toString().contains('Failed host lookup')) {
+        errorMessage = 'Network error: Cannot connect to server. Please check your internet connection.';
+      } else if (e.toString().contains('timeout')) {
+        errorMessage = 'Request timeout: Server is taking too long to respond.';
+      } else if (e.toString().contains('FormatException')) {
+        errorMessage = 'Data format error: Invalid response from server.';
+      }
+      
       return {
         'success': false,
         'error': 'Exception',
-        'message': 'Error loading dorms: ${e.toString()}',
+        'message': errorMessage,
       };
     }
   }
@@ -125,30 +193,60 @@ class DormService {
   /// - data: Dorm details or null
   /// - message: Success or error message
   Future<Map<String, dynamic>> getDormDetails(String dormId) async {
+    print('🏠 [DormService] Fetching dorm details for ID: $dormId');
     try {
       final uri = Uri.parse(
-        '$_baseUrl/mobile-api/get_dorm_details.php?dorm_id=$dormId',
+        '${ApiConstants.dormDetailsEndpoint}?dorm_id=$dormId',
       );
       
+      print('🏠 [DormService] Request URL: $uri');
       final response = await http.get(uri);
+      print('🏠 [DormService] Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
+        print('🏠 [DormService] Response body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
         final data = json.decode(response.body);
         
         if (data is Map) {
-          return {
-            'success': true,
-            'data': data,
-            'message': 'Dorm details loaded successfully',
-          };
-        } else {
-          return {
-            'success': false,
-            'error': 'Invalid data format',
-            'message': 'Unexpected response format',
-          };
+          // Check if API returns {ok: true, dorm: {...}}
+          if (data['ok'] == true && data['dorm'] != null) {
+            print('🏠 [DormService] ✅ Success! Dorm details loaded');
+            return {
+              'success': true,
+              'data': data['dorm'], // Use 'dorm' field from API
+              'rooms': data['rooms'], // Also include rooms
+              'reviews': data['reviews'], // And reviews
+              'message': 'Dorm details loaded successfully',
+            };
+          }
+          // Or direct dorm data (fallback)
+          else if (data['dorm_id'] != null) {
+            print('🏠 [DormService] ✅ Success! Dorm details loaded (direct format)');
+            return {
+              'success': true,
+              'data': data,
+              'message': 'Dorm details loaded successfully',
+            };
+          }
+          // Error response
+          else if (data['ok'] == false) {
+            print('🏠 [DormService] ❌ API error: ${data['error']}');
+            return {
+              'success': false,
+              'error': data['error'] ?? 'Unknown error',
+              'message': data['message'] ?? data['error'] ?? 'Failed to load dorm details',
+            };
+          }
         }
+        
+        print('🏠 [DormService] ❌ Invalid data format');
+        return {
+          'success': false,
+          'error': 'Invalid data format',
+          'message': 'Unexpected response format',
+        };
       } else {
+        print('🏠 [DormService] ❌ HTTP ${response.statusCode}: ${response.body}');
         return {
           'success': false,
           'error': 'HTTP Error',
@@ -156,6 +254,7 @@ class DormService {
         };
       }
     } catch (e) {
+      print('🏠 [DormService] ❌ Exception: $e');
       return {
         'success': false,
         'error': 'Exception',
@@ -265,10 +364,16 @@ class DormService {
     }
   }
 
-  /// Updates an existing dorm (Future implementation)
+  /// Updates an existing dorm
   /// 
   /// [dormId] - ID of the dorm to update
-  /// [dormData] - Map containing updated dorm information
+  /// [dormData] - Map containing updated dorm information:
+  ///   - name: String
+  ///   - address: String
+  ///   - description: String (optional)
+  ///   - features: String (optional)
+  ///   - latitude: String (optional)
+  ///   - longitude: String (optional)
   /// 
   /// Returns a Map with:
   /// - success: true if successful, false otherwise
@@ -278,11 +383,48 @@ class DormService {
     String dormId,
     Map<String, dynamic> dormData,
   ) async {
-    // TODO: Implement when update API endpoint is available
-    return {
-      'success': false,
-      'error': 'Not Implemented',
-      'message': 'Update dorm functionality not yet implemented',
-    };
+    try {
+      final uri = Uri.parse('$_baseUrl/modules/mobile-api/update_dorm_api.php');
+      
+      final body = {
+        'dorm_id': dormId,
+        ...dormData,
+      };
+      
+      final response = await http.post(
+        uri,
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['success'] == true) {
+          return {
+            'success': true,
+            'data': data,
+            'message': data['message'] ?? 'Dorm updated successfully',
+          };
+        } else {
+          return {
+            'success': false,
+            'error': data['error'] ?? 'Unknown error',
+            'message': data['message'] ?? 'Failed to update dorm',
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'error': 'HTTP Error',
+          'message': 'Failed to update dorm. Status: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Exception',
+        'message': 'Error updating dorm: ${e.toString()}',
+      };
+    }
   }
 }

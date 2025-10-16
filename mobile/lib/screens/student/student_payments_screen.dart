@@ -31,6 +31,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
   }
 
   Future<void> fetchPayments() async {
+    print('💰 [Payments] Fetching payments for: ${widget.userEmail}');
     setState(() {
       isLoading = true;
       error = '';
@@ -38,18 +39,29 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
 
     try {
       final result = await _paymentService.getStudentPayments(widget.userEmail);
+      print('💰 [Payments] API result success: ${result['success']}');
+      print('💰 [Payments] API result data: ${result['data']}');
 
       if (result['success']) {
+        final paymentData = result['data'];
+        print('💰 [Payments] Payment data type: ${paymentData.runtimeType}');
+        
         setState(() {
-          final paymentData = result['data'];
-          // Note: The API might return data differently
-          // Adjust based on actual API response structure
           if (paymentData is List) {
+            // If data is directly a list of payments
             payments = paymentData;
-            statistics = {}; // Empty if no stats in response
+            statistics = {};
+            print('💰 [Payments] ✅ Loaded ${payments.length} payments (list format)');
           } else if (paymentData is Map) {
-            statistics = paymentData['statistics'] ?? {};
-            payments = paymentData['payments'] ?? paymentData;
+            // If data is a map with statistics and payments
+            statistics = (paymentData['statistics'] as Map?)?.cast<String, dynamic>() ?? {};
+            payments = (paymentData['payments'] as List?) ?? [];
+            print('💰 [Payments] ✅ Loaded ${payments.length} payments with statistics');
+            print('💰 [Payments] Statistics: $statistics');
+          } else {
+            payments = [];
+            statistics = {};
+            print('💰 [Payments] ⚠️ Unexpected data format');
           }
           isLoading = false;
         });
@@ -57,6 +69,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
         throw Exception(result['error'] ?? 'Failed to load payments');
       }
     } catch (e) {
+      print('💰 [Payments] ❌ Error: $e');
       setState(() {
         error = e.toString();
         isLoading = false;

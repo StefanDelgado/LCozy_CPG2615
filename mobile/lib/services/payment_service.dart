@@ -17,18 +17,27 @@ class PaymentService {
   ///   - error: Error message if request failed
   Future<Map<String, dynamic>> getStudentPayments(String studentEmail) async {
     try {
+      print('📡 [PaymentService] Fetching payments for: $studentEmail');
       final response = await http.get(
         Uri.parse(
           'http://cozydorms.life/modules/mobile-api/student_payments_api.php?student_email=$studentEmail'
         ),
       );
 
+      print('📡 [PaymentService] Response status: ${response.statusCode}');
+      print('📡 [PaymentService] Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print('📡 [PaymentService] Decoded data ok: ${data['ok']}');
+        
         if (data['ok'] == true) {
           return {
             'success': true,
-            'data': data['payments'] ?? [],
+            'data': {
+              'statistics': data['statistics'] ?? {},
+              'payments': data['payments'] ?? [],
+            },
           };
         } else {
           return {
@@ -43,6 +52,7 @@ class PaymentService {
         };
       }
     } catch (e) {
+      print('📡 [PaymentService] ❌ Exception: $e');
       return {
         'success': false,
         'error': 'Network error: ${e.toString()}',
@@ -150,4 +160,115 @@ class PaymentService {
       };
     }
   }
+
+  /// Completes a payment (marks as paid)
+  /// 
+  /// Parameters:
+  /// - [paymentId]: ID of the payment
+  /// - [ownerEmail]: Email of the owner
+  /// 
+  /// Returns:
+  /// - Map with keys:
+  ///   - success: boolean indicating if the payment was completed
+  ///   - message: Success or error message
+  Future<Map<String, dynamic>> completePayment(int paymentId, String ownerEmail) async {
+    try {
+      print('📡 [PaymentService] Completing payment: $paymentId');
+      
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner_payments_api.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'action': 'complete',
+          'payment_id': paymentId,
+          'owner_email': ownerEmail,
+        }),
+      );
+
+      print('📡 [PaymentService] Complete response status: ${response.statusCode}');
+      print('📡 [PaymentService] Complete response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['ok'] == true) {
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Payment completed successfully',
+          };
+        } else {
+          return {
+            'success': false,
+            'message': data['error'] ?? 'Failed to complete payment',
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'message': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('📡 [PaymentService] ❌ Exception: $e');
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
+  /// Rejects a payment
+  /// 
+  /// Parameters:
+  /// - [paymentId]: ID of the payment
+  /// - [ownerEmail]: Email of the owner
+  /// 
+  /// Returns:
+  /// - Map with keys:
+  ///   - success: boolean indicating if the payment was rejected
+  ///   - message: Success or error message
+  Future<Map<String, dynamic>> rejectPayment(int paymentId, String ownerEmail) async {
+    try {
+      print('📡 [PaymentService] Rejecting payment: $paymentId');
+      
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner_payments_api.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'action': 'reject',
+          'payment_id': paymentId,
+          'owner_email': ownerEmail,
+        }),
+      );
+
+      print('📡 [PaymentService] Reject response status: ${response.statusCode}');
+      print('📡 [PaymentService] Reject response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['ok'] == true) {
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Payment rejected successfully',
+          };
+        } else {
+          return {
+            'success': false,
+            'message': data['error'] ?? 'Failed to reject payment',
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'message': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('📡 [PaymentService] ❌ Exception: $e');
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
 }
+

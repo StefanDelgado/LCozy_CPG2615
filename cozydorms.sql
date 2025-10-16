@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Oct 12, 2025 at 01:26 PM
+-- Generation Time: Oct 16, 2025 at 12:38 AM
 -- Server version: 10.6.22-MariaDB-cll-lve
 -- PHP Version: 8.3.22
 
@@ -37,6 +37,14 @@ CREATE TABLE `announcements` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `recipient_type` enum('all','owners','students','custom') DEFAULT 'all'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `announcements`
+--
+
+INSERT INTO `announcements` (`id`, `sender_id`, `title`, `message`, `audience`, `send_option`, `created_at`, `recipient_type`) VALUES
+(14, 1, 'Verify', 'Submit all required documents.', 'All Hosts', '', '2025-10-14 00:00:17', 'all'),
+(15, 1, 'New Owners', 'For new owners, please make sure that your documents are valid.', 'All Hosts', '', '2025-10-14 06:27:11', 'owners');
 
 -- --------------------------------------------------------
 
@@ -80,12 +88,15 @@ CREATE TABLE `bookings` (
 
 INSERT INTO `bookings` (`booking_id`, `room_id`, `student_id`, `booking_type`, `start_date`, `end_date`, `status`, `updated_at`, `created_at`, `expires_at`, `selfie`, `id_document`, `display_picture`, `notes`) VALUES
 (7, 18, 9, 'shared', '2025-10-07', '2026-04-07', 'cancelled', '2025-10-12 11:00:18', '2025-10-07 02:43:54', '2025-10-07 06:43:54', NULL, NULL, NULL, NULL),
-(8, 23, 30, 'shared', '2025-10-10', '2026-04-10', 'cancelled', '2025-10-12 11:00:18', '2025-10-10 17:16:37', '2025-10-10 19:16:37', NULL, NULL, NULL, NULL),
 (10, 26, 11, 'shared', '2025-10-11', '2026-04-11', 'cancelled', '2025-10-12 11:00:18', '2025-10-11 09:43:38', '2025-10-11 11:43:38', NULL, NULL, NULL, NULL),
-(11, 22, 11, 'shared', '2025-10-11', '2026-04-11', 'pending', '2025-10-12 11:00:18', '2025-10-11 22:39:05', '2025-10-12 00:39:05', NULL, NULL, NULL, NULL),
+(11, 22, 11, 'shared', '2025-10-11', '2026-04-11', 'approved', '2025-10-13 10:42:00', '2025-10-11 22:39:05', '2025-10-12 00:39:05', NULL, NULL, NULL, NULL),
 (12, 22, 47, 'shared', '2025-10-12', '2026-04-12', 'cancelled', '2025-10-12 11:00:18', '2025-10-12 13:45:18', '2025-10-12 15:45:18', NULL, NULL, NULL, NULL),
-(13, 23, 47, 'shared', '2025-10-12', '2026-04-12', 'cancelled', '2025-10-12 11:00:18', '2025-10-12 13:49:02', '2025-10-12 15:49:02', NULL, NULL, NULL, NULL),
-(26, 28, 31, 'whole', '2025-10-12', '2026-04-12', 'approved', '2025-10-12 12:26:56', '2025-10-12 19:26:47', '2025-10-12 21:26:47', NULL, NULL, NULL, NULL);
+(26, 28, 31, 'whole', '2025-10-12', '2026-04-12', 'approved', '2025-10-12 12:26:56', '2025-10-12 19:26:47', '2025-10-12 21:26:47', NULL, NULL, NULL, NULL),
+(27, 26, 48, 'whole', '2025-10-13', '2026-04-13', 'pending', '2025-10-13 16:49:07', '2025-10-13 23:49:07', '2025-10-14 01:49:07', NULL, NULL, NULL, NULL),
+(28, 27, 50, 'shared', '2025-10-14', '2026-04-14', 'cancelled', '2025-10-13 21:43:02', '2025-10-14 04:42:43', '2025-10-14 06:42:43', NULL, NULL, NULL, NULL),
+(29, 22, 50, 'shared', '2025-10-14', '2026-04-14', 'pending', '2025-10-13 21:43:12', '2025-10-14 04:43:12', '2025-10-14 06:43:12', NULL, NULL, NULL, NULL),
+(30, 46, 30, 'shared', '2025-10-15', '2026-04-13', 'approved', '2025-10-14 19:05:29', '2025-10-15 02:04:23', '2025-10-15 04:04:23', NULL, NULL, NULL, NULL),
+(31, 29, 30, 'whole', '2025-10-15', '2026-04-13', 'approved', '2025-10-14 19:59:32', '2025-10-15 02:58:05', '2025-10-15 04:58:05', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -118,8 +129,14 @@ INSERT INTO `dormitories` (`dorm_id`, `owner_id`, `name`, `address`, `descriptio
 (3, 5, 'Blue Haven Dormitory', 'Araneta Avenue, Bacolod City', 'Close to universities, laundry service available, 24/7 security.', 1, '2025-08-22 02:25:32', NULL, NULL, 'pending', '2025-10-11 06:08:50', NULL, NULL),
 (4, 4, 'Evergreen Dorms', 'Burgos Avenue, Bacolod City', 'Spacious rooms with air conditioning and shared kitchen.', 0, '2025-08-22 02:30:36', NULL, NULL, 'pending', '2025-10-07 01:47:34', NULL, NULL),
 (5, 8, 'Southern Oasis', 'P Hernaez St.', 'A cozy dorm with a cozy atmosphere', 1, '2025-10-07 01:15:32', NULL, NULL, 'pending', '2025-10-07 01:47:24', 'dorm_68e469b41e437.png', 'Free Wifi, Aircon, Meals provided every morning.'),
-(6, 15, 'Anna\'s Haven Dormitory', '12th Street, Lacson Extension, Bacolod City', 'A cozy and affordable dorm perfect for university students. Located near major schools and transport lines.', 0, '2025-10-10 16:58:30', NULL, NULL, 'pending', '2025-10-11 06:08:31', 'dorm_68e93b36b97a4.png', 'Wi-Fi, Study Lounge, CCTV Security, Air-conditioned Rooms, Laundry Area'),
-(7, 45, 'lozola', 'Bacolod', 'Secure and awesome', 1, '2025-10-11 07:32:12', NULL, NULL, 'pending', '2025-10-11 07:33:36', 'dorm_68ea07fc77de4.jpg', 'Wifi, Aircon, Study Room, Kitchen,');
+(6, 15, 'Anna\'s Haven Dormitory', '12th Street, Lacson Extension, Bacolod City', 'A cozy and affordable dorm perfect for university students. Located near major schools and transport lines.', 1, '2025-10-10 16:58:30', NULL, NULL, 'pending', '2025-10-14 02:07:45', 'dorm_68e93b36b97a4.png', 'Wi-Fi, Study Lounge, CCTV Security, Air-conditioned Rooms, Laundry Area'),
+(7, 45, 'lozola', 'Bacolod', 'Secure and awesome', 1, '2025-10-11 07:32:12', NULL, NULL, 'pending', '2025-10-11 07:33:36', 'dorm_68ea07fc77de4.jpg', 'Wifi, Aircon, Study Room, Kitchen,'),
+(8, 17, 'The Greenfield Residences', 'Burgos Avenue, Brgy. Villamonte, Bacolod City', 'Modern dormitory offering a quiet study-friendly environment with 24/7 access.', 0, '2025-10-14 05:01:20', NULL, NULL, 'pending', '2025-10-14 05:01:20', 'dorm_68edd92060847.jpg', 'Private Bathroom, Common Kitchen, Wi-Fi, Parking Space, Visitor Lobby'),
+(9, 18, 'Casa de Felisa Dorm', 'Brgy. Mandalagan, Bacolod City', 'Home-like atmosphere with spacious rooms ideal for long-term student boarders.', 0, '2025-10-14 05:57:42', NULL, NULL, 'pending', '2025-10-14 05:57:42', 'dorm_68ede65686ffa.jpg', 'Air Conditioning, Free Water, Shared Kitchen, CCTV, Common Area'),
+(10, 19, 'DormHub Bacolod', '17th Lacson Street, near Robinsons Place, Bacolod City', 'A digitalized dorm for tech-savvy students with app-based access and smart utilities.', 0, '2025-10-14 06:04:13', NULL, NULL, 'pending', '2025-10-14 06:04:13', 'dorm_68ede7dd98ba7.jpg', 'Smart Lock, Wi-Fi 6, Study Cubicles, Rooftop Area, 24/7 Security'),
+(11, 20, 'La Salle Courtyard Residence', 'Narra Avenue, near University of St. La Salle, Bacolod City', 'Premium dorm for USLS students offering comfort and convenience within walking distance to campus.', 0, '2025-10-14 06:13:05', NULL, NULL, 'pending', '2025-10-14 06:13:05', 'dorm_68ede9f182e68.jpg', 'Wi-Fi, Study Hall, Air-Conditioned Rooms, Mini Café, Biometric Entry'),
+(12, 21, 'SunnyStay Dormitory', '8th Street, Brgy. Taculing, Bacolod City', 'Bright and airy dorm designed for female students, close to jeepney routes and eateries.', 0, '2025-10-14 06:18:12', NULL, NULL, 'pending', '2025-10-14 06:18:12', 'dorm_68edeb244bf96.jpg', 'Wi-Fi, Laundry Service, CCTV, Study Desks, Shared Kitchen'),
+(13, 22, 'St. Claire Student Inn', '15th Street, near USLS Gate 2, Bacolod City', 'Safe and budget-friendly dorm ideal for first-year college students.', 0, '2025-10-14 06:23:43', NULL, NULL, 'pending', '2025-10-14 06:23:43', 'dorm_68edec6f6a5e3.jpg', '24/7 Security, Free Drinking Water, Wi-Fi, Common Lounge, Refrigerator');
 
 -- --------------------------------------------------------
 
@@ -186,7 +203,11 @@ CREATE TABLE `payments` (
 --
 
 INSERT INTO `payments` (`payment_id`, `booking_id`, `student_id`, `owner_id`, `amount`, `status`, `payment_date`, `due_date`, `receipt_image`, `notes`, `updated_at`, `created_at`, `reminder_sent`) VALUES
-(10, 26, 31, NULL, 4000.00, 'submitted', '2025-10-12 19:26:56', '2025-10-12', 'receipt_10_1760300247.png', NULL, '2025-10-12 13:17:27', '2025-10-12 12:26:56', 0);
+(10, 26, 31, NULL, 4000.00, 'paid', '2025-10-12 19:26:56', '2025-10-12', 'receipt_10_1760300247.png', NULL, '2025-10-12 13:36:33', '2025-10-12 12:26:56', 0),
+(12, 11, 11, NULL, 4000.00, '', '2025-10-13 17:42:00', '2025-10-11', NULL, NULL, '2025-10-13 16:46:57', '2025-10-13 10:42:00', 0),
+(13, 26, 31, 15, 2000.00, '', '2025-10-14 02:03:52', '2025-10-14', NULL, NULL, '2025-10-16 00:00:04', '2025-10-13 19:03:52', 0),
+(14, 30, 30, NULL, 1000.00, 'paid', '2025-10-15 02:05:29', '2025-10-15', 'receipt_14_1760495172.jpg', NULL, '2025-10-14 19:27:31', '2025-10-14 19:05:29', 0),
+(15, 31, 30, NULL, 1500.00, 'pending', '2025-10-15 02:59:32', '2025-10-15', NULL, NULL, '2025-10-14 19:59:32', '2025-10-14 19:59:32', 0);
 
 -- --------------------------------------------------------
 
@@ -238,10 +259,27 @@ INSERT INTO `rooms` (`room_id`, `dorm_id`, `room_type`, `capacity`, `size`, `pri
 (20, 3, 'Suite', 4, NULL, 8000.00, 'vacant', '2025-10-06 12:31:41', NULL, NULL),
 (21, 1, 'Twin', 2, NULL, 4000.00, 'vacant', '2025-10-06 12:32:23', NULL, NULL),
 (22, 5, 'Twin', 2, NULL, 4000.00, 'vacant', '2025-10-07 02:10:43', NULL, NULL),
-(23, 6, 'SIngle', 4, NULL, 100.00, 'vacant', '2025-10-10 17:04:02', NULL, NULL),
 (26, 7, 'twin', 2, NULL, 2000.00, 'vacant', '2025-10-11 09:42:05', NULL, NULL),
 (27, 7, 'twin', 2, '', 3000.00, 'vacant', '2025-10-12 13:42:13', NULL, NULL),
-(28, 6, 'Single', 6, NULL, 4000.00, 'vacant', '2025-10-12 15:14:11', NULL, NULL);
+(28, 6, 'Single', 6, NULL, 4000.00, 'vacant', '2025-10-12 15:14:11', NULL, NULL),
+(29, 5, 'Single', 1, '', 1500.00, 'occupied', '2025-10-12 20:46:23', NULL, NULL),
+(30, 5, 'Twin', 2, '27.5', 5000.00, 'vacant', '2025-10-13 02:37:03', NULL, NULL),
+(31, 8, 'Suite', 3, '31', 18000.00, 'vacant', '2025-10-14 05:34:08', NULL, NULL),
+(32, 8, 'Twin', 2, '23', 21600.00, 'vacant', '2025-10-14 05:41:18', NULL, NULL),
+(33, 8, 'Single', 1, '10', 700.00, 'vacant', '2025-10-14 05:44:57', NULL, NULL),
+(34, 9, 'Single', 1, '10.2', 6800.00, 'vacant', '2025-10-14 05:59:56', NULL, NULL),
+(35, 9, 'Single', 1, '10.2', 6800.00, 'vacant', '2025-10-14 06:01:17', NULL, NULL),
+(36, 9, 'Single', 1, '10.2', 6800.00, 'vacant', '2025-10-14 06:01:42', NULL, NULL),
+(37, 10, 'Suite', 4, '36', 22000.00, 'vacant', '2025-10-14 06:05:43', NULL, NULL),
+(38, 10, 'Group Room', 6, '20', 9500.00, 'vacant', '2025-10-14 06:09:53', NULL, NULL),
+(39, 11, 'Single', 1, '11.1', 7000.00, 'vacant', '2025-10-14 06:13:35', NULL, NULL),
+(40, 11, 'Single', 1, '11.1', 7000.00, 'vacant', '2025-10-14 06:13:56', NULL, NULL),
+(41, 11, 'Single', 1, '11.1', 7000.00, 'vacant', '2025-10-14 06:14:16', NULL, NULL),
+(42, 11, 'Suite', 2, '29', 15000.00, 'vacant', '2025-10-14 06:14:52', NULL, NULL),
+(43, 12, 'Twin', 2, '23', 10600.00, 'vacant', '2025-10-14 06:21:00', NULL, NULL),
+(44, 13, 'Single', 1, '8.7', 5800.00, 'vacant', '2025-10-14 06:25:03', NULL, NULL),
+(45, 13, 'Quad Room', 4, '15', 8000.00, 'vacant', '2025-10-14 06:26:16', NULL, NULL),
+(46, 6, 'Double', 2, NULL, 1000.00, 'vacant', '2025-10-14 21:57:13', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -255,6 +293,28 @@ CREATE TABLE `room_images` (
   `image_path` varchar(255) NOT NULL,
   `uploaded_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `room_images`
+--
+
+INSERT INTO `room_images` (`id`, `room_id`, `image_path`, `uploaded_at`) VALUES
+(1, 31, 'room_68ede0d0b7610.jpg', '2025-10-13 22:34:08'),
+(2, 32, 'room_68ede27ee11bf.jpg', '2025-10-13 22:41:18'),
+(3, 33, 'room_68ede35918775.jpg', '2025-10-13 22:44:57'),
+(4, 33, 'room_68ede35919600.jpg', '2025-10-13 22:44:57'),
+(5, 34, 'room_68ede6dc5d491.jpg', '2025-10-13 22:59:56'),
+(6, 35, 'room_68ede72d2d612.jpg', '2025-10-13 23:01:17'),
+(7, 36, 'room_68ede746d3af4.jpg', '2025-10-13 23:01:42'),
+(8, 37, 'room_68ede837a2447.jpg', '2025-10-13 23:05:43'),
+(9, 38, 'room_68ede931f0b77.jpg', '2025-10-13 23:09:53'),
+(10, 39, 'room_68edea0fd945d.jpg', '2025-10-13 23:13:35'),
+(11, 40, 'room_68edea242178b.jpg', '2025-10-13 23:13:56'),
+(12, 41, 'room_68edea386a39b.jpg', '2025-10-13 23:14:16'),
+(13, 42, 'room_68edea5c02a21.jpg', '2025-10-13 23:14:52'),
+(14, 43, 'room_68edebcc2c04b.jpg', '2025-10-13 23:21:00'),
+(15, 44, 'room_68edecbf44883.jpg', '2025-10-13 23:25:03'),
+(16, 45, 'room_68eded084a3ea.jpg', '2025-10-13 23:26:16');
 
 -- --------------------------------------------------------
 
@@ -298,7 +358,7 @@ INSERT INTO `users` (`user_id`, `name`, `address`, `email`, `password`, `role`, 
 (15, 'Anna Reyes', NULL, 'anna.reyes@email.com', '$2y$10$GcA1WBqEvjfPSMilhf6JAeayssvMMh2YjkQXs8jLupP2LC2rsToQG', 'owner', '2025-10-09 05:27:48', 1, '09123456789', NULL, NULL, NULL),
 (16, 'Mark Dela Cruz', NULL, 'mark.dc@email.net', '$2y$10$/ooC1kx/Kjfu.mxgy.zrTOZEX9GfHlygte8AG.DS5FQWTBO3xtzny', 'student', '2025-10-09 05:28:04', 0, '09234567890', NULL, NULL, NULL),
 (17, 'Julia Santos', NULL, 'julia.santos@email.org', '$2y$10$FzPRcx/dy1pX9oYi5iHm1usHELxZ6ENicqrrJ42Q1lS7xIcl73PWu', 'owner', '2025-10-09 05:28:22', -1, '09345678901', NULL, NULL, NULL),
-(18, 'Leo Gutierrez', NULL, 'leo.g@email.com', '$2y$10$FIMS9XX/o8/o30PF8KuiUOB9Lp2JE06cNR9BcPowbp9z22dtuXvk6', 'student', '2025-10-09 05:28:40', 0, '09456789012', NULL, NULL, NULL),
+(18, 'Leo Gutierrez', '', 'leo.g@email.com', '$2y$10$FIMS9XX/o8/o30PF8KuiUOB9Lp2JE06cNR9BcPowbp9z22dtuXvk6', 'owner', '2025-10-09 05:28:40', 0, '09456789012', '', NULL, NULL),
 (19, 'Mia Navarro', NULL, 'mia.n@email.net', '$2y$10$yk6AyX7psnoKa7hqXoPsseBuXxviTJdRvt7x2UrHPh5MbQBLT6jEO', 'owner', '2025-10-09 05:29:00', 1, '09567890123', NULL, NULL, NULL),
 (20, 'Carlo Ramos', NULL, 'carlo.r@email.com', '$2y$10$P9Ee1v7KFY11BhU8PeUcuOpOzzjXHU0dW2Y8KGiQBXrVFpRKjKD4O', 'owner', '2025-10-09 05:32:52', -1, '09678901234', NULL, NULL, NULL),
 (21, 'Denise Lopez', NULL, 'denise.lopez@email.org', '$2y$10$gn0Dfqv3gfy6hEywgDYQ0eVaZbqsj3cHWRE6ztc9ljEHupnQh04MO', 'owner', '2025-10-09 05:33:18', 0, '09789012345', NULL, NULL, NULL),
@@ -327,7 +387,10 @@ INSERT INTO `users` (`user_id`, `name`, `address`, `email`, `password`, `role`, 
 (44, 'Nathaniel Reyes', NULL, 'nathaniel.r@email.org', '$2y$10$ulSD9yuBVnVqUuhyKaHqs.Rg/B0GfhK2RVNkWOHZS2Y7SbmnxHMNC', 'student', '2025-10-09 05:46:56', 0, '09542227890', NULL, NULL, NULL),
 (45, 'Fall Gomes', NULL, 'jpsgomes0212@gmail.com', '$2y$10$GULRRafuNafHQb0JFZmFAucbpqolQI0Xnl6Tcc8SxaHL/HLvccyJC', 'owner', '2025-10-11 07:22:53', 0, '09453196127', NULL, NULL, NULL),
 (46, 'Jan Pol Gomes', NULL, 'janpolgomes@gmal.com', '$2y$10$xiaLSF0v9z3UGK5d7eS1A.SXWfHtie6PaM/r1jm.uT2NUCE5rQLpS', 'student', '2025-10-11 10:05:13', 0, '09453196129', NULL, NULL, NULL),
-(47, 'Jan Pol Gomes', NULL, 'janpol@gmail.com', '$2y$10$OZp52j10PNJnJFs.yZGlYua5JWxTES1BJmrG.k/yrNz1S6xBrcqPC', 'student', '2025-10-11 10:06:43', 0, '09453196127', NULL, NULL, NULL);
+(47, 'Jan Pol Gomes', NULL, 'janpol@gmail.com', '$2y$10$OZp52j10PNJnJFs.yZGlYua5JWxTES1BJmrG.k/yrNz1S6xBrcqPC', 'student', '2025-10-11 10:06:43', 0, '09453196127', NULL, NULL, NULL),
+(48, 'Jhanna Gracey Villan', NULL, 'jhanna@gmail.com', '$2y$10$55XADUHThWKpFwwYe09bReyYZKmiJY65e4XxNS4o4u1G1E7Ir8cv6', 'student', '2025-10-13 23:48:11', 0, '09019203817', NULL, NULL, NULL),
+(49, 'James Ham', NULL, 'jamesham@email.com', '$2y$10$ti5K7WBkOm6MdSmIRgsZe.bR0FiMeBK3c4rpo6ZsZpXkYp.HYYyoy', 'student', '2025-10-14 00:05:07', 0, '09764537234', NULL, NULL, NULL),
+(50, 'John Garcia', NULL, 'garcia@email.com', '$2y$10$G7Xl.SKODvwTi4VkbLyCDebskx2gPw8vQNOFYgrcN63VtrGN.Fw/y', 'student', '2025-10-14 04:41:58', 0, '09874356273', NULL, NULL, NULL);
 
 --
 -- Indexes for dumped tables
@@ -419,7 +482,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `announcements`
 --
 ALTER TABLE `announcements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `announcement_reads`
@@ -431,13 +494,13 @@ ALTER TABLE `announcement_reads`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `dormitories`
 --
 ALTER TABLE `dormitories`
-  MODIFY `dorm_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `dorm_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `messages`
@@ -449,7 +512,7 @@ ALTER TABLE `messages`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `reviews`
@@ -461,19 +524,19 @@ ALTER TABLE `reviews`
 -- AUTO_INCREMENT for table `rooms`
 --
 ALTER TABLE `rooms`
-  MODIFY `room_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `room_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT for table `room_images`
 --
 ALTER TABLE `room_images`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- Constraints for dumped tables

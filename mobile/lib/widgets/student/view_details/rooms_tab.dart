@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../../utils/helpers.dart';
+import '../../../screens/student/booking_form_screen.dart';
 
 class RoomsTab extends StatelessWidget {
   final List<dynamic> rooms;
+  final String dormId;
+  final String dormName;
+  final String studentEmail;
 
   const RoomsTab({
     super.key,
     required this.rooms,
+    required this.dormId,
+    required this.dormName,
+    required this.studentEmail,
   });
 
   @override
@@ -26,7 +33,24 @@ class RoomsTab extends StatelessWidget {
         
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
-          child: Padding(
+          child: InkWell(
+            onTap: isAvailable ? () {
+              // Navigate to booking form with this room pre-selected
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BookingFormScreen(
+                    dormId: dormId,
+                    dormName: dormName,
+                    rooms: rooms,
+                    studentEmail: studentEmail,
+                    preSelectedRoomId: room['room_id'],
+                  ),
+                ),
+              );
+            } : null,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,8 +120,24 @@ class RoomsTab extends StatelessWidget {
                     '${room['available_slots']} slots remaining',
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(Icons.touch_app, size: 16, color: Colors.blue[700]),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Tap to book this room',
+                        style: TextStyle(
+                          color: Colors.blue[700],
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ],
+            ),
             ),
           ),
         );

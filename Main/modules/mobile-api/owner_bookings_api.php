@@ -4,6 +4,148 @@ require_once __DIR__ . '/cors.php';
 
 header('Content-Type: application/json');
 
+// Handle POST requests for booking actions (approve/reject)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    $booking_id = $_POST['booking_id'] ?? '';
+    $owner_email = $_POST['owner_email'] ?? '';
+
+    error_log("POST request - action: $action, booking_id: $booking_id, owner_email: $owner_email");
+
+    if (!$owner_email) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Owner email required']);
+        exit;
+    }
+
+    if (!$booking_id) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Booking ID required']);
+        exit;
+    }
+
+    if (!in_array($action, ['approve', 'reject'])) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Invalid action']);
+        exit;
+    }
+
+    try {
+        // Verify owner exists
+        $stmt = $pdo->prepare("SELECT user_id FROM users WHERE email = ? AND role = 'owner'");
+        $stmt->execute([$owner_email]);
+        $owner = $stmt->fetch();
+
+        if (!$owner) {
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'error' => 'Owner not found']);
+            exit;
+        }
+
+        // Verify booking belongs to owner's dorm
+        $stmt = $pdo->prepare("
+            SELECT b.booking_id, b.status, d.owner_id, b.room_id
+            FROM bookings b
+            JOIN rooms r ON b.room_id = r.room_id
+            JOIN dormitories d ON r.dorm_id = d.dorm_id
+            WHERE b.booking_id = ? AND d.owner_id = ?
+        ");
+        $stmt->execute([$booking_id, $owner['user_id']]);
+        $booking = $stmt->fetch();
+
+        if (!$booking) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Booking not found or access denied']);
+            exit;
+        }
+
+        // Update booking status
+        $new_status = $action === 'approve' ? 'approved' : 'rejected';
+        $stmt = $pdo->prepare("UPDATE bookings SET status = ? WHERE booking_id = ?");
+        $stmt->execute([$new_status, $booking_id]);
+
+        // If approved, mark room as occupied AND create payment
+        if ($action === 'approve') {
+            $stmt = $pdo->prepare("UPDATE rooms SET status = 'occupied' WHERE room_id = ?");
+            $stmt->execute([$booking['room_id']]);
+            
+            // Get booking details to create payment
+            $stmt = $pdo->prepare("
+                SELECT 
+                    b.student_id,
+                    b.booking_type,
+                    b.start_date,
+                    r.price as base_price,
+                    r.capacity
+                FROM bookings b
+                JOIN rooms r ON b.room_id = r.room_id
+                WHERE b.booking_id = ?
+            ");
+            $stmt->execute([$booking_id]);
+            $booking_details = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($booking_details) {
+                // Calculate payment amount based on booking type
+                $base_price = (float)$booking_details['base_price'];
+                $capacity = (int)$booking_details['capacity'];
+                $booking_type = strtolower($booking_details['booking_type']);
+                
+                if ($booking_type === 'shared' && $capacity > 0) {
+                    $payment_amount = $base_price / $capacity;
+                } else {
+                    $payment_amount = $base_price;
+                }
+                
+                // Set due date (first payment due 7 days from start date or today, whichever is later)
+                $start_date = $booking_details['start_date'];
+                $today = date('Y-m-d');
+                $due_date = max($start_date, date('Y-m-d', strtotime($today . ' +7 days')));
+                
+                // Create payment record
+                $stmt = $pdo->prepare("
+                    INSERT INTO payments (
+                        student_id, 
+                        booking_id, 
+                        owner_id,
+                        amount, 
+                        status, 
+                        payment_date, 
+                        due_date,
+                        created_at
+                    ) VALUES (?, ?, ?, ?, 'pending', NOW(), ?, NOW())
+                ");
+                $stmt->execute([
+                    $booking_details['student_id'],
+                    $booking_id,
+                    $owner['user_id'],
+                    $payment_amount,
+                    $due_date
+                ]);
+                
+                $payment_id = $pdo->lastInsertId();
+                error_log("Payment $payment_id created for booking $booking_id - Amount: $payment_amount, Due: $due_date");
+            } else {
+                error_log("WARNING: Could not create payment - booking details not found for booking $booking_id");
+            }
+        }
+
+        error_log("Booking $booking_id $new_status successfully");
+
+        echo json_encode([
+            'ok' => true,
+            'message' => 'Booking ' . $new_status . ' successfully'
+        ]);
+        exit;
+
+    } catch (Exception $e) {
+        error_log('Booking action error: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'error' => 'Server error: ' . $e->getMessage()]);
+        exit;
+    }
+}
+
+// Handle GET requests for fetching bookings
 $owner_email = $_GET['owner_email'] ?? '';
 
 if (!$owner_email) {
@@ -35,9 +177,11 @@ try {
             COALESCE(b.status, 'pending') as status, -- Default to pending if NULL
             d.name as dorm,
             r.room_type,
-            r.price,
-            b.booking_type as duration,
+            r.price as base_price,
+            r.capacity,
+            b.booking_type,
             b.start_date,
+            b.end_date,
             b.notes as message
         FROM bookings b
         JOIN rooms r ON b.room_id = r.room_id
@@ -55,17 +199,56 @@ try {
 
     // Format data for mobile app
     $formatted = array_map(function($b) {
+        // Calculate duration from start_date and end_date
+        $duration = 'Not specified';
+        if (!empty($b['start_date']) && !empty($b['end_date'])) {
+            $start = new DateTime($b['start_date']);
+            $end = new DateTime($b['end_date']);
+            $interval = $start->diff($end);
+            
+            $months = $interval->m + ($interval->y * 12);
+            $days = $interval->d;
+            
+            if ($months > 0) {
+                $duration = $months . ' month' . ($months > 1 ? 's' : '');
+                if ($days > 0) {
+                    $duration .= ' ' . $days . ' day' . ($days > 1 ? 's' : '');
+                }
+            } else if ($days > 0) {
+                $duration = $days . ' day' . ($days > 1 ? 's' : '');
+            }
+        }
+        
+        // Calculate price based on booking type
+        $base_price = (float)$b['base_price'];
+        $capacity = (int)$b['capacity'];
+        $booking_type = strtolower($b['booking_type'] ?? 'shared');
+        
+        if ($booking_type === 'shared' && $capacity > 0) {
+            // For shared booking, divide price by room capacity
+            $calculated_price = $base_price / $capacity;
+        } else {
+            // For whole room booking, use full price
+            $calculated_price = $base_price;
+        }
+        
         return [
             'id' => $b['id'],
+            'booking_id' => $b['id'], // Add booking_id for consistency
             'student_email' => $b['student_email'],
             'student_name' => $b['student_name'],
             'requested_at' => timeAgo($b['requested_at']),
             'status' => ucfirst(strtolower($b['status'])),
-            'dorm' => $b['dorm'],
+            'dorm' => $b['dorm'], // Keep for backward compatibility
+            'dorm_name' => $b['dorm'], // Add dorm_name for consistency with widget
             'room_type' => $b['room_type'],
-            'duration' => $b['duration'] ?? 'Not specified',
+            'booking_type' => ucfirst($booking_type), // 'Whole' or 'Shared'
+            'duration' => $duration,
             'start_date' => $b['start_date'],
-            'price' => '₱' . number_format($b['price'], 2),
+            'end_date' => $b['end_date'] ?? null,
+            'base_price' => $base_price,
+            'capacity' => $capacity,
+            'price' => '₱' . number_format($calculated_price, 2),
             'message' => $b['message'] ?? 'No additional message'
         ];
     }, $bookings);

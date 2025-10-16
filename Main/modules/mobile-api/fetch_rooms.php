@@ -25,6 +25,10 @@ try {
             (SELECT COUNT(*) 
              FROM bookings b 
              WHERE b.room_id = r.room_id 
+             AND b.status = 'approved') as current_occupants,
+            (SELECT COUNT(*) 
+             FROM bookings b 
+             WHERE b.room_id = r.room_id 
              AND b.status = 'approved') as active_bookings
         FROM rooms r
         WHERE r.dorm_id = ?

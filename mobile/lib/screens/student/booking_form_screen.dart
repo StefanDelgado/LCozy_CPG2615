@@ -7,6 +7,7 @@ class BookingFormScreen extends StatefulWidget {
   final String dormName;
   final List<dynamic> rooms;
   final String studentEmail;
+  final int? preSelectedRoomId;
 
   const BookingFormScreen({
     super.key,
@@ -14,6 +15,7 @@ class BookingFormScreen extends StatefulWidget {
     required this.dormName,
     required this.rooms,
     required this.studentEmail,
+    this.preSelectedRoomId,
   });
 
   @override
@@ -36,6 +38,14 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     // Set default dates
     startDate = DateTime.now();
     endDate = DateTime.now().add(const Duration(days: 180)); // 6 months
+    
+    // Pre-select room if provided
+    if (widget.preSelectedRoomId != null) {
+      selectedRoom = widget.rooms.firstWhere(
+        (room) => room['room_id'] == widget.preSelectedRoomId,
+        orElse: () => null,
+      );
+    }
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
@@ -155,14 +165,27 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     }
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, String value, {bool highlight = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            label, 
+            style: TextStyle(
+              color: highlight ? Colors.green[700] : Colors.grey,
+              fontWeight: highlight ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+          Text(
+            value, 
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: highlight ? Colors.green[700] : Colors.black,
+              fontSize: highlight ? 16 : 14,
+            ),
+          ),
         ],
       ),
     );
@@ -228,12 +251,17 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                     ...availableRooms.map((room) {
                       final isSelected = selectedRoom?['room_id'] == room['room_id'];
                       return Card(
-                        color: isSelected ? orange.withValues(alpha: 0.1) : Colors.white,
+                        elevation: isSelected ? 4 : 1,
+                        color: isSelected 
+                            ? Colors.blue.shade50  // Soft blue background
+                            : Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: isSelected ? orange : Colors.grey.shade300,
-                            width: isSelected ? 2 : 1,
+                            color: isSelected 
+                                ? Colors.blue.shade600  // Blue border
+                                : Colors.grey.shade300,
+                            width: isSelected ? 2.5 : 1,
                           ),
                         ),
                         child: InkWell(
@@ -247,16 +275,31 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      room['room_type'] ?? 'Unknown',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: isSelected ? orange : Colors.black,
+                                    Expanded(
+                                      child: Text(
+                                        room['room_type'] ?? 'Unknown',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelected 
+                                              ? Colors.blue.shade700  // Blue text when selected
+                                              : Colors.black,
+                                        ),
                                       ),
                                     ),
                                     if (isSelected)
-                                      Icon(Icons.check_circle, color: orange),
+                                      Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.shade600,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.check, 
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
@@ -391,7 +434,20 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                               const Divider(),
                               _buildInfoRow('Room Type', selectedRoom!['room_type']),
                               _buildInfoRow('Booking Type', bookingType.toUpperCase()),
-                              _buildInfoRow('Monthly Rate', '₱${selectedRoom!['price']}'),
+                              _buildInfoRow('Room Capacity', '${selectedRoom!['capacity']} person(s)'),
+                              _buildInfoRow('Base Price', '₱${selectedRoom!['price']}/month'),
+                              if (bookingType == 'shared' && selectedRoom!['capacity'] != null && selectedRoom!['capacity'] > 0)
+                                _buildInfoRow(
+                                  'Your Share',
+                                  '₱${(selectedRoom!['price'] / selectedRoom!['capacity']).toStringAsFixed(2)}/month',
+                                  highlight: true,
+                                )
+                              else
+                                _buildInfoRow(
+                                  'Total Price',
+                                  '₱${selectedRoom!['price']}/month',
+                                  highlight: true,
+                                ),
                               _buildInfoRow(
                                 'Duration',
                                 '${endDate!.difference(startDate!).inDays} days',

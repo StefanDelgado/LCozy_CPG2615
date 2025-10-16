@@ -80,8 +80,12 @@ class OwnerSettingsScreen extends StatelessWidget {
           TextButton(
             child: const Text('Logout', style: TextStyle(color: Colors.red)),
             onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.pushReplacementNamed(context, '/login');
+              Navigator.of(context).pop(); // Close dialog
+              // Clear entire navigation stack and go to login
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                '/login',
+                (route) => false, // Remove all previous routes
+              );
             },
           ),
         ],

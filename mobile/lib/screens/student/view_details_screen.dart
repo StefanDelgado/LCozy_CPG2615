@@ -6,6 +6,7 @@ import '../../widgets/student/view_details/overview_tab.dart';
 import '../../widgets/student/view_details/rooms_tab.dart';
 import '../../widgets/student/view_details/reviews_tab.dart';
 import '../../widgets/student/view_details/contact_tab.dart';
+import '../../widgets/student/tabs/location_tab.dart';
 import '../../widgets/student/view_details/stat_chip.dart';
 import '../shared/chat_conversation_screen.dart';
 import 'booking_form_screen.dart';
@@ -39,7 +40,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     fetchDormDetails();
   }
 
@@ -50,6 +51,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
   }
 
   Future<void> fetchDormDetails() async {
+    print('📱 [ViewDetails] Fetching dorm details...');
     setState(() {
       isLoading = true;
       error = '';
@@ -57,32 +59,63 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
 
     try {
       final result = await _dormService.getDormDetails(
-        widget.property['dorm_id'] ?? '',
+        widget.property['dorm_id']?.toString() ?? '',
       );
 
+      print('📱 [ViewDetails] Service result success: ${result['success']}');
+      
       if (result['success']) {
-        final data = result['data'];
+        final dormData = result['data'];
+        final roomsData = result['rooms'] ?? [];
+        final reviewsData = result['reviews'] ?? [];
+        
+        print('📱 [ViewDetails] Dorm data: ${dormData != null ? "loaded" : "null"}');
+        print('📱 [ViewDetails] Dorm data keys: ${dormData?.keys.toList()}');
+        print('📱 [ViewDetails] Owner data: ${dormData?['owner']}');
+        print('📱 [ViewDetails] Rooms count: ${roomsData.length}');
+        print('📱 [ViewDetails] Reviews count: ${reviewsData.length}');
+        
         setState(() {
-          dormDetails = data['dorm'] ?? data;
-          _rooms = data['rooms'] ?? [];
-          _reviews = data['reviews'] ?? [];
-          _images = (data['images'] as List?)?.map((e) => e.toString()).toList() ?? [];
+          dormDetails = dormData ?? {};
+          _rooms = roomsData is List ? roomsData : [];
+          _reviews = reviewsData is List ? reviewsData : [];
           
-          // Parse features from comma-separated string
-          final featuresString = dormDetails['features']?.toString() ?? '';
-          _features = featuresString.isNotEmpty 
-              ? featuresString.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
-              : [];
+          // Extract images from dorm data
+          if (dormData != null && dormData['images'] != null) {
+            _images = (dormData['images'] as List?)
+                ?.map((e) => e.toString())
+                .toList() ?? [];
+          }
+          
+          // Parse features from comma-separated string or array
+          if (dormData != null && dormData['features'] != null) {
+            if (dormData['features'] is List) {
+              _features = (dormData['features'] as List)
+                  .map((e) => e.toString())
+                  .where((e) => e.isNotEmpty)
+                  .toList();
+            } else {
+              final featuresString = dormData['features']?.toString() ?? '';
+              _features = featuresString.isNotEmpty 
+                  ? featuresString.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
+                  : [];
+            }
+          }
           
           isLoading = false;
         });
+        
+        print('📱 [ViewDetails] ✅ State updated successfully');
+        print('📱 [ViewDetails] Final rooms count: ${_rooms.length}');
       } else {
+        print('📱 [ViewDetails] ❌ Failed: ${result['message']}');
         setState(() {
           error = result['message'] ?? 'Failed to load dorm details';
           isLoading = false;
         });
       }
     } catch (e) {
+      print('📱 [ViewDetails] ❌ Exception: $e');
       setState(() {
         error = 'Failed to connect. Please check your internet connection.';
         isLoading = false;
@@ -112,21 +145,61 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
   }
 
   void _navigateToChat() {
-    final ownerEmail = dormDetails['owner_email']?.toString();
+    print('🔍 [Chat Navigation] Starting...');
+    print('🔍 [Chat Navigation] dormDetails: $dormDetails');
+    
+    // Extract owner information from nested owner object
+    final owner = dormDetails['owner'] as Map<String, dynamic>?;
+    print('🔍 [Chat Navigation] owner object: $owner');
+    
+    final ownerEmail = owner?['email']?.toString();
+    final ownerId = owner?['owner_id'] as int?;  // Changed from user_id to owner_id
+    final ownerName = owner?['name']?.toString() ?? 'Owner';
+    final dormId = dormDetails['dorm_id'] as int?;
+    final dormName = dormDetails['name']?.toString() ?? widget.property['name'] ?? '';
+    
+    print('🔍 [Chat Navigation] ownerEmail: $ownerEmail');
+    print('🔍 [Chat Navigation] ownerId: $ownerId');
+    print('🔍 [Chat Navigation] ownerName: $ownerName');
+    print('🔍 [Chat Navigation] dormId: $dormId');
+    print('🔍 [Chat Navigation] dormName: $dormName');
+    
     if (ownerEmail == null || ownerEmail.isEmpty) {
+      print('❌ [Chat Navigation] Owner email is missing');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Owner information not available')),
+        const SnackBar(content: Text('Owner email not available')),
+      );
+      return;
+    }
+    
+    if (ownerId == null) {
+      print('❌ [Chat Navigation] Owner ID is missing');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Owner ID not available')),
+      );
+      return;
+    }
+    
+    if (dormId == null) {
+      print('❌ [Chat Navigation] Dorm ID is missing');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dorm ID not available')),
       );
       return;
     }
 
+    print('✅ [Chat Navigation] All data valid, navigating to chat...');
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ChatConversationScreen(
           currentUserEmail: widget.userEmail,
-          otherUserEmail: ownerEmail,
           currentUserRole: 'student',
+          otherUserId: ownerId,
+          otherUserName: ownerName,
+          otherUserEmail: ownerEmail,
+          dormId: dormId,
+          dormName: dormName,
         ),
       ),
     );
@@ -154,11 +227,31 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
 
     final name = dormDetails['name']?.toString() ?? '';
     final address = dormDetails['address']?.toString() ?? '';
-    final monthlyRate = double.tryParse(dormDetails['monthly_rate']?.toString() ?? '0') ?? 0.0;
-    final availableSlots = int.tryParse(dormDetails['available_slots']?.toString() ?? '0') ?? 0;
-    final totalSlots = int.tryParse(dormDetails['total_capacity']?.toString() ?? '0') ?? 0;
-    final rating = double.tryParse(dormDetails['average_rating']?.toString() ?? '0') ?? 0.0;
-    final reviewCount = int.tryParse(dormDetails['review_count']?.toString() ?? '0') ?? 0;
+    
+    // Extract stats from nested object
+    final stats = dormDetails['stats'] as Map<String, dynamic>? ?? {};
+    final pricing = dormDetails['pricing'] as Map<String, dynamic>? ?? {};
+    
+    // Available rooms calculation
+    final totalRooms = stats['total_rooms'] as int? ?? _rooms.length;
+    final availableRooms = stats['available_rooms'] as int? ?? 
+        _rooms.where((room) => room['is_available'] == true).length;
+    
+    // Price range
+    final minPrice = pricing['min_price'] as num? ?? 0;
+    final maxPrice = pricing['max_price'] as num? ?? 0;
+    final priceDisplay = minPrice > 0 
+        ? (minPrice == maxPrice 
+            ? '₱${minPrice.toStringAsFixed(0)}/mo' 
+            : '₱${minPrice.toStringAsFixed(0)}-${maxPrice.toStringAsFixed(0)}/mo')
+        : '₱0/mo';
+    
+    // Rating
+    final rating = (stats['avg_rating'] as num?)?.toDouble() ?? 0.0;
+    final reviewCount = stats['total_reviews'] as int? ?? _reviews.length;
+    
+    // Check if fully booked
+    final isFullyBooked = availableRooms == 0;
 
     return Scaffold(
       body: CustomScrollView(
@@ -167,6 +260,18 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
           SliverAppBar(
             expandedHeight: 250.0,
             pinned: true,
+            backgroundColor: Colors.black.withOpacity(0.3),
+            leading: Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 name,
@@ -226,12 +331,12 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
                     children: [
                       StatChip(
                         icon: Icons.bed,
-                        text: '$availableSlots/$totalSlots Slots',
+                        text: '$availableRooms/$totalRooms Slots',
                         color: Colors.blue,
                       ),
                       StatChip(
                         icon: Icons.attach_money,
-                        text: '₱${monthlyRate.toStringAsFixed(0)}/mo',
+                        text: priceDisplay,
                         color: Colors.green,
                       ),
                       StatChip(
@@ -269,10 +374,12 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
                   labelColor: Theme.of(context).primaryColor,
                   unselectedLabelColor: Colors.grey,
                   indicatorColor: Theme.of(context).primaryColor,
+                  isScrollable: true,
                   tabs: const [
                     Tab(text: 'Overview'),
                     Tab(text: 'Rooms'),
                     Tab(text: 'Reviews'),
+                    Tab(text: 'Location'),
                     Tab(text: 'Contact'),
                   ],
                 ),
@@ -287,10 +394,16 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
                         dormDetails: dormDetails,
                         features: _features,
                       ),
-                      RoomsTab(rooms: _rooms),
+                      RoomsTab(
+                        rooms: _rooms,
+                        dormId: dormDetails['dorm_id']?.toString() ?? widget.property['dorm_id']?.toString() ?? '',
+                        dormName: dormDetails['name']?.toString() ?? widget.property['name']?.toString() ?? '',
+                        studentEmail: widget.userEmail,
+                      ),
                       ReviewsTab(reviews: _reviews),
+                      LocationTab(dorm: dormDetails),
                       ContactTab(
-                        owner: dormDetails,
+                        owner: dormDetails['owner'] as Map<String, dynamic>? ?? {},
                         currentUserEmail: widget.userEmail,
                         onSendMessage: _navigateToChat,
                       ),
@@ -332,9 +445,9 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
             Expanded(
               flex: 2,
               child: ElevatedButton.icon(
-                onPressed: availableSlots > 0 ? _navigateToBookingForm : null,
+                onPressed: !isFullyBooked ? _navigateToBookingForm : null,
                 icon: const Icon(Icons.calendar_month),
-                label: Text(availableSlots > 0 ? 'Book Now' : 'Fully Booked'),
+                label: Text(isFullyBooked ? 'Fully Booked' : 'Book Now'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   backgroundColor: Theme.of(context).primaryColor,

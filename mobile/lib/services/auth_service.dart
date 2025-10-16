@@ -18,6 +18,8 @@ class AuthService {
     final http = IOClient(client);
 
     try {
+      print('🔑 [AuthService] Login request for: $email');
+      
       final response = await http.post(
         Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/login-api.php'),
         headers: {
@@ -30,9 +32,8 @@ class AuthService {
         }),
       );
 
-      // Debug logging (remove in production)
-      // print('Login Status code: ${response.statusCode}');
-      // print('Login Response body: ${response.body}');
+      print('🔑 [AuthService] Login Status code: ${response.statusCode}');
+      print('🔑 [AuthService] Login Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         try {
@@ -41,13 +42,17 @@ class AuthService {
           final name = (data['name'] ?? '').toString();
           final userEmail = (data['email'] ?? '').toString();
 
+          print('🔑 [AuthService] Decoded - role: $role, name: $name, email: $userEmail');
+
           if (role.isEmpty) {
+            print('🔑 [AuthService] ❌ Role is empty');
             return {
               'success': false,
               'error': 'Unknown user role.',
             };
           }
 
+          print('🔑 [AuthService] ✅ Login successful');
           return {
             'success': true,
             'role': role,
@@ -55,7 +60,7 @@ class AuthService {
             'email': userEmail,
           };
         } catch (e) {
-          // print('JSON decode error: $e');
+          print('🔑 [AuthService] ❌ JSON decode error: $e');
           return {
             'success': false,
             'error': 'Invalid server response. Please try again later.',
@@ -71,13 +76,14 @@ class AuthService {
           }
         } catch (_) {}
 
+        print('🔑 [AuthService] ❌ Login failed: $errorMsg');
         return {
           'success': false,
           'error': errorMsg,
         };
       }
     } catch (e) {
-      // print('Login error: $e');
+      print('🔑 [AuthService] ❌ Login exception: $e');
       return {
         'success': false,
         'error': 'Network error. Please try again.',
