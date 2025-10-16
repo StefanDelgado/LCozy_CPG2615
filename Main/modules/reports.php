@@ -38,18 +38,18 @@ $trends = $pdo->query("
     ORDER BY month DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// Top performing dorms
+// Top performing dorms (NO aliases)
 $top_dorms = $pdo->query("
     SELECT 
-        d.name,
-        COUNT(b.booking_id) as total_bookings,
-        COALESCE(AVG(r.rating), 0) as avg_rating,
-        COUNT(DISTINCT r.id) as review_count
-    FROM dormitories d
-    LEFT JOIN rooms rm ON rm.dorm_id = d.dorm_id
-    LEFT JOIN bookings b ON b.room_id = rm.room_id
-    LEFT JOIN reviews r ON r.booking_id = b.booking_id
-    GROUP BY d.dorm_id
+        dormitories.name,
+        COUNT(bookings.booking_id) as total_bookings,
+        COALESCE(AVG(reviews.rating), 0) as avg_rating,
+        COUNT(DISTINCT reviews.id) as review_count
+    FROM dormitories
+    LEFT JOIN rooms ON rooms.dorm_id = dormitories.dorm_id
+    LEFT JOIN bookings ON bookings.room_id = rooms.room_id
+    LEFT JOIN reviews ON reviews.booking_id = bookings.booking_id
+    GROUP BY dormitories.dorm_id
     ORDER BY total_bookings DESC
     LIMIT 5
 ")->fetchAll(PDO::FETCH_ASSOC);
@@ -105,13 +105,10 @@ require_once __DIR__ . '/../partials/header.php';
 
 <!-- Charts Section -->
 <div class="reports-grid">
-    <!-- Booking Trends -->
     <div class="chart-card">
         <h2>Monthly Booking Trends</h2>
         <canvas id="bookingTrends"></canvas>
     </div>
-    
-    <!-- Revenue by Payment Method -->
     <div class="chart-card">
         <h2>Revenue by Payment Method</h2>
         <canvas id="paymentStats"></canvas>
@@ -147,11 +144,9 @@ require_once __DIR__ . '/../partials/header.php';
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Convert PHP data for charts
 const trends = <?= json_encode($trends) ?>;
 const payments = <?= json_encode($payment_stats) ?>;
 
-// Booking Trends Chart
 new Chart(document.getElementById('bookingTrends').getContext('2d'), {
     type: 'line',
     data: {
@@ -179,7 +174,6 @@ new Chart(document.getElementById('bookingTrends').getContext('2d'), {
     }
 });
 
-// Payment Methods Chart
 new Chart(document.getElementById('paymentStats').getContext('2d'), {
     type: 'doughnut',
     data: {
@@ -196,7 +190,6 @@ new Chart(document.getElementById('paymentStats').getContext('2d'), {
 });
 </script>
 
-<!-- Additional styling -->
 <style>
 .stats-grid {
     display: grid;
@@ -225,26 +218,11 @@ new Chart(document.getElementById('paymentStats').getContext('2d'), {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
-.date-filter {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
-.table th, .table td {
-    padding: 0.75rem;
-    border-bottom: 1px solid #eee;
-}
-.table th {
-    background: #f8f9fa;
-    font-weight: 600;
-}
-.table-responsive {
-    overflow-x: auto;
-}
+.date-filter { display: flex; gap: 1rem; align-items: center; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 0.75rem; border-bottom: 1px solid #eee; }
+.table th { background: #f8f9fa; font-weight: 600; }
+.table-responsive { overflow-x: auto; }
 </style>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>
