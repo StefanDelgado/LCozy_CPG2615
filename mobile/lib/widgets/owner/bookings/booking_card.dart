@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 class BookingCard extends StatelessWidget {
   final Map<String, dynamic> booking;
   final VoidCallback? onApprove;
+  final VoidCallback? onReject;
 
   const BookingCard({
     super.key,
     required this.booking,
     this.onApprove,
+    this.onReject,
   });
 
   @override
@@ -58,25 +60,52 @@ class BookingCard extends StatelessWidget {
             _InfoRow(label: 'Duration', value: duration),
             _InfoRow(label: 'Price', value: price),
             
-            // Approve Button (only for pending bookings)
-            if (isPending && onApprove != null)
+            // Action Buttons (only for pending bookings)
+            if (isPending && (onApprove != null || onReject != null))
               Padding(
                 padding: const EdgeInsets.only(top: 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: onApprove,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  children: [
+                    // Reject Button
+                    if (onReject != null)
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: onReject,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red,
+                            side: const BorderSide(color: Colors.red),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          icon: const Icon(Icons.cancel, size: 20),
+                          label: const Text('Reject'),
+                        ),
                       ),
-                    ),
-                    icon: const Icon(Icons.check_circle),
-                    label: const Text('Approve Booking'),
-                  ),
+                    
+                    // Spacing between buttons
+                    if (onReject != null && onApprove != null)
+                      const SizedBox(width: 12),
+                    
+                    // Approve Button
+                    if (onApprove != null)
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: onApprove,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          icon: const Icon(Icons.check_circle, size: 20),
+                          label: const Text('Approve'),
+                        ),
+                      ),
+                  ],
                 ),
               ),
           ],

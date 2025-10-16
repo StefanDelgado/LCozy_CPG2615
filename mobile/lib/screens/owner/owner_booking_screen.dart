@@ -126,6 +126,86 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
     }
   }
 
+  /// Rejects a booking
+  Future<void> _rejectBooking(Map<String, dynamic> booking) async {
+    print('📋 [OwnerBooking] Reject booking clicked');
+    print('📋 [OwnerBooking] Booking data: $booking');
+    print('📋 [OwnerBooking] Owner email: ${widget.ownerEmail}');
+
+    final bookingId = booking['booking_id'] ?? booking['id'];
+    if (bookingId == null) {
+      print('📋 [OwnerBooking] ❌ Booking ID is null');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: Booking ID is missing'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    print('📋 [OwnerBooking] Booking ID: $bookingId');
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Booking'),
+        content: Text('Are you sure you want to reject the booking request from ${booking['student_name'] ?? 'this student'}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Reject'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      print('📋 [OwnerBooking] Rejection cancelled by user');
+      return;
+    }
+
+    try {
+      final result = await _bookingService.updateBookingStatus(
+        bookingId: bookingId.toString(),
+        action: 'reject',
+        ownerEmail: widget.ownerEmail,
+      );
+
+      print('📋 [OwnerBooking] Update result: $result');
+
+      if (result['success']) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Booking rejected successfully'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          _fetchBookings(); // Refresh the list
+        }
+      } else {
+        throw Exception(result['message'] ?? 'Failed to reject booking');
+      }
+    } catch (e) {
+      print('📋 [OwnerBooking] ❌ Error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   /// Returns filtered bookings based on selected tab
   List<Map<String, dynamic>> _getFilteredBookings() {
     return _bookings.where((booking) {
@@ -257,6 +337,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
           return BookingCard(
             booking: booking,
             onApprove: () => _approveBooking(booking),
+            onReject: () => _rejectBooking(booking),
           );
         },
       ),
