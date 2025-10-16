@@ -28,9 +28,11 @@ class PaymentCard extends StatelessWidget {
     final method = 'GCash'; // Default method
     final transactionId = payment['receipt_image']?.toString();
 
-    final isCompleted = status.toLowerCase() == 'completed';
-    final isPending = status.toLowerCase() == 'pending';
-    final isFailed = status.toLowerCase() == 'failed';
+    // Normalize status checking
+    final statusLower = status.toLowerCase();
+    final isCompleted = statusLower == 'completed' || statusLower == 'paid';
+    final isPending = statusLower == 'pending' || statusLower == 'submitted';
+    final isFailed = statusLower == 'failed' || statusLower == 'rejected';
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -40,7 +42,7 @@ class PaymentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(name, amount, isCompleted),
+            _buildHeader(name, amount, isCompleted, isPending),
             const SizedBox(height: 2),
             Text(dorm, style: const TextStyle(color: Colors.black54, fontSize: 13)),
             const SizedBox(height: 10),
@@ -55,12 +57,12 @@ class PaymentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(String name, double amount, bool isCompleted) {
+  Widget _buildHeader(String name, double amount, bool isCompleted, bool isPending) {
     return Row(
       children: [
         Icon(
-          isCompleted ? Icons.check_circle : Icons.access_time,
-          color: isCompleted ? Colors.green : Colors.orange,
+          isCompleted ? Icons.check_circle : isPending ? Icons.access_time : Icons.error,
+          color: isCompleted ? Colors.green : isPending ? Colors.orange : Colors.red,
           size: 22,
         ),
         const SizedBox(width: 8),
@@ -69,7 +71,7 @@ class PaymentCard extends StatelessWidget {
         Text(
           '₱${amount.toStringAsFixed(2)}',
           style: TextStyle(
-            color: isCompleted ? Colors.green : Colors.orange,
+            color: isCompleted ? Colors.green : isPending ? Colors.orange : Colors.red,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
