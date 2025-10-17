@@ -19,5 +19,5 @@ if (isset($_SESSION['user'])) {
 }
 
 // If not logged in, show the landing page
-header('Location: /public/index.php');
+header('Location: /public/anchorpage.php');
 exit;
