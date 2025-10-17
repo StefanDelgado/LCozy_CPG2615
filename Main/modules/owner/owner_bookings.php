@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . '/../auth/auth.php';
+require_once __DIR__ . '/../../auth/auth.php';
 require_role('owner');
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../config.php';
 
 // ---- DEBUG MODE ----
 if (isset($pdo) && $pdo instanceof PDO) {
@@ -15,7 +15,7 @@ if (APP_DEBUG) {
 }
 
 $page_title = "Bookings";
-include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../../partials/header.php';
 
 $owner_id = $_SESSION['user']['user_id'] ?? 0;
 
