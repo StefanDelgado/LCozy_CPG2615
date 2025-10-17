@@ -46,14 +46,14 @@ $message_page = "#";
 $announcement_page = "#";
 
 if ($user['role'] === 'student') {
-    $message_page = "../modules/student/student_messages.php";
-    $announcement_page = "../modules/student/student_announcements.php";
+    $message_page = "/modules/student/student_messages.php";
+    $announcement_page = "/modules/student/student_announcements.php";
 } elseif ($user['role'] === 'owner') {
-    $message_page = "../modules/owner/owner_messages.php";
-    $announcement_page = "../modules/owner/owner_announcements.php";
+    $message_page = "/modules/owner/owner_messages.php";
+    $announcement_page = "/modules/owner/owner_announcements.php";
 } elseif ($user['role'] === 'admin') {
-    $message_page = "../modules/shared/messaging.php";
-    $announcement_page = "../modules/admin/announcements.php";
+    $message_page = "/modules/shared/messaging.php";
+    $announcement_page = "/modules/admin/announcements.php";
 }
 ?>
 <!doctype html>
@@ -63,9 +63,9 @@ if ($user['role'] === 'student') {
   <title><?= htmlspecialchars($brand_title) ?> — Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <link rel="icon" href="../assets/favicon.png" type="image/png">
-  <link rel="stylesheet" href="../assets/style.css">
-  <link rel="stylesheet" href="../assets/modules.css">
+  <link rel="icon" href="/assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/modules.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -151,7 +151,7 @@ if ($user['role'] === 'student') {
         <?php if (!empty($user['profile_pic'])): ?>
           <img src="<?= htmlspecialchars($user['profile_pic']) ?>" alt="profile">
         <?php else: ?>
-          <img src="../assets/default_profile.jpg" alt="default">
+          <img src="/assets/default_profile.jpg" alt="default">
         <?php endif; ?>
         <div class="user-details">
           <div class="name"><?= htmlspecialchars($user['name']) ?></div>
@@ -163,34 +163,34 @@ if ($user['role'] === 'student') {
 
     <nav>
       <?php if ($user['role'] === 'admin'): ?>
-        <a href="../dashboards/admin_dashboard.php">Overview</a>
-        <a href="../modules/admin/user_management.php">User Management</a>
-        <a href="../modules/admin/reports.php">Reports & Analytics</a>
-        <a href="../modules/admin/owner_verification.php">Dorm Owner Verification</a>
-        <a href="../modules/shared/dorm_listings.php">Dorm Listings</a>
-        <a href="../modules/admin/booking_oversight.php">Booking & Reservation</a>
-        <a href="../modules/admin/admin_payments.php">Payment Management</a>
-        <a href="../modules/admin/announcements.php">Broadcast Announcements</a>
+        <a href="/dashboards/admin_dashboard.php">Overview</a>
+        <a href="/modules/admin/user_management.php">User Management</a>
+        <a href="/modules/admin/reports.php">Reports & Analytics</a>
+        <a href="/modules/admin/owner_verification.php">Dorm Owner Verification</a>
+        <a href="/modules/shared/dorm_listings.php">Dorm Listings</a>
+        <a href="/modules/admin/booking_oversight.php">Booking & Reservation</a>
+        <a href="/modules/admin/admin_payments.php">Payment Management</a>
+        <a href="/modules/admin/announcements.php">Broadcast Announcements</a>
       
       <?php elseif ($user['role'] === 'student'): ?>
-        <a href="../dashboards/student_dashboard.php">My Dashboard</a>
-        <a href="../modules/shared/available_dorms.php">Available Dorms</a>
-        <a href="../modules/student/student_reservations.php">My Reservations</a>
-        <a href="../modules/student/student_payments.php">Payment Management</a>
+        <a href="/dashboards/student_dashboard.php">My Dashboard</a>
+        <a href="/modules/shared/available_dorms.php">Available Dorms</a>
+        <a href="/modules/student/student_reservations.php">My Reservations</a>
+        <a href="/modules/student/student_payments.php">Payment Management</a>
 
 
       <?php elseif ($user['role'] === 'owner'): ?>
-        <a href="../dashboards/owner_dashboard.php">My Dashboard</a>
-        <a href="../modules/owner/owner_dorms.php">CozyDorms</a>
-        <a href="../modules/admin/room_management.php">Dorm Room Management</a>
-        <a href="../modules/owner/owner_tenants.php">Tenant Management</a>
-        <a href="../modules/owner/owner_bookings.php">Bookings</a>
-        <a href="../modules/owner/owner_payments.php">Payment Management</a>
+        <a href="/dashboards/owner_dashboard.php">My Dashboard</a>
+        <a href="/modules/owner/owner_dorms.php">CozyDorms</a>
+        <a href="/modules/admin/room_management.php">Dorm Room Management</a>
+        <a href="/modules/owner/owner_tenants.php">Tenant Management</a>
+        <a href="/modules/owner/owner_bookings.php">Bookings</a>
+        <a href="/modules/owner/owner_payments.php">Payment Management</a>
       <?php endif; ?>
     </nav>
 
     <div class="sidebar-foot">
-      <a class="logout" href="../auth/logout.php"><i class="fa fa-sign-out-alt"></i> Logout</a>
+      <a class="logout" href="/auth/logout.php"><i class="fa fa-sign-out-alt"></i> Logout</a>
     </div>
   </aside>
 
