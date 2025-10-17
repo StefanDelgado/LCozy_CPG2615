@@ -39,6 +39,7 @@ try {
             DATEDIFF(t.expected_checkout, CURDATE()) AS days_remaining,
             t.total_paid,
             t.outstanding_balance,
+            t.status AS tenant_status,
             b.booking_type,
             (SELECT COUNT(*) FROM payments p 
              WHERE p.booking_id = t.booking_id AND p.status IN ('pending','submitted')) AS pending_payments,
@@ -49,7 +50,7 @@ try {
         JOIN dormitories d ON t.dorm_id = d.dorm_id AND d.owner_id = ?
         JOIN rooms r ON t.room_id = r.room_id
         JOIN bookings b ON t.booking_id = b.booking_id
-        WHERE t.status = 'active'
+        WHERE t.status IN ('active', 'pending')
         ORDER BY t.check_in_date DESC
     ");
     $current_tenants_stmt->execute([$owner_id]);
