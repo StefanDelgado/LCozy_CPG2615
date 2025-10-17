@@ -39,7 +39,7 @@ if (file_exists($logFile)) {
 }
 
 $page_title = "Admin Dashboard";
-include __DIR__ . '/partials/header.php';
+include __DIR__ . '/../partials/header.php';
 ?>
 
 <div class="top-cards">
@@ -131,4 +131,4 @@ include __DIR__ . '/partials/header.php';
   <?php endif; ?>
 </section>
 
-<?php include __DIR__ . '/partials/footer.php'; ?>
+<?php include __DIR__ . '/../partials/footer.php'; ?>
