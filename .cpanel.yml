@@ -2,27 +2,9 @@
 deployment:
   tasks:
     # ===================================
-    # OPTIMIZED DEPLOYMENT - Fast rsync from Main/ folder
+    # FAST DEPLOYMENT - Rsync only changed files from Main/
     # ===================================
     - export DEPLOYPATH=/home/yyju4g9j6ey3/public_html/
-    
-    # ===================================
-    # STEP 1: Quick cleanup (old files only)
-    # ===================================
-    - /bin/rm -f $DEPLOYPATH/login.php
-    - /bin/rm -f $DEPLOYPATH/register.php
-    - /bin/rm -f $DEPLOYPATH/register_admin.php
-    - /bin/rm -f $DEPLOYPATH/logout.php
-    - /bin/rm -f $DEPLOYPATH/auth.php
-    - /bin/rm -f $DEPLOYPATH/dashboard.php
-    - /bin/rm -f $DEPLOYPATH/student_dashboard.php
-    - /bin/rm -f $DEPLOYPATH/owner_dashboard.php
-    - /bin/rm -f $DEPLOYPATH/download_log.php
-    - /bin/rm -f $DEPLOYPATH/test-pdo.php
-
-    # ===================================
-    # STEP 2: Use rsync for FAST incremental sync (FROM Main/)
-    # ===================================
     
     # Core files (always update)
     - /bin/cp -f Main/config.php $DEPLOYPATH
