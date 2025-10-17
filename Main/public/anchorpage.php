@@ -38,11 +38,15 @@ try {
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM bookings");
     $total_bookings = $stmt->fetch()['count'] ?? 0;
     
-    // Featured dorms (top 3 with images)
-    $stmt = $pdo->query("SELECT d.*, u.name as owner_name 
+    // Featured dorms (top 3 with images and minimum room price)
+    $stmt = $pdo->query("SELECT d.*, u.name as owner_name, 
+                         MIN(r.price) as min_price,
+                         d.cover_image as image_url
                          FROM dormitories d 
                          JOIN users u ON d.owner_id = u.user_id 
-                         WHERE d.status = 'active' 
+                         LEFT JOIN rooms r ON d.dorm_id = r.dorm_id
+                         WHERE d.status = 'active' OR d.verified = 1
+                         GROUP BY d.dorm_id, d.name, d.address, d.description, d.features, d.cover_image, d.status, d.verified, d.created_at, d.owner_id, u.name
                          ORDER BY d.created_at DESC 
                          LIMIT 3");
     $featured_dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -471,16 +475,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
       <h2>Featured Dorms</h2>
       <p class="section-subtitle">Check out our newest and most popular student accommodations</p>
       <div class="dorms-grid">
-        <?php foreach ($featured_dorms as $index => $dorm): ?>
+        <?php foreach ($featured_dorms as $index => $dorm): 
+          // Build proper image URL
+          $imageUrl = '../assets/images/default-dorm.jpg';
+          if (!empty($dorm['image_url'])) {
+            // Check if it's a full URL or just filename
+            if (strpos($dorm['image_url'], 'http') === 0) {
+              $imageUrl = $dorm['image_url'];
+            } else {
+              $imageUrl = '../uploads/' . $dorm['image_url'];
+            }
+          }
+          $price = $dorm['min_price'] ?? 0;
+        ?>
         <div class="dorm-card" data-aos="fade-up" data-aos-delay="<?= ($index + 1) * 100 ?>">
-          <div class="dorm-image" style="background-image:url('<?= !empty($dorm['image_url']) ? htmlspecialchars($dorm['image_url']) : '../assets/images/default-dorm.jpg' ?>')">
+          <div class="dorm-image" style="background-image:url('<?= htmlspecialchars($imageUrl) ?>')">
             <div class="dorm-badge">Available</div>
           </div>
           <div class="dorm-content">
             <div class="dorm-title"><?= htmlspecialchars($dorm['name']) ?></div>
             <div class="dorm-info">📍 <?= htmlspecialchars($dorm['address'] ?? 'Location') ?></div>
             <div class="dorm-info">👤 By <?= htmlspecialchars($dorm['owner_name']) ?></div>
-            <div class="dorm-price">₱<?= number_format($dorm['price_per_month'] ?? 0) ?><span style="font-size:0.9rem;font-weight:400;color:var(--gray-600);">/month</span></div>
+            <div class="dorm-price">
+              <?php if ($price > 0): ?>
+                ₱<?= number_format($price) ?><span style="font-size:0.9rem;font-weight:400;color:var(--gray-600);">/month</span>
+              <?php else: ?>
+                <span style="font-size:0.9rem;color:var(--gray-600);">Contact for pricing</span>
+              <?php endif; ?>
+            </div>
           </div>
         </div>
         <?php endforeach; ?>
