@@ -8,7 +8,7 @@ include __DIR__ . '/../partials/header.php';
 </div>
 
 <div class="card full center" style="max-width:600px; margin:auto; text-align:center;">
-  <img src="/CAPSTONE/assets/mobile_placeholder.png" 
+  <img src="../assets/mobile_placeholder.png" 
        alt="CozyDorms Mobile Preview" 
        style="max-width:250px; margin:20px auto; display:block;">
 

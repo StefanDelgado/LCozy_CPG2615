@@ -148,7 +148,7 @@ if ($user['role'] === 'student') {
         <?php if (!empty($user['profile_pic'])): ?>
           <img src="<?= htmlspecialchars($user['profile_pic']) ?>" alt="profile">
         <?php else: ?>
-          <img src="/assets/default_profile.jpg" alt="default">
+          <img src="../assets/default_profile.jpg" alt="default">
         <?php endif; ?>
         <div class="user-details">
           <div class="name"><?= htmlspecialchars($user['name']) ?></div>
