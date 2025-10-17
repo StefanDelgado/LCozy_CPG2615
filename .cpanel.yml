@@ -2,66 +2,55 @@
 deployment:
   tasks:
     # ===================================
-    # STEP 1: Clean up old files first
+    # OPTIMIZED DEPLOYMENT - Fast rsync from Main/ folder
     # ===================================
     - export DEPLOYPATH=/home/yyju4g9j6ey3/public_html/
     
-    # Remove old auth files from root
+    # ===================================
+    # STEP 1: Quick cleanup (old files only)
+    # ===================================
     - /bin/rm -f $DEPLOYPATH/login.php
     - /bin/rm -f $DEPLOYPATH/register.php
     - /bin/rm -f $DEPLOYPATH/register_admin.php
     - /bin/rm -f $DEPLOYPATH/logout.php
     - /bin/rm -f $DEPLOYPATH/auth.php
-    
-    # Remove old dashboard files from root
     - /bin/rm -f $DEPLOYPATH/dashboard.php
     - /bin/rm -f $DEPLOYPATH/student_dashboard.php
     - /bin/rm -f $DEPLOYPATH/owner_dashboard.php
-    
-    # Remove old admin files from root
     - /bin/rm -f $DEPLOYPATH/download_log.php
     - /bin/rm -f $DEPLOYPATH/test-pdo.php
-    
-    # Remove old public files from root
-    - /bin/rm -f $DEPLOYPATH/index.html
-    - /bin/rm -f $DEPLOYPATH/home.html
-    - /bin/rm -f $DEPLOYPATH/layout-styles.css
 
     # ===================================
-    # STEP 2: Deploy new organized structure FROM Main/ folder
+    # STEP 2: Use rsync for FAST incremental sync (FROM Main/)
     # ===================================
     
-    # Core files (root) - WITH "Main/" prefix since repo root is parent
-    - /bin/cp Main/config.php $DEPLOYPATH
-    - /bin/cp Main/index.php $DEPLOYPATH
-    - /bin/cp Main/404.shtml $DEPLOYPATH
-
-    # New organized directories - WITH "Main/" prefix
-    - /bin/cp -R Main/auth $DEPLOYPATH
-    - /bin/cp -R Main/dashboards $DEPLOYPATH
-    - /bin/cp -R Main/admin $DEPLOYPATH
-    - /bin/cp -R Main/public $DEPLOYPATH
+    # Core files (always update)
+    - /bin/cp -f Main/config.php $DEPLOYPATH
+    - /bin/cp -f Main/index.php $DEPLOYPATH
+    - /bin/cp -f Main/404.shtml $DEPLOYPATH
     
-    # Existing directories (update) - WITH "Main/" prefix
-    - /bin/cp -R Main/modules $DEPLOYPATH
-    - /bin/cp -R Main/partials $DEPLOYPATH
-    - /bin/cp -R Main/assets $DEPLOYPATH
-    - /bin/cp -R Main/cgi-bin $DEPLOYPATH
-    - /bin/cp -R Main/cron $DEPLOYPATH
+    # Sync directories (only changed files) - MUCH FASTER!
+    - /usr/bin/rsync -a --delete Main/auth/ $DEPLOYPATH/auth/
+    - /usr/bin/rsync -a --delete Main/dashboards/ $DEPLOYPATH/dashboards/
+    - /usr/bin/rsync -a --delete Main/admin/ $DEPLOYPATH/admin/
+    - /usr/bin/rsync -a --delete Main/modules/ $DEPLOYPATH/modules/
+    - /usr/bin/rsync -a --delete Main/partials/ $DEPLOYPATH/partials/
+    - /usr/bin/rsync -a --delete Main/public/ $DEPLOYPATH/public/
     
-    # Uploads directory (preserve existing files)
-    - /bin/mkdir -p $DEPLOYPATH/uploads
+    # Assets - sync without delete
+    - /usr/bin/rsync -a Main/assets/ $DEPLOYPATH/assets/
+    
+    # Uploads - only add new, never delete or overwrite
     - /bin/mkdir -p $DEPLOYPATH/uploads/receipts
     - /bin/mkdir -p $DEPLOYPATH/uploads/rooms
-    - /bin/cp -n -R Main/uploads/* $DEPLOYPATH/uploads/ 2>/dev/null || true
+    - /usr/bin/rsync -a --ignore-existing Main/uploads/ $DEPLOYPATH/uploads/ 2>/dev/null || true
     
-    # Set proper permissions
-    - /bin/chmod -R 755 $DEPLOYPATH/auth
-    - /bin/chmod -R 755 $DEPLOYPATH/dashboards
-    - /bin/chmod -R 755 $DEPLOYPATH/admin
-    - /bin/chmod -R 755 $DEPLOYPATH/modules
-    - /bin/chmod -R 755 $DEPLOYPATH/partials
-    - /bin/chmod -R 755 $DEPLOYPATH/public
+    # Optional directories (only if they exist)
+    - test -d Main/cgi-bin && /usr/bin/rsync -a Main/cgi-bin/ $DEPLOYPATH/cgi-bin/ || true
+    - test -d Main/cron && /usr/bin/rsync -a Main/cron/ $DEPLOYPATH/cron/ || true
+    
+    # Set permissions efficiently
+    - /bin/find $DEPLOYPATH/auth $DEPLOYPATH/dashboards $DEPLOYPATH/modules -type f -exec chmod 644 {} +
+    - /bin/find $DEPLOYPATH/auth $DEPLOYPATH/dashboards $DEPLOYPATH/modules -type d -exec chmod 755 {} +
     - /bin/chmod -R 775 $DEPLOYPATH/uploads
-    - /bin/chmod 644 $DEPLOYPATH/config.php
-    - /bin/chmod 644 $DEPLOYPATH/*.php
+    - /bin/chmod 644 $DEPLOYPATH/config.php $DEPLOYPATH/index.php
