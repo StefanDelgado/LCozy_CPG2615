@@ -16,15 +16,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_room_id'])) {
     $end_date = date('Y-m-d', strtotime('+6 months'));
     $expires_at = date('Y-m-d H:i:s', strtotime('+2 hours'));
 
-    // ✅ Check if the student already has an active booking in the same dorm
+    // Check if the student already has an active booking in the same dorm
     $check_existing = $pdo->prepare("
-        SELECT b.booking_id 
-        FROM bookings b
-        JOIN rooms r ON b.room_id = r.room_id
-        JOIN dormitories d ON r.dorm_id = d.dorm_id
-        WHERE b.student_id = ? 
-          AND d.dorm_id = (SELECT dorm_id FROM rooms WHERE room_id = ?)
-          AND b.status IN ('pending', 'approved')
+        SELECT bookings.booking_id 
+        FROM bookings
+        JOIN rooms ON bookings.room_id = rooms.room_id
+        JOIN dormitories ON rooms.dorm_id = dormitories.dorm_id
+        WHERE bookings.student_id = ? 
+          AND dormitories.dorm_id = (SELECT dorm_id FROM rooms WHERE room_id = ?)
+          AND bookings.status IN ('pending', 'approved')
     ");
     $check_existing->execute([$student_id, $room_id]);
     $already_booked = $check_existing->fetch();
@@ -37,12 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_room_id'])) {
     } else {
         // Check room availability
         $check = $pdo->prepare("
-            SELECT r.capacity, r.status,
-                   COUNT(b.booking_id) AS total_booked
-            FROM rooms r
-            LEFT JOIN bookings b ON b.room_id = r.room_id AND b.status IN ('pending','approved')
-            WHERE r.room_id = ?
-            GROUP BY r.room_id
+            SELECT rooms.capacity, rooms.status,
+                   COUNT(bookings.booking_id) AS total_booked
+            FROM rooms
+            LEFT JOIN bookings ON bookings.room_id = rooms.room_id AND bookings.status IN ('pending','approved')
+            WHERE rooms.room_id = ?
+            GROUP BY rooms.room_id
         ");
         $check->execute([$room_id]);
         $room_info = $check->fetch(PDO::FETCH_ASSOC);
@@ -76,28 +76,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_room_id'])) {
     }
 }
 
-// 🔍 Search filter
+// Search filter
 $search = trim($_GET['search'] ?? '');
 $params = [];
 
 $sql = "
-    SELECT d.dorm_id, d.name AS dorm_name, d.address, d.description, d.cover_image,
-           u.name AS owner_name,
-           COALESCE(AVG(r.rating), 0) AS avg_rating,
-           COUNT(r.review_id) AS total_reviews
-    FROM dormitories d
-    JOIN users u ON d.owner_id = u.user_id
-    LEFT JOIN reviews r ON d.dorm_id = r.dorm_id AND r.status = 'approved'
+    SELECT dormitories.dorm_id,
+           dormitories.name,
+           dormitories.address,
+           dormitories.description,
+           dormitories.cover_image,
+           users.name AS owner_name,
+           COALESCE(AVG(reviews.rating), 0) AS avg_rating,
+           COUNT(reviews.review_id) AS total_reviews
+    FROM dormitories
+    JOIN users ON dormitories.owner_id = users.user_id
+    LEFT JOIN reviews ON dormitories.dorm_id = reviews.dorm_id AND reviews.status = 'approved'
     WHERE 1=1
 ";
 
 if ($search) {
-    $sql .= " AND (d.name LIKE ? OR d.address LIKE ?)";
+    $sql .= " AND (dormitories.name LIKE ? OR dormitories.address LIKE ?)";
     $params[] = "%$search%";
     $params[] = "%$search%";
 }
 
-$sql .= " GROUP BY d.dorm_id ORDER BY avg_rating DESC, d.name ASC";
+$sql .= " GROUP BY dormitories.dorm_id ORDER BY avg_rating DESC, dormitories.name ASC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -134,7 +138,7 @@ setTimeout(closeFlash,3000);
 
     <?php if (!empty($dorm['cover_image']) && file_exists(__DIR__ . '/../uploads/' . $dorm['cover_image'])): ?>
       <img src="../uploads/<?= htmlspecialchars($dorm['cover_image']) ?>" 
-           alt="<?= htmlspecialchars($dorm['dorm_name']) ?>" 
+           alt="<?= htmlspecialchars($dorm['name']) ?>" 
            class="dorm-image">
     <?php else: ?>
       <div class="no-image">
@@ -142,7 +146,7 @@ setTimeout(closeFlash,3000);
       </div>
     <?php endif; ?>
 
-    <h2><?= htmlspecialchars($dorm['dorm_name']) ?></h2>
+    <h2><?= htmlspecialchars($dorm['name']) ?></h2>
     <p><strong>Address:</strong> <?= htmlspecialchars($dorm['address']) ?></p>
     <p><strong>Owner:</strong> <?= htmlspecialchars($dorm['owner_name']) ?></p>
     <p><?= nl2br(htmlspecialchars($dorm['description'])) ?></p>
@@ -174,11 +178,12 @@ setTimeout(closeFlash,3000);
       <tbody>
         <?php
         $room_sql = "
-          SELECT r.*, 
-            (SELECT COUNT(*) FROM bookings b 
-             WHERE b.room_id = r.room_id AND b.status IN ('pending','approved')) AS booked_count
-          FROM rooms r
-          WHERE r.dorm_id = ?
+          SELECT rooms.*, 
+            (SELECT COUNT(*) FROM bookings 
+             WHERE bookings.room_id = rooms.room_id 
+               AND bookings.status IN ('pending','approved')) AS booked_count
+          FROM rooms
+          WHERE rooms.dorm_id = ?
         ";
         $rooms = $pdo->prepare($room_sql);
         $rooms->execute([$dorm['dorm_id']]);
