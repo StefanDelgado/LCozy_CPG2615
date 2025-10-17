@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../auth.php';
+require_once __DIR__ . '/../auth/auth.php';
 login_required();
 require_once __DIR__ . '/../config.php';
 

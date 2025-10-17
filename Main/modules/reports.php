@@ -4,7 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../auth.php';
+require_once __DIR__ . '/../auth/auth.php';
 require_role('admin');
 
 // Date range filter

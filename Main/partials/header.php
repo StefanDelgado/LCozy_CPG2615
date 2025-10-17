@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../auth.php';
+require_once __DIR__ . '/../auth/auth.php';
 login_required();
 $user = current_user();
 require_once __DIR__ . '/../config.php';
@@ -160,33 +160,33 @@ if ($user['role'] === 'student') {
 
     <nav>
       <?php if ($user['role'] === 'admin'): ?>
-        <a href="/../dashboard.php">Overview</a>
-        <a href="/../modules/user_management.php">User Management</a>
-        <a href="/../modules/reports.php">Reports & Analytics</a>
-        <a href="/../modules/owner_verification.php">Dorm Owner Verification</a>
-        <a href="/../modules/dorm_listings.php">Dorm Listings</a>
-        <a href="/../modules/booking_oversight.php">Booking & Reservation</a>
-        <a href="/../modules/admin_payments.php">Payment Management</a>
-        <a href="/../modules/announcements.php">Broadcast Announcements</a>
+        <a href="../dashboards/admin_dashboard.php">Overview</a>
+        <a href="../modules/user_management.php">User Management</a>
+        <a href="../modules/reports.php">Reports & Analytics</a>
+        <a href="../modules/owner_verification.php">Dorm Owner Verification</a>
+        <a href="../modules/dorm_listings.php">Dorm Listings</a>
+        <a href="../modules/booking_oversight.php">Booking & Reservation</a>
+        <a href="../modules/admin_payments.php">Payment Management</a>
+        <a href="../modules/announcements.php">Broadcast Announcements</a>
       
       <?php elseif ($user['role'] === 'student'): ?>
-        <a href="/../student_dashboard.php">My Dashboard</a>
-        <a href="/../modules/available_dorms.php">Available Dorms</a>
-        <a href="/../modules/student_reservations.php">My Reservations</a>
-        <a href="/../modules/student_payments.php">Payment Management</a>
+        <a href="../dashboards/student_dashboard.php">My Dashboard</a>
+        <a href="../modules/available_dorms.php">Available Dorms</a>
+        <a href="../modules/student_reservations.php">My Reservations</a>
+        <a href="../modules/student_payments.php">Payment Management</a>
 
 
       <?php elseif ($user['role'] === 'owner'): ?>
-        <a href="/../owner_dashboard.php">My Dashboard</a>
-        <a href="/../modules/owner_dorms.php">CozyDorms</a>
-        <a href="/../modules/room_management.php">Dorm Room Management</a>
-        <a href="/../modules/owner_bookings.php">Bookings</a>
-        <a href="/../modules/owner_payments.php">Payment Management</a>
+        <a href="../dashboards/owner_dashboard.php">My Dashboard</a>
+        <a href="../modules/owner_dorms.php">CozyDorms</a>
+        <a href="../modules/room_management.php">Dorm Room Management</a>
+        <a href="../modules/owner_bookings.php">Bookings</a>
+        <a href="../modules/owner_payments.php">Payment Management</a>
       <?php endif; ?>
     </nav>
 
     <div class="sidebar-foot">
-      <a class="logout" href="/../logout.php"><i class="fa fa-sign-out-alt"></i> Logout</a>
+      <a class="logout" href="../auth/logout.php"><i class="fa fa-sign-out-alt"></i> Logout</a>
     </div>
   </aside>
 
