@@ -301,14 +301,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     /* Footer */
     .footer{background:var(--gray-900);color:var(--gray-300);padding:3rem 2rem 1.5rem;margin-top:0;}
     .footer-content{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:2rem;}
-    .footer-section h4{color:white;margin-bottom:1rem;font-size:1.1rem;}
+    .footer-section h4{color:white;margin-bottom:1rem;font-size:1.1rem;font-weight:700;}
+    .footer-section p{color:rgba(255,255,255,0.7);line-height:1.8;}
     .footer-section ul{list-style:none;}
     .footer-section ul li{margin-bottom:0.7rem;}
-    .footer-section a{color:var(--gray-400);text-decoration:none;transition:color 0.3s;}
-    .footer-section a:hover{color:white;}
+    .footer-section a{color:rgba(255,255,255,0.8);text-decoration:none;transition:color 0.3s;font-size:0.95rem;}
+    .footer-section a:hover{color:white;text-decoration:underline;}
     .footer-bottom{
       text-align:center;margin-top:2rem;padding-top:2rem;border-top:1px solid var(--gray-700);
-      color:var(--gray-500);font-size:0.9rem;
+      color:rgba(255,255,255,0.6);font-size:0.9rem;
     }
 
     /* Modal */
