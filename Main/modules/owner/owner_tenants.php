@@ -16,80 +16,97 @@ $flash = null;
 // Get active tab (default: current)
 $active_tab = $_GET['tab'] ?? 'current';
 
-// ─── Fetch Current Tenants ───
-$current_tenants_stmt = $pdo->prepare("
-    SELECT 
-        t.tenant_id,
-        t.booking_id,
-        t.student_id,
-        u.name AS tenant_name,
-        u.email AS tenant_email,
-        u.phone AS tenant_phone,
-        d.name AS dorm_name,
-        r.room_type,
-        r.room_id,
-        t.check_in_date,
-        t.expected_checkout,
-        DATEDIFF(t.expected_checkout, CURDATE()) AS days_remaining,
-        t.total_paid,
-        t.outstanding_balance,
-        b.booking_type,
-        (SELECT COUNT(*) FROM payments p 
-         WHERE p.booking_id = t.booking_id AND p.status IN ('pending','submitted')) AS pending_payments,
-        (SELECT COUNT(*) FROM payments p 
-         WHERE p.booking_id = t.booking_id AND p.status IN ('paid','verified')) AS completed_payments
-    FROM tenants t
-    JOIN users u ON t.student_id = u.user_id
-    JOIN dormitories d ON t.dorm_id = d.dorm_id AND d.owner_id = ?
-    JOIN rooms r ON t.room_id = r.room_id
-    JOIN bookings b ON t.booking_id = b.booking_id
-    WHERE t.status = 'active'
-    ORDER BY t.check_in_date DESC
-");
-$current_tenants_stmt->execute([$owner_id]);
-$current_tenants = $current_tenants_stmt->fetchAll(PDO::FETCH_ASSOC);
+// Initialize arrays
+$current_tenants = [];
+$past_tenants = [];
 
-// ─── Fetch Past Tenants ───
-$past_tenants_stmt = $pdo->prepare("
-    SELECT 
-        t.tenant_id,
-        t.booking_id,
-        t.student_id,
-        u.name AS tenant_name,
-        u.email AS tenant_email,
-        u.phone AS tenant_phone,
-        d.name AS dorm_name,
-        r.room_type,
-        r.room_id,
-        t.check_in_date,
-        t.check_out_date,
-        t.expected_checkout,
-        DATEDIFF(t.check_out_date, t.check_in_date) AS days_stayed,
-        t.total_paid,
-        t.outstanding_balance,
-        b.booking_type,
-        t.status
-    FROM tenants t
-    JOIN users u ON t.student_id = u.user_id
-    JOIN dormitories d ON t.dorm_id = d.dorm_id AND d.owner_id = ?
-    JOIN rooms r ON t.room_id = r.room_id
-    JOIN bookings b ON t.booking_id = b.booking_id
-    WHERE t.status IN ('completed', 'terminated')
-    ORDER BY t.check_out_date DESC
-    LIMIT 100
-");
-$past_tenants_stmt->execute([$owner_id]);
-$past_tenants = $past_tenants_stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    // ─── Fetch Current Tenants ───
+    $current_tenants_stmt = $pdo->prepare("
+        SELECT 
+            t.tenant_id,
+            t.booking_id,
+            t.student_id,
+            u.name AS tenant_name,
+            u.email AS tenant_email,
+            u.phone AS tenant_phone,
+            d.name AS dorm_name,
+            r.room_type,
+            r.room_id,
+            t.check_in_date,
+            t.expected_checkout,
+            DATEDIFF(t.expected_checkout, CURDATE()) AS days_remaining,
+            t.total_paid,
+            t.outstanding_balance,
+            b.booking_type,
+            (SELECT COUNT(*) FROM payments p 
+             WHERE p.booking_id = t.booking_id AND p.status IN ('pending','submitted')) AS pending_payments,
+            (SELECT COUNT(*) FROM payments p 
+             WHERE p.booking_id = t.booking_id AND p.status IN ('paid','verified')) AS completed_payments
+        FROM tenants t
+        JOIN users u ON t.student_id = u.user_id
+        JOIN dormitories d ON t.dorm_id = d.dorm_id AND d.owner_id = ?
+        JOIN rooms r ON t.room_id = r.room_id
+        JOIN bookings b ON t.booking_id = b.booking_id
+        WHERE t.status = 'active'
+        ORDER BY t.check_in_date DESC
+    ");
+    $current_tenants_stmt->execute([$owner_id]);
+    $current_tenants = $current_tenants_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // ─── Fetch Past Tenants ───
+    $past_tenants_stmt = $pdo->prepare("
+        SELECT 
+            t.tenant_id,
+            t.booking_id,
+            t.student_id,
+            u.name AS tenant_name,
+            u.email AS tenant_email,
+            u.phone AS tenant_phone,
+            d.name AS dorm_name,
+            r.room_type,
+            r.room_id,
+            t.check_in_date,
+            t.check_out_date,
+            t.expected_checkout,
+            DATEDIFF(t.check_out_date, t.check_in_date) AS days_stayed,
+            t.total_paid,
+            t.outstanding_balance,
+            b.booking_type,
+            t.status
+        FROM tenants t
+        JOIN users u ON t.student_id = u.user_id
+        JOIN dormitories d ON t.dorm_id = d.dorm_id AND d.owner_id = ?
+        JOIN rooms r ON t.room_id = r.room_id
+        JOIN bookings b ON t.booking_id = b.booking_id
+        WHERE t.status IN ('completed', 'terminated')
+        ORDER BY t.check_out_date DESC
+        LIMIT 100
+    ");
+    $past_tenants_stmt->execute([$owner_id]);
+    $past_tenants = $past_tenants_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+    $flash = ['type' => 'error', 'msg' => 'Database error: ' . $e->getMessage()];
+    error_log("Tenant query error: " . $e->getMessage());
+}
 
 // Calculate statistics
 $total_current = count($current_tenants);
 $total_past = count($past_tenants);
 $total_revenue = array_sum(array_column($current_tenants, 'total_paid'));
-$pending_amount = array_sum(array_map(function($tenant) use ($pdo) {
-    $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE booking_id = ? AND status IN ('pending','submitted')");
-    $stmt->execute([$tenant['booking_id']]);
-    return $stmt->fetchColumn();
-}, $current_tenants));
+$pending_amount = 0;
+
+// Calculate pending payments safely
+try {
+    foreach ($current_tenants as $tenant) {
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE booking_id = ? AND status IN ('pending','submitted')");
+        $stmt->execute([$tenant['booking_id']]);
+        $pending_amount += (float)$stmt->fetchColumn();
+    }
+} catch (PDOException $e) {
+    error_log("Pending payment calculation error: " . $e->getMessage());
+}
 ?>
 
 <div class="page-header">
@@ -98,6 +115,12 @@ $pending_amount = array_sum(array_map(function($tenant) use ($pdo) {
         <p>Track and manage your current and past tenants</p>
     </div>
 </div>
+
+<?php if ($flash): ?>
+<div class="alert <?= $flash['type'] === 'error' ? 'error' : 'success' ?>" style="padding: 15px; margin-bottom: 20px; border-radius: 8px; background: <?= $flash['type'] === 'error' ? '#fee' : '#efe' ?>; border: 1px solid <?= $flash['type'] === 'error' ? '#fcc' : '#cfc' ?>;">
+    <?= htmlspecialchars($flash['msg']) ?>
+</div>
+<?php endif; ?>
 
 <!-- Statistics -->
 <div class="stats-grid">
