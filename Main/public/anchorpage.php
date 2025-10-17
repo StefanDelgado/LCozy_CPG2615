@@ -26,8 +26,8 @@ try {
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM users WHERE role = 'student'");
     $total_students = $stmt->fetch()['count'] ?? 0;
     
-    // Total dorms
-    $stmt = $pdo->query("SELECT COUNT(*) as count FROM dorms WHERE status = 'active'");
+    // Total dorms (using 'dormitories' table)
+    $stmt = $pdo->query("SELECT COUNT(*) as count FROM dormitories WHERE status = 'active'");
     $total_dorms = $stmt->fetch()['count'] ?? 0;
     
     // Total owners
@@ -40,8 +40,8 @@ try {
     
     // Featured dorms (top 3 with images)
     $stmt = $pdo->query("SELECT d.*, u.name as owner_name 
-                         FROM dorms d 
-                         JOIN users u ON d.user_id = u.user_id 
+                         FROM dormitories d 
+                         JOIN users u ON d.owner_id = u.user_id 
                          WHERE d.status = 'active' 
                          ORDER BY d.created_at DESC 
                          LIMIT 3");
@@ -50,8 +50,9 @@ try {
     // Recent testimonials (approved bookings with students)
     $stmt = $pdo->query("SELECT u.name, d.name as dorm_name, b.created_at
                          FROM bookings b
-                         JOIN users u ON b.user_id = u.user_id
-                         JOIN dorms d ON b.dorm_id = d.dorm_id
+                         JOIN users u ON b.student_id = u.user_id
+                         JOIN rooms r ON b.room_id = r.room_id
+                         JOIN dormitories d ON r.dorm_id = d.dorm_id
                          WHERE b.status = 'approved'
                          ORDER BY b.created_at DESC
                          LIMIT 3");
