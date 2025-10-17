@@ -145,6 +145,7 @@ if ($user['role'] === 'student') {
     /* Collapsible Sidebar Styles */
     .sidebar {
       transition: transform 0.3s ease;
+      z-index: 1001;
     }
     
     .sidebar.collapsed {
@@ -153,6 +154,7 @@ if ($user['role'] === 'student') {
     
     .main {
       transition: margin-left 0.3s ease;
+      position: relative;
     }
     
     .main.expanded {
@@ -162,8 +164,8 @@ if ($user['role'] === 'student') {
     .hamburger-btn {
       position: fixed;
       top: 20px;
-      left: 20px;
-      z-index: 1000;
+      left: 300px;
+      z-index: 1002;
       background: #8b5cf6;
       color: white;
       border: none;
@@ -185,7 +187,7 @@ if ($user['role'] === 'student') {
     }
     
     .hamburger-btn.shifted {
-      left: 300px;
+      left: 20px;
     }
     
     .sidebar-overlay {
@@ -217,8 +219,8 @@ if ($user['role'] === 'student') {
 </head>
 <body>
   <!-- Hamburger Menu Button -->
-  <button class="hamburger-btn shifted" id="sidebarToggle" onclick="toggleSidebar()">
-    <i class="fa fa-bars"></i>
+  <button class="hamburger-btn" id="sidebarToggle" onclick="toggleSidebar()">
+    <i class="fa fa-times"></i>
   </button>
   
   <!-- Sidebar Overlay for mobile -->
