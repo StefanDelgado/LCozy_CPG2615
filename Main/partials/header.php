@@ -1,4 +1,7 @@
 <?php
+// Suppress errors in header to prevent page breaks
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+
 require_once __DIR__ . '/../auth/auth.php';
 login_required();
 $user = current_user();
