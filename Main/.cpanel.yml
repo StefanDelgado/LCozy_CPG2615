@@ -28,32 +28,32 @@ deployment:
     - /bin/rm -f $DEPLOYPATH/layout-styles.css
 
     # ===================================
-    # STEP 2: Deploy new organized structure FROM Main/ folder
+    # STEP 2: Deploy new organized structure
     # ===================================
     
-    # Core files (root) - WITH "Main/" prefix since repo root is parent
-    - /bin/cp Main/config.php $DEPLOYPATH
-    - /bin/cp Main/index.php $DEPLOYPATH
-    - /bin/cp Main/404.shtml $DEPLOYPATH
+    # Core files (root) - NO "Main/" prefix since we're IN Main/
+    - /bin/cp config.php $DEPLOYPATH
+    - /bin/cp index.php $DEPLOYPATH
+    - /bin/cp 404.shtml $DEPLOYPATH
 
-    # New organized directories - WITH "Main/" prefix
-    - /bin/cp -R Main/auth $DEPLOYPATH
-    - /bin/cp -R Main/dashboards $DEPLOYPATH
-    - /bin/cp -R Main/admin $DEPLOYPATH
-    - /bin/cp -R Main/public $DEPLOYPATH
+    # New organized directories - NO "Main/" prefix
+    - /bin/cp -R auth $DEPLOYPATH
+    - /bin/cp -R dashboards $DEPLOYPATH
+    - /bin/cp -R admin $DEPLOYPATH
+    - /bin/cp -R public $DEPLOYPATH
     
-    # Existing directories (update) - WITH "Main/" prefix
-    - /bin/cp -R Main/modules $DEPLOYPATH
-    - /bin/cp -R Main/partials $DEPLOYPATH
-    - /bin/cp -R Main/assets $DEPLOYPATH
-    - /bin/cp -R Main/cgi-bin $DEPLOYPATH
-    - /bin/cp -R Main/cron $DEPLOYPATH
+    # Existing directories (update) - NO "Main/" prefix
+    - /bin/cp -R modules $DEPLOYPATH
+    - /bin/cp -R partials $DEPLOYPATH
+    - /bin/cp -R assets $DEPLOYPATH
+    - /bin/cp -R cgi-bin $DEPLOYPATH
+    - /bin/cp -R cron $DEPLOYPATH
     
     # Uploads directory (preserve existing files)
     - /bin/mkdir -p $DEPLOYPATH/uploads
     - /bin/mkdir -p $DEPLOYPATH/uploads/receipts
     - /bin/mkdir -p $DEPLOYPATH/uploads/rooms
-    - /bin/cp -n -R Main/uploads/* $DEPLOYPATH/uploads/ 2>/dev/null || true
+    - /bin/cp -n -R uploads/* $DEPLOYPATH/uploads/ 2>/dev/null || true
     
     # Set proper permissions
     - /bin/chmod -R 755 $DEPLOYPATH/auth
