@@ -2,66 +2,56 @@
 deployment:
   tasks:
     # ===================================
-    # STEP 1: Clean up old files first
+    # OPTIMIZED DEPLOYMENT - Only sync changed files
     # ===================================
     - export DEPLOYPATH=/home/yyju4g9j6ey3/public_html/
     
-    # Remove old auth files from root
+    # ===================================
+    # STEP 1: Quick cleanup (old files only)
+    # ===================================
     - /bin/rm -f $DEPLOYPATH/login.php
     - /bin/rm -f $DEPLOYPATH/register.php
     - /bin/rm -f $DEPLOYPATH/register_admin.php
     - /bin/rm -f $DEPLOYPATH/logout.php
     - /bin/rm -f $DEPLOYPATH/auth.php
-    
-    # Remove old dashboard files from root
     - /bin/rm -f $DEPLOYPATH/dashboard.php
     - /bin/rm -f $DEPLOYPATH/student_dashboard.php
     - /bin/rm -f $DEPLOYPATH/owner_dashboard.php
-    
-    # Remove old admin files from root
     - /bin/rm -f $DEPLOYPATH/download_log.php
     - /bin/rm -f $DEPLOYPATH/test-pdo.php
-    
-    # Remove old public files from root
-    - /bin/rm -f $DEPLOYPATH/index.html
-    - /bin/rm -f $DEPLOYPATH/home.html
-    - /bin/rm -f $DEPLOYPATH/layout-styles.css
 
     # ===================================
-    # STEP 2: Deploy new organized structure
+    # STEP 2: Use rsync for FAST incremental sync
     # ===================================
     
-    # Core files (root) - NO "Main/" prefix since we're IN Main/
-    - /bin/cp config.php $DEPLOYPATH
-    - /bin/cp index.php $DEPLOYPATH
-    - /bin/cp 404.shtml $DEPLOYPATH
-
-    # New organized directories - NO "Main/" prefix
-    - /bin/cp -R auth $DEPLOYPATH
-    - /bin/cp -R dashboards $DEPLOYPATH
-    - /bin/cp -R admin $DEPLOYPATH
-    - /bin/cp -R public $DEPLOYPATH
+    # Core files (always update these)
+    - /bin/cp -f config.php $DEPLOYPATH
+    - /bin/cp -f index.php $DEPLOYPATH
     
-    # Existing directories (update) - NO "Main/" prefix
-    - /bin/cp -R modules $DEPLOYPATH
-    - /bin/cp -R partials $DEPLOYPATH
-    - /bin/cp -R assets $DEPLOYPATH
-    - /bin/cp -R cgi-bin $DEPLOYPATH
-    - /bin/cp -R cron $DEPLOYPATH
+    # Sync directories (only changed files) - MUCH FASTER!
+    - /usr/bin/rsync -a --delete auth/ $DEPLOYPATH/auth/
+    - /usr/bin/rsync -a --delete dashboards/ $DEPLOYPATH/dashboards/
+    - /usr/bin/rsync -a --delete admin/ $DEPLOYPATH/admin/
+    - /usr/bin/rsync -a --delete modules/ $DEPLOYPATH/modules/
+    - /usr/bin/rsync -a --delete partials/ $DEPLOYPATH/partials/
+    - /usr/bin/rsync -a --delete public/ $DEPLOYPATH/public/
     
-    # Uploads directory (preserve existing files)
-    - /bin/mkdir -p $DEPLOYPATH/uploads
+    # Assets - sync without delete (preserve uploaded files)
+    - /usr/bin/rsync -a --exclude='uploads/*' assets/ $DEPLOYPATH/assets/
+    
+    # Uploads - only add new, never delete
     - /bin/mkdir -p $DEPLOYPATH/uploads/receipts
     - /bin/mkdir -p $DEPLOYPATH/uploads/rooms
-    - /bin/cp -n -R uploads/* $DEPLOYPATH/uploads/ 2>/dev/null || true
+    - /usr/bin/rsync -a --ignore-existing uploads/ $DEPLOYPATH/uploads/
     
-    # Set proper permissions
-    - /bin/chmod -R 755 $DEPLOYPATH/auth
-    - /bin/chmod -R 755 $DEPLOYPATH/dashboards
-    - /bin/chmod -R 755 $DEPLOYPATH/admin
-    - /bin/chmod -R 755 $DEPLOYPATH/modules
-    - /bin/chmod -R 755 $DEPLOYPATH/partials
-    - /bin/chmod -R 755 $DEPLOYPATH/public
+    # Cron scripts
+    - /usr/bin/rsync -a cron/ $DEPLOYPATH/cron/
+    
+    # Set permissions only on changed directories
+    - /bin/find $DEPLOYPATH/auth -type f -exec chmod 644 {} \;
+    - /bin/find $DEPLOYPATH/auth -type d -exec chmod 755 {} \;
+    - /bin/find $DEPLOYPATH/dashboards -type f -exec chmod 644 {} \;
+    - /bin/find $DEPLOYPATH/dashboards -type d -exec chmod 755 {} \;
+    - /bin/find $DEPLOYPATH/modules -type f -exec chmod 644 {} \;
+    - /bin/find $DEPLOYPATH/modules -type d -exec chmod 755 {} \;
     - /bin/chmod -R 775 $DEPLOYPATH/uploads
-    - /bin/chmod 644 $DEPLOYPATH/config.php
-    - /bin/chmod 644 $DEPLOYPATH/*.php
