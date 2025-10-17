@@ -1,25 +1,63 @@
 ---
 deployment:
   tasks:
+    # ===================================
+    # STEP 1: Clean up old files first
+    # ===================================
     - export DEPLOYPATH=/home/yyju4g9j6ey3/public_html/
     
-    # Root level files
-    - /bin/cp Main/404.shtml $DEPLOYPATH
-    - /bin/cp Main/config.php $DEPLOYPATH
-    - /bin/cp Main/index.php $DEPLOYPATH
+    # Remove old auth files from root
+    - /bin/rm -f $DEPLOYPATH/login.php
+    - /bin/rm -f $DEPLOYPATH/register.php
+    - /bin/rm -f $DEPLOYPATH/register_admin.php
+    - /bin/rm -f $DEPLOYPATH/logout.php
+    - /bin/rm -f $DEPLOYPATH/auth.php
     
-    # Deploy organized directories
-    - /bin/cp -R Main/auth $DEPLOYPATH
-    - /bin/cp -R Main/dashboards $DEPLOYPATH
-    - /bin/cp -R Main/admin $DEPLOYPATH
-    - /bin/cp -R Main/public $DEPLOYPATH
-    - /bin/cp -R Main/modules $DEPLOYPATH
-    - /bin/cp -R Main/partials $DEPLOYPATH
-    - /bin/cp -R Main/assets $DEPLOYPATH
-    - /bin/cp -R Main/uploads $DEPLOYPATH
-    - /bin/cp -R Main/cgi-bin $DEPLOYPATH
-    - /bin/cp -R Main/cron $DEPLOYPATH
+    # Remove old dashboard files from root
+    - /bin/rm -f $DEPLOYPATH/dashboard.php
+    - /bin/rm -f $DEPLOYPATH/student_dashboard.php
+    - /bin/rm -f $DEPLOYPATH/owner_dashboard.php
     
-    # Optional: Copy documentation (comment out if not needed in production)
-    # - /bin/cp Main/WEB_ORGANIZATION_COMPLETE.md $DEPLOYPATH
-    # - /bin/cp Main/QUICK_REFERENCE.md $DEPLOYPATH
+    # Remove old admin files from root
+    - /bin/rm -f $DEPLOYPATH/download_log.php
+    - /bin/rm -f $DEPLOYPATH/test-pdo.php
+    
+    # Remove old public files from root (optional)
+    - /bin/rm -f $DEPLOYPATH/index.html
+    - /bin/rm -f $DEPLOYPATH/home.html
+    - /bin/rm -f $DEPLOYPATH/layout-styles.css
+
+    # ===================================
+    # STEP 2: Deploy new organized structure
+    # ===================================
+    
+    # Core files (root)
+    - /bin/cp config.php $DEPLOYPATH
+    - /bin/cp index.php $DEPLOYPATH
+    - /bin/cp 404.shtml $DEPLOYPATH
+
+    # New organized directories
+    - /bin/cp -R auth $DEPLOYPATH
+    - /bin/cp -R dashboards $DEPLOYPATH
+    - /bin/cp -R admin $DEPLOYPATH
+    - /bin/cp -R public $DEPLOYPATH
+    
+    # Existing directories (update)
+    - /bin/cp -R modules $DEPLOYPATH
+    - /bin/cp -R partials $DEPLOYPATH
+    - /bin/cp -R assets $DEPLOYPATH
+    - /bin/cp -R cgi-bin $DEPLOYPATH
+    - /bin/cp -R cron $DEPLOYPATH
+    
+    # Uploads directory (preserve existing files)
+    - /bin/mkdir -p $DEPLOYPATH/uploads
+    - /bin/cp -R uploads/* $DEPLOYPATH/uploads/ 2>/dev/null || :
+    
+    # Set proper permissions
+    - /bin/chmod 755 $DEPLOYPATH/auth
+    - /bin/chmod 755 $DEPLOYPATH/dashboards
+    - /bin/chmod 755 $DEPLOYPATH/admin
+    - /bin/chmod 755 $DEPLOYPATH/modules
+    - /bin/chmod 775 $DEPLOYPATH/uploads
+    - /bin/chmod 775 $DEPLOYPATH/uploads/receipts
+    - /bin/chmod 775 $DEPLOYPATH/uploads/rooms
