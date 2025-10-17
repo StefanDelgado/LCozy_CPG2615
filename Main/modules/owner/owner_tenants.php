@@ -88,249 +88,11 @@ $pending_amount = array_sum(array_map(function($tenant) use ($pdo) {
 }, $current_tenants));
 ?>
 
-<style>
-.tenants-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 30px;
-    border-radius: 12px;
-    color: white;
-    margin-bottom: 30px;
-}
-
-.tenants-header h1 {
-    margin: 0 0 10px 0;
-    font-size: 28px;
-}
-
-.tenants-header p {
-    margin: 0;
-    opacity: 0.9;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.stat-card {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    text-align: center;
-}
-
-.stat-card h3 {
-    font-size: 32px;
-    margin: 0 0 5px 0;
-    color: #667eea;
-}
-
-.stat-card p {
-    margin: 0;
-    color: #666;
-    font-size: 14px;
-}
-
-.tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #e0e0e0;
-}
-
-.tab {
-    padding: 12px 24px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-size: 16px;
-    color: #666;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s;
-}
-
-.tab:hover {
-    color: #667eea;
-}
-
-.tab.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
-    font-weight: 600;
-}
-
-.tenant-card {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.tenant-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.tenant-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    margin-bottom: 15px;
-}
-
-.tenant-info h3 {
-    margin: 0 0 5px 0;
-    font-size: 20px;
-    color: #333;
-}
-
-.tenant-info .subtitle {
-    color: #666;
-    font-size: 14px;
-}
-
-.badge {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.badge.active {
-    background: #d4edda;
-    color: #155724;
-}
-
-.badge.completed {
-    background: #d1ecf1;
-    color: #0c5460;
-}
-
-.badge.overdue {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.badge.warning {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.tenant-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 15px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-}
-
-.detail-item {
-    display: flex;
-    flex-direction: column;
-}
-
-.detail-item label {
-    font-size: 12px;
-    color: #666;
-    margin-bottom: 3px;
-    text-transform: uppercase;
-    font-weight: 600;
-}
-
-.detail-item span {
-    font-size: 14px;
-    color: #333;
-}
-
-.tenant-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.btn-sm {
-    padding: 8px 16px;
-    font-size: 14px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.2s;
-}
-
-.btn-primary {
-    background: #667eea;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #5568d3;
-}
-
-.btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #5a6268;
-}
-
-.btn-success {
-    background: #28a745;
-    color: white;
-}
-
-.btn-success:hover {
-    background: #218838;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #666;
-}
-
-.empty-state svg {
-    width: 100px;
-    height: 100px;
-    margin-bottom: 20px;
-    opacity: 0.3;
-}
-
-.search-box {
-    margin-bottom: 20px;
-}
-
-.search-box input {
-    width: 100%;
-    max-width: 400px;
-    padding: 12px 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
-}
-
-.search-box input:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-</style>
-
-<div class="tenants-header">
-    <h1>🏠 Tenant Management</h1>
-    <p>Track and manage your current and past tenants</p>
+<div class="page-header">
+    <div>
+        <h1>Tenant Management</h1>
+        <p>Track and manage your current and past tenants</p>
+    </div>
 </div>
 
 <!-- Statistics -->
@@ -353,30 +115,28 @@ $pending_amount = array_sum(array_map(function($tenant) use ($pdo) {
     </div>
 </div>
 
-<!-- Tabs -->
-<div class="tabs">
-    <a href="?tab=current" class="tab <?= $active_tab === 'current' ? 'active' : '' ?>">
-        Current Tenants (<?= $total_current ?>)
-    </a>
-    <a href="?tab=past" class="tab <?= $active_tab === 'past' ? 'active' : '' ?>">
-        Past Tenants (<?= $total_past ?>)
-    </a>
-</div>
+<div class="section">
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0;">
+        <a href="?tab=current" style="padding: 12px 24px; border: none; background: none; cursor: pointer; font-size: 16px; color: <?= $active_tab === 'current' ? '#8b5cf6' : '#666' ?>; border-bottom: 3px solid <?= $active_tab === 'current' ? '#8b5cf6' : 'transparent' ?>; font-weight: <?= $active_tab === 'current' ? '600' : 'normal' ?>; text-decoration: none;">
+            Current Tenants (<?= $total_current ?>)
+        </a>
+        <a href="?tab=past" style="padding: 12px 24px; border: none; background: none; cursor: pointer; font-size: 16px; color: <?= $active_tab === 'past' ? '#8b5cf6' : '#666' ?>; border-bottom: 3px solid <?= $active_tab === 'past' ? '#8b5cf6' : 'transparent' ?>; font-weight: <?= $active_tab === 'past' ? '600' : 'normal' ?>; text-decoration: none;">
+            Past Tenants (<?= $total_past ?>)
+        </a>
+    </div>
 
-<!-- Search Box -->
-<div class="search-box">
-    <input type="text" id="searchTenant" placeholder="🔍 Search by name, dorm, or room type...">
-</div>
+    <!-- Search Box -->
+    <div style="margin-bottom: 20px;">
+        <input type="text" id="searchTenant" placeholder="🔍 Search by name, dorm, or room type..." style="width: 100%; max-width: 400px; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
+    </div>
+
 
 <!-- Current Tenants Tab -->
 <?php if ($active_tab === 'current'): ?>
     <?php if (empty($current_tenants)): ?>
-        <div class="empty-state">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
-            <h3>No Current Tenants</h3>
-            <p>You don't have any active tenants at the moment.</p>
+        <div class="card" style="text-align: center; padding: 60px 20px;">
+            <h3 style="color: #666;">No Current Tenants</h3>
+            <p style="color: #999;">You don't have any active tenants at the moment.</p>
         </div>
     <?php else: ?>
         <div id="tenantsContainer">
@@ -385,65 +145,65 @@ $pending_amount = array_sum(array_map(function($tenant) use ($pdo) {
                 $is_near_checkout = $days_left <= 30 && $days_left > 0;
                 $is_overdue = $days_left < 0;
             ?>
-                <div class="tenant-card" data-tenant-name="<?= strtolower(htmlspecialchars($tenant['tenant_name'])) ?>" 
+                <div class="card tenant-card" style="margin-bottom: 15px;" data-tenant-name="<?= strtolower(htmlspecialchars($tenant['tenant_name'])) ?>" 
                      data-dorm="<?= strtolower(htmlspecialchars($tenant['dorm_name'])) ?>"
                      data-room="<?= strtolower(htmlspecialchars($tenant['room_type'])) ?>">
-                    <div class="tenant-header">
-                        <div class="tenant-info">
-                            <h3><?= htmlspecialchars($tenant['tenant_name']) ?></h3>
-                            <div class="subtitle">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                        <div>
+                            <h3 style="margin: 0 0 5px 0; font-size: 18px;"><?= htmlspecialchars($tenant['tenant_name']) ?></h3>
+                            <div style="color: #666; font-size: 14px;">
                                 <?= htmlspecialchars($tenant['dorm_name']) ?> • <?= htmlspecialchars($tenant['room_type']) ?> Room
                             </div>
                         </div>
                         <div>
                             <?php if ($is_overdue): ?>
-                                <span class="badge overdue">Overdue</span>
+                                <span class="badge error">Overdue</span>
                             <?php elseif ($is_near_checkout): ?>
                                 <span class="badge warning"><?= $days_left ?> days left</span>
                             <?php else: ?>
-                                <span class="badge active">Active</span>
+                                <span class="badge success">Active</span>
                             <?php endif; ?>
                         </div>
                     </div>
 
-                    <div class="tenant-details">
-                        <div class="detail-item">
-                            <label>Email</label>
-                            <span><?= htmlspecialchars($tenant['tenant_email']) ?></span>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px;">
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Email</label>
+                            <span style="font-size: 14px; color: #333;"><?= htmlspecialchars($tenant['tenant_email']) ?></span>
                         </div>
-                        <div class="detail-item">
-                            <label>Phone</label>
-                            <span><?= htmlspecialchars($tenant['tenant_phone'] ?: 'Not provided') ?></span>
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Phone</label>
+                            <span style="font-size: 14px; color: #333;"><?= htmlspecialchars($tenant['tenant_phone'] ?: 'Not provided') ?></span>
                         </div>
-                        <div class="detail-item">
-                            <label>Check-in Date</label>
-                            <span><?= date('M d, Y', strtotime($tenant['check_in_date'])) ?></span>
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Check-in Date</label>
+                            <span style="font-size: 14px; color: #333;"><?= date('M d, Y', strtotime($tenant['check_in_date'])) ?></span>
                         </div>
-                        <div class="detail-item">
-                            <label>Expected Checkout</label>
-                            <span><?= date('M d, Y', strtotime($tenant['expected_checkout'])) ?></span>
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Expected Checkout</label>
+                            <span style="font-size: 14px; color: #333;"><?= date('M d, Y', strtotime($tenant['expected_checkout'])) ?></span>
                         </div>
-                        <div class="detail-item">
-                            <label>Total Paid</label>
-                            <span>₱<?= number_format($tenant['total_paid'], 2) ?></span>
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Total Paid</label>
+                            <span style="font-size: 14px; color: #333;">₱<?= number_format($tenant['total_paid'], 2) ?></span>
                         </div>
-                        <div class="detail-item">
-                            <label>Payments</label>
-                            <span>
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Payments</label>
+                            <span style="font-size: 14px; color: #333;">
                                 <?= $tenant['completed_payments'] ?> paid, 
                                 <?= $tenant['pending_payments'] ?> pending
                             </span>
                         </div>
                     </div>
 
-                    <div class="tenant-actions">
-                        <a href="../shared/messaging.php?user_id=<?= $tenant['student_id'] ?>" class="btn-sm btn-primary">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <a href="../shared/messaging.php?user_id=<?= $tenant['student_id'] ?>" class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; text-decoration: none;">
                             💬 Message
                         </a>
-                        <a href="../owner/owner_payments.php?booking_id=<?= $tenant['booking_id'] ?>" class="btn-sm btn-success">
+                        <a href="../owner/owner_payments.php?booking_id=<?= $tenant['booking_id'] ?>" class="btn" style="padding: 8px 16px; font-size: 14px; text-decoration: none; background: #28a745; color: white;">
                             💳 View Payments
                         </a>
-                        <a href="../shared/dorm_details.php?id=<?= $tenant['dorm_name'] ?>" class="btn-sm btn-secondary">
+                        <a href="../shared/dorm_details.php?id=<?= $tenant['dorm_name'] ?>" class="btn" style="padding: 8px 16px; font-size: 14px; text-decoration: none; background: #6c757d; color: white;">
                             🏠 View Dorm
                         </a>
                     </div>
@@ -451,67 +211,65 @@ $pending_amount = array_sum(array_map(function($tenant) use ($pdo) {
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
-<?php endif; ?>
+</div>
 
 <!-- Past Tenants Tab -->
+<div class="section">
 <?php if ($active_tab === 'past'): ?>
     <?php if (empty($past_tenants)): ?>
-        <div class="empty-state">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            <h3>No Past Tenants</h3>
-            <p>You don't have any completed tenancies yet.</p>
+        <div class="card" style="text-align: center; padding: 60px 20px;">
+            <h3 style="color: #666;">No Past Tenants</h3>
+            <p style="color: #999;">You don't have any completed tenancies yet.</p>
         </div>
     <?php else: ?>
         <div id="tenantsContainer">
             <?php foreach ($past_tenants as $tenant): ?>
-                <div class="tenant-card" data-tenant-name="<?= strtolower(htmlspecialchars($tenant['tenant_name'])) ?>" 
+                <div class="card tenant-card" style="margin-bottom: 15px;" data-tenant-name="<?= strtolower(htmlspecialchars($tenant['tenant_name'])) ?>" 
                      data-dorm="<?= strtolower(htmlspecialchars($tenant['dorm_name'])) ?>"
                      data-room="<?= strtolower(htmlspecialchars($tenant['room_type'])) ?>">
-                    <div class="tenant-header">
-                        <div class="tenant-info">
-                            <h3><?= htmlspecialchars($tenant['tenant_name']) ?></h3>
-                            <div class="subtitle">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                        <div>
+                            <h3 style="margin: 0 0 5px 0; font-size: 18px;"><?= htmlspecialchars($tenant['tenant_name']) ?></h3>
+                            <div style="color: #666; font-size: 14px;">
                                 <?= htmlspecialchars($tenant['dorm_name']) ?> • <?= htmlspecialchars($tenant['room_type']) ?> Room
                             </div>
                         </div>
-                        <span class="badge completed">
+                        <span class="badge success">
                             <?= ucfirst($tenant['status']) ?>
                         </span>
                     </div>
 
-                    <div class="tenant-details">
-                        <div class="detail-item">
-                            <label>Email</label>
-                            <span><?= htmlspecialchars($tenant['tenant_email']) ?></span>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px;">
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Email</label>
+                            <span style="font-size: 14px; color: #333;"><?= htmlspecialchars($tenant['tenant_email']) ?></span>
                         </div>
-                        <div class="detail-item">
-                            <label>Check-in</label>
-                            <span><?= date('M d, Y', strtotime($tenant['check_in_date'])) ?></span>
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Check-in</label>
+                            <span style="font-size: 14px; color: #333;"><?= date('M d, Y', strtotime($tenant['check_in_date'])) ?></span>
                         </div>
-                        <div class="detail-item">
-                            <label>Check-out</label>
-                            <span><?= date('M d, Y', strtotime($tenant['check_out_date'])) ?></span>
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Check-out</label>
+                            <span style="font-size: 14px; color: #333;"><?= date('M d, Y', strtotime($tenant['check_out_date'])) ?></span>
                         </div>
-                        <div class="detail-item">
-                            <label>Duration</label>
-                            <span><?= $tenant['days_stayed'] ?> days</span>
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Duration</label>
+                            <span style="font-size: 14px; color: #333;"><?= $tenant['days_stayed'] ?> days</span>
                         </div>
-                        <div class="detail-item">
-                            <label>Total Paid</label>
-                            <span>₱<?= number_format($tenant['total_paid'], 2) ?></span>
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Total Paid</label>
+                            <span style="font-size: 14px; color: #333;">₱<?= number_format($tenant['total_paid'], 2) ?></span>
                         </div>
                         <?php if ($tenant['outstanding_balance'] > 0): ?>
-                        <div class="detail-item">
-                            <label>Outstanding</label>
-                            <span class="text-danger">₱<?= number_format($tenant['outstanding_balance'], 2) ?></span>
+                        <div>
+                            <label style="font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; font-weight: 600; display: block;">Outstanding</label>
+                            <span style="font-size: 14px; color: #d9534f;">₱<?= number_format($tenant['outstanding_balance'], 2) ?></span>
                         </div>
                         <?php endif; ?>
                     </div>
 
-                    <div class="tenant-actions">
-                        <a href="../owner/owner_payments.php?booking_id=<?= $tenant['booking_id'] ?>" class="btn-sm btn-secondary">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <a href="../owner/owner_payments.php?booking_id=<?= $tenant['booking_id'] ?>" class="btn" style="padding: 8px 16px; font-size: 14px; text-decoration: none; background: #6c757d; color: white;">
                             📄 View Payment History
                         </a>
                     </div>
@@ -520,6 +278,7 @@ $pending_amount = array_sum(array_map(function($tenant) use ($pdo) {
         </div>
     <?php endif; ?>
 <?php endif; ?>
+</div>
 
 <script>
 // Search functionality
