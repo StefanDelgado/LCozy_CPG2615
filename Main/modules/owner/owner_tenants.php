@@ -1,8 +1,4 @@
 <?php
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once __DIR__ . '/../../auth/auth.php';
 require_role('owner');
 require_once __DIR__ . '/../../config.php';

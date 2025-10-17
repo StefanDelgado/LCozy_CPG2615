@@ -1,7 +1,7 @@
 <?php 
-require_once __DIR__ . '/../partials/header.php'; 
+require_once __DIR__ . '/../../partials/header.php'; 
 require_role('owner');
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../config.php';
 
 $owner_id = $_SESSION['user']['user_id'];
 $flash = null;
@@ -254,4 +254,4 @@ function toggleCustomRoomType(select, inputId) {
 }
 </script>
 
-<?php require_once __DIR__ . '/../partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/footer.php'; ?>
