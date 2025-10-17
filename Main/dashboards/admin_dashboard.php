@@ -65,14 +65,14 @@ include __DIR__ . '/../partials/header.php';
   <h2>Management Modules</h2>
   <p>Comprehensive management tools for admins</p>
   <div class="grid">
-    <a class="module" href="../modules/user_management.php"><span class="module-title">User Management</span></a>
-    <a class="module" href="../modules/reports.php"><span class="module-title">Reports & Analytics</span></a>
-    <a class="module" href="../modules/owner_verification.php"><span class="module-title">Owner Verification</span></a>
-    <a class="module" href="../modules/room_management.php"><span class="module-title">Room Management</span></a>
-    <a class="module" href="../modules/booking_oversight.php"><span class="module-title">Booking Oversight</span></a>
-    <a class="module" href="../modules/payments.php"><span class="module-title">Payment Management</span></a>
-    <a class="module" href="../modules/messaging.php"><span class="module-title">Messaging</span></a>
-    <a class="module" href="../modules/system_config.php"><span class="module-title">System Configuration</span></a>
+    <a class="module" href="../modules/admin/user_management.php"><span class="module-title">User Management</span></a>
+    <a class="module" href="../modules/admin/reports.php"><span class="module-title">Reports & Analytics</span></a>
+    <a class="module" href="../modules/admin/owner_verification.php"><span class="module-title">Owner Verification</span></a>
+    <a class="module" href="../modules/admin/room_management.php"><span class="module-title">Room Management</span></a>
+    <a class="module" href="../modules/admin/booking_oversight.php"><span class="module-title">Booking Oversight</span></a>
+    <a class="module" href="../modules/shared/payments.php"><span class="module-title">Payment Management</span></a>
+    <a class="module" href="../modules/shared/messaging.php"><span class="module-title">Messaging</span></a>
+    <a class="module" href="../modules/admin/system_config.php"><span class="module-title">System Configuration</span></a>
   </div>
 </section>
 

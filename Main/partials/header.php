@@ -43,14 +43,14 @@ $message_page = "#";
 $announcement_page = "#";
 
 if ($user['role'] === 'student') {
-    $message_page = "../modules/student_messages.php";
-    $announcement_page = "../modules/student_announcements.php";
+    $message_page = "../modules/student/student_messages.php";
+    $announcement_page = "../modules/student/student_announcements.php";
 } elseif ($user['role'] === 'owner') {
-    $message_page = "../modules/owner_messages.php";
-    $announcement_page = "../modules/owner_announcements.php";
+    $message_page = "../modules/owner/owner_messages.php";
+    $announcement_page = "../modules/owner/owner_announcements.php";
 } elseif ($user['role'] === 'admin') {
-    $message_page = "../modules/messaging.php";
-    $announcement_page = "../modules/announcements.php";
+    $message_page = "../modules/shared/messaging.php";
+    $announcement_page = "../modules/admin/announcements.php";
 }
 ?>
 <!doctype html>
@@ -161,27 +161,27 @@ if ($user['role'] === 'student') {
     <nav>
       <?php if ($user['role'] === 'admin'): ?>
         <a href="../dashboards/admin_dashboard.php">Overview</a>
-        <a href="../modules/user_management.php">User Management</a>
-        <a href="../modules/reports.php">Reports & Analytics</a>
-        <a href="../modules/owner_verification.php">Dorm Owner Verification</a>
-        <a href="../modules/dorm_listings.php">Dorm Listings</a>
-        <a href="../modules/booking_oversight.php">Booking & Reservation</a>
-        <a href="../modules/admin_payments.php">Payment Management</a>
-        <a href="../modules/announcements.php">Broadcast Announcements</a>
+        <a href="../modules/admin/user_management.php">User Management</a>
+        <a href="../modules/admin/reports.php">Reports & Analytics</a>
+        <a href="../modules/admin/owner_verification.php">Dorm Owner Verification</a>
+        <a href="../modules/shared/dorm_listings.php">Dorm Listings</a>
+        <a href="../modules/admin/booking_oversight.php">Booking & Reservation</a>
+        <a href="../modules/admin/admin_payments.php">Payment Management</a>
+        <a href="../modules/admin/announcements.php">Broadcast Announcements</a>
       
       <?php elseif ($user['role'] === 'student'): ?>
         <a href="../dashboards/student_dashboard.php">My Dashboard</a>
-        <a href="../modules/available_dorms.php">Available Dorms</a>
-        <a href="../modules/student_reservations.php">My Reservations</a>
-        <a href="../modules/student_payments.php">Payment Management</a>
+        <a href="../modules/shared/available_dorms.php">Available Dorms</a>
+        <a href="../modules/student/student_reservations.php">My Reservations</a>
+        <a href="../modules/student/student_payments.php">Payment Management</a>
 
 
       <?php elseif ($user['role'] === 'owner'): ?>
         <a href="../dashboards/owner_dashboard.php">My Dashboard</a>
-        <a href="../modules/owner_dorms.php">CozyDorms</a>
-        <a href="../modules/room_management.php">Dorm Room Management</a>
-        <a href="../modules/owner_bookings.php">Bookings</a>
-        <a href="../modules/owner_payments.php">Payment Management</a>
+        <a href="../modules/owner/owner_dorms.php">CozyDorms</a>
+        <a href="../modules/admin/room_management.php">Dorm Room Management</a>
+        <a href="../modules/owner/owner_bookings.php">Bookings</a>
+        <a href="../modules/owner/owner_payments.php">Payment Management</a>
       <?php endif; ?>
     </nav>
 

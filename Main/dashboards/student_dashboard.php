@@ -89,10 +89,10 @@ $recent_reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="section">
   <h2>Quick Actions</h2>
   <div class="actions">
-    <a href="../modules/student_reservations.php" class="btn-primary">My Reservations</a>
-    <a href="../modules/student_payments.php" class="btn-secondary">Payments</a>
-    <a href="../modules/student_messages.php" class="btn-secondary">Messages</a>
-    <a href="../modules/student_announcements.php" class="btn-secondary">Announcements</a>
+    <a href="../modules/student/student_reservations.php" class="btn-primary">My Reservations</a>
+    <a href="../modules/student/student_payments.php" class="btn-secondary">Payments</a>
+    <a href="../modules/student/student_messages.php" class="btn-secondary">Messages</a>
+    <a href="../modules/student/student_announcements.php" class="btn-secondary">Announcements</a>
   </div>
 </div>
 
