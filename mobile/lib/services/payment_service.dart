@@ -20,7 +20,7 @@ class PaymentService {
       print('📡 [PaymentService] Fetching payments for: $studentEmail');
       final response = await http.get(
         Uri.parse(
-          'http://cozydorms.life/modules/mobile-api/student_payments_api.php?student_email=$studentEmail'
+          '${ApiConstants.baseUrl}/modules/mobile-api/student/student_payments_api.php?student_email=$studentEmail'
         ),
       );
 
@@ -73,7 +73,7 @@ class PaymentService {
   Future<Map<String, dynamic>> getOwnerPayments(String ownerEmail) async {
     try {
       final uri = Uri.parse(
-        '${ApiConstants.baseUrl}/modules/mobile-api/owner_payments_api.php'
+        '${ApiConstants.baseUrl}/modules/mobile-api/owner/owner_payments_api.php'
       ).replace(queryParameters: {
         'owner_email': ownerEmail,
       });
@@ -128,7 +128,7 @@ class PaymentService {
   Future<Map<String, dynamic>> uploadPaymentProof(Map<String, dynamic> paymentData) async {
     try {
       final response = await http.post(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/upload_receipt_api.php'),
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/payments/upload_receipt_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(paymentData),
       );

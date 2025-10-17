@@ -23,7 +23,7 @@ class DormService {
   Future<Map<String, dynamic>> getOwnerDorms(String ownerEmail) async {
     try {
       final uri = Uri.parse(
-        '$_baseUrl/modules/mobile-api/owner_dorms_api.php?owner_email=$ownerEmail',
+        '$_baseUrl/modules/mobile-api/owner/owner_dorms_api.php?owner_email=$ownerEmail',
       );
       
       print('🌐 Calling API: $uri');
@@ -97,7 +97,7 @@ class DormService {
   Future<Map<String, dynamic>> getAllDorms({String? studentEmail}) async {
     try {
       // Use student_home_api.php which returns all available dorms
-      final uri = Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/student_home_api.php');
+      final uri = Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/student/student_home_api.php');
       
       print('🌐 API Call: $uri');
       
@@ -196,7 +196,7 @@ class DormService {
     print('🏠 [DormService] Fetching dorm details for ID: $dormId');
     try {
       final uri = Uri.parse(
-        '${ApiConstants.dormDetailsEndpoint}?dorm_id=$dormId',
+        '${ApiConstants.baseUrl}/modules/mobile-api/dorms/dorm_details_api.php?dorm_id=$dormId',
       );
       
       print('🏠 [DormService] Request URL: $uri');
@@ -278,7 +278,7 @@ class DormService {
   /// - message: Success or error message
   Future<Map<String, dynamic>> addDorm(Map<String, dynamic> dormData) async {
     try {
-      final uri = Uri.parse('$_baseUrl/modules/mobile-api/add_dorm_api.php');
+      final uri = Uri.parse('$_baseUrl/modules/mobile-api/dorms/add_dorm_api.php');
       
       final response = await http.post(
         uri,
@@ -326,7 +326,7 @@ class DormService {
   /// - message: Success or error message
   Future<Map<String, dynamic>> deleteDorm(String dormId) async {
     try {
-      final uri = Uri.parse('$_baseUrl/modules/mobile-api/delete_dorm_api.php');
+      final uri = Uri.parse('$_baseUrl/modules/mobile-api/dorms/delete_dorm_api.php');
       
       final response = await http.post(
         uri,
@@ -384,7 +384,7 @@ class DormService {
     Map<String, dynamic> dormData,
   ) async {
     try {
-      final uri = Uri.parse('$_baseUrl/modules/mobile-api/update_dorm_api.php');
+      final uri = Uri.parse('$_baseUrl/modules/mobile-api/dorms/update_dorm_api.php');
       
       final body = {
         'dorm_id': dormId,

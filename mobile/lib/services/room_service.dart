@@ -17,7 +17,7 @@ class RoomService {
   ///   - error: Error message if request failed
   Future<Map<String, dynamic>> getRoomsByDorm(int dormId) async {
     try {
-      final uri = Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/fetch_rooms.php?dorm_id=$dormId');
+      final uri = Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/rooms/fetch_rooms.php?dorm_id=$dormId');
       print('🏠 Fetching rooms for dorm_id: $dormId');
       print('🏠 API URL: $uri');
       
@@ -90,7 +90,7 @@ class RoomService {
       print('➕ Adding room with data: $roomData');
       
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/add_room_api.php'),
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/rooms/add_room_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(roomData),
       );
@@ -167,7 +167,7 @@ class RoomService {
       print('✏️ Updating room $roomId with data: $updateData');
 
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/edit_room_api.php'),
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/rooms/edit_room_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(updateData),
       );
@@ -227,7 +227,7 @@ class RoomService {
       print('🗑️ Deleting room $roomId for owner $ownerEmail');
       
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/delete_room_api.php'),
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/rooms/delete_room_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'room_id': roomId,

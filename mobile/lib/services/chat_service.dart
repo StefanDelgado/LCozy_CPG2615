@@ -6,11 +6,11 @@ import '../utils/constants.dart';
 /// Handles conversations and messages between students and owners
 class ChatService {
   static const String _conversationsEndpoint = 
-      '${ApiConstants.baseUrl}/modules/mobile-api/conversation_api.php';
+      '${ApiConstants.baseUrl}/modules/mobile-api/messaging/conversation_api.php';
   static const String _messagesEndpoint = 
-      '${ApiConstants.baseUrl}/modules/mobile-api/messages_api.php';
+      '${ApiConstants.baseUrl}/modules/mobile-api/messaging/messages_api.php';
   static const String _sendMessageEndpoint = 
-      '${ApiConstants.baseUrl}/modules/mobile-api/send_message_api.php';
+      '${ApiConstants.baseUrl}/modules/mobile-api/messaging/send_message_api.php';
 
   /// Get all conversations for a user (student or owner)
   /// Returns list of conversations with last message and unread count

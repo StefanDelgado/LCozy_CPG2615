@@ -21,7 +21,7 @@ class AuthService {
       print('🔑 [AuthService] Login request for: $email');
       
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/login-api.php'),
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/auth/login-api.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -110,7 +110,7 @@ class AuthService {
     try {
       final response = await http.post(
         Uri.parse(
-            '${ApiConstants.baseUrl}/modules/mobile-api/register_api.php'),
+            '${ApiConstants.baseUrl}/modules/mobile-api/auth/register_api.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

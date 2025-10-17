@@ -18,7 +18,7 @@ class TenantService {
   Future<Map<String, dynamic>> getOwnerTenants(String ownerEmail) async {
     try {
       final uri = Uri.parse(
-        '${ApiConstants.baseUrl}/modules/mobile-api/owner_tenants_api.php'
+        '${ApiConstants.baseUrl}/modules/mobile-api/owner/owner_tenants_api.php'
       ).replace(queryParameters: {
         'owner_email': ownerEmail,
       });

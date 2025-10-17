@@ -19,7 +19,7 @@ class BookingService {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://cozydorms.life/modules/mobile-api/student_dashboard_api.php?student_email=${Uri.encodeComponent(studentEmail)}'
+          '${ApiConstants.baseUrl}/modules/mobile-api/student/student_dashboard_api.php?student_email=${Uri.encodeComponent(studentEmail)}'
         ),
       );
 
@@ -63,7 +63,7 @@ class BookingService {
   Future<Map<String, dynamic>> getOwnerBookings(String ownerEmail) async {
     try {
       final uri = Uri.parse(
-        '${ApiConstants.baseUrl}/modules/mobile-api/owner_bookings_api.php'
+        '${ApiConstants.baseUrl}/modules/mobile-api/owner/owner_bookings_api.php'
       ).replace(queryParameters: {
         'owner_email': ownerEmail,
       });
@@ -128,7 +128,7 @@ class BookingService {
     print('📝 [Booking] Check-out date: ${bookingData['check_out_date']}');
     
     try {
-      final url = ApiConstants.createBookingEndpoint;
+      final url = '${ApiConstants.baseUrl}/modules/mobile-api/bookings/create_booking_api.php';
       print('📝 [Booking] Request URL: $url');
       print('📝 [Booking] Request headers: Content-Type: application/json');
       print('📝 [Booking] Request body (JSON): ${jsonEncode(bookingData)}');
@@ -203,7 +203,7 @@ class BookingService {
       print('📋 [BookingService] Owner Email: $ownerEmail');
 
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner_bookings_api.php'),
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner/owner_bookings_api.php'),
         body: {
           'action': action,
           'booking_id': bookingId,

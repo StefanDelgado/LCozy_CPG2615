@@ -42,7 +42,7 @@ class DashboardService {
   Future<Map<String, dynamic>> getOwnerDashboard(String ownerEmail) async {
     try {
       final uri = Uri.parse(
-        '${ApiConstants.baseUrl}/modules/mobile-api/owner_dashboard_api.php'
+        '${ApiConstants.baseUrl}/modules/mobile-api/owner/owner_dashboard_api.php'
       ).replace(queryParameters: {
         'owner_email': ownerEmail,
       });
