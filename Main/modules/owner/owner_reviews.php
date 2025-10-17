@@ -4,7 +4,7 @@ require_role('owner');
 require_once __DIR__ . '/../../config.php';
 
 $page_title = "Dorm Reviews";
-include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../../partials/header.php';
 
 $owner_id = $_SESSION['user']['user_id'];
 
