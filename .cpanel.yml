@@ -2,21 +2,24 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/yyju4g9j6ey3/public_html/
+    
+    # Root level files
     - /bin/cp Main/404.shtml $DEPLOYPATH
-    - /bin/cp Main/auth.php $DEPLOYPATH
     - /bin/cp Main/config.php $DEPLOYPATH
-    - /bin/cp Main/dashboard.php $DEPLOYPATH
-    - /bin/cp Main/download_log.php $DEPLOYPATH
-    - /bin/cp Main/home.html $DEPLOYPATH
-    - /bin/cp Main/index.html $DEPLOYPATH
     - /bin/cp Main/index.php $DEPLOYPATH
-    - /bin/cp Main/login.php $DEPLOYPATH
-    - /bin/cp Main/logout.php $DEPLOYPATH
-    - /bin/cp Main/owner_dashboard.php $DEPLOYPATH
-    - /bin/cp Main/register.php $DEPLOYPATH
-    - /bin/cp Main/register_admin.php $DEPLOYPATH 
-    - /bin/cp Main/student_dashboard.php $DEPLOYPATH
+    
+    # Deploy organized directories
+    - /bin/cp -R Main/auth $DEPLOYPATH
+    - /bin/cp -R Main/dashboards $DEPLOYPATH
+    - /bin/cp -R Main/admin $DEPLOYPATH
+    - /bin/cp -R Main/public $DEPLOYPATH
     - /bin/cp -R Main/modules $DEPLOYPATH
     - /bin/cp -R Main/partials $DEPLOYPATH
     - /bin/cp -R Main/assets $DEPLOYPATH
     - /bin/cp -R Main/uploads $DEPLOYPATH
+    - /bin/cp -R Main/cgi-bin $DEPLOYPATH
+    - /bin/cp -R Main/cron $DEPLOYPATH
+    
+    # Optional: Copy documentation (comment out if not needed in production)
+    # - /bin/cp Main/WEB_ORGANIZATION_COMPLETE.md $DEPLOYPATH
+    # - /bin/cp Main/QUICK_REFERENCE.md $DEPLOYPATH
