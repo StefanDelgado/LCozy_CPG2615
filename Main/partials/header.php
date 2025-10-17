@@ -141,94 +141,10 @@ if ($user['role'] === 'student') {
       border-top: 1px solid #d0bfff;
       margin: 0;
     }
-
-    /* Collapsible Sidebar Styles */
-    .sidebar {
-      transition: transform 0.3s ease;
-      z-index: 1001;
-    }
-    
-    .sidebar.collapsed {
-      transform: translateX(-280px);
-      pointer-events: none; /* Disable interactions when collapsed */
-    }
-    
-    .main {
-      transition: margin-left 0.3s ease;
-      position: relative;
-      z-index: 1; /* Ensure main content is below sidebar but above nothing */
-    }
-    
-    .main.expanded {
-      margin-left: 0;
-    }
-    
-    .hamburger-btn {
-      position: fixed;
-      top: 20px;
-      left: 300px;
-      z-index: 1002;
-      background: #8b5cf6;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      width: 45px;
-      height: 45px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      transition: all 0.3s ease;
-    }
-    
-    .hamburger-btn:hover {
-      background: #7c3aed;
-      transform: scale(1.05);
-    }
-    
-    .hamburger-btn.shifted {
-      left: 20px;
-    }
-    
-    .sidebar-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 999;
-    }
-    
-    .sidebar-overlay.active {
-      display: block;
-    }
-    
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-280px);
-      }
-      
-      .main {
-        margin-left: 0 !important;
-      }
-      
-      .hamburger-btn {
-        left: 20px;
-      }
-    }
   </style>
 </head>
 <body>
-  <!-- Hamburger Menu Button -->
-  <button class="hamburger-btn" id="sidebarToggle" onclick="toggleSidebar()">
-    <i class="fa fa-times"></i>
-  </button>
-  
-  <!-- Sidebar Overlay for mobile -->
-  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-  
-  <aside class="sidebar" id="sidebar">
+  <aside class="sidebar">
     <div class="brand">
       <div class="brand-title"><?= htmlspecialchars($brand_title) ?></div>
       <div class="user-info">
@@ -300,36 +216,3 @@ if ($user['role'] === 'student') {
         </a>
       </div>
     </header>
-
-    <script>
-      function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const main = document.querySelector('.main');
-        const toggleBtn = document.getElementById('sidebarToggle');
-        const overlay = document.getElementById('sidebarOverlay');
-        
-        sidebar.classList.toggle('collapsed');
-        main.classList.toggle('expanded');
-        toggleBtn.classList.toggle('shifted');
-        overlay.classList.toggle('active');
-        
-        // Change icon based on state
-        const icon = toggleBtn.querySelector('i');
-        if (sidebar.classList.contains('collapsed')) {
-          icon.className = 'fa fa-bars';
-        } else {
-          icon.className = 'fa fa-times';
-        }
-        
-        // Save state to localStorage
-        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-      }
-      
-      // Restore sidebar state on page load
-      document.addEventListener('DOMContentLoaded', function() {
-        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        if (isCollapsed) {
-          toggleSidebar();
-        }
-      });
-    </script>
