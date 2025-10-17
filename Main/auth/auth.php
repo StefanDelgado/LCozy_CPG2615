@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 function current_user() {
     return $_SESSION['user'] ?? null;
@@ -10,7 +10,7 @@ function current_user() {
 
 function login_required() {
     if (!isset($_SESSION['user'])) {
-        header('Location: /login.php');
+        header('Location: /auth/login.php');
         exit;
     }
 }
@@ -37,16 +37,16 @@ function require_role($role) {
 function redirect_to_dashboard($role) {
     switch ($role) {
         case 'admin':
-            header('Location: /dashboard.php');
+            header('Location: /dashboards/admin_dashboard.php');
             break;
         case 'owner':
-            header('Location: /owner_dashboard.php');
+            header('Location: /dashboards/owner_dashboard.php');
             break;
         case 'student':
-            header('Location: /student_dashboard.php');
+            header('Location: /dashboards/student_dashboard.php');
             break;
         default:
-            header('Location: /login.php');
+            header('Location: /auth/login.php');
     }
     exit;
 }
