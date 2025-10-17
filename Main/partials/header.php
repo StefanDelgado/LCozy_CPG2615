@@ -43,14 +43,14 @@ $message_page = "#";
 $announcement_page = "#";
 
 if ($user['role'] === 'student') {
-    $message_page = "/../modules/student_messages.php";
-    $announcement_page = "/../modules/student_announcements.php";
+    $message_page = "../modules/student_messages.php";
+    $announcement_page = "../modules/student_announcements.php";
 } elseif ($user['role'] === 'owner') {
-    $message_page = "/../modules/owner_messages.php";
-    $announcement_page = "/../modules/owner_announcements.php";
+    $message_page = "../modules/owner_messages.php";
+    $announcement_page = "../modules/owner_announcements.php";
 } elseif ($user['role'] === 'admin') {
-    $message_page = "/../modules/messaging.php";
-    $announcement_page = "/../modules/announcements.php";
+    $message_page = "../modules/messaging.php";
+    $announcement_page = "../modules/announcements.php";
 }
 ?>
 <!doctype html>
@@ -60,9 +60,9 @@ if ($user['role'] === 'student') {
   <title><?= htmlspecialchars($brand_title) ?> — Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <link rel="icon" href="/../assets/favicon.png" type="image/png">
-  <link rel="stylesheet" href="/../assets/style.css">
-  <link rel="stylesheet" href="/../assets/modules.css">
+  <link rel="icon" href="../assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../assets/modules.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
