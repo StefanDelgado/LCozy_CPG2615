@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// If user is logged in, redirect to their dashboard
 if (isset($_SESSION['user'])) {
     $role = $_SESSION['user']['role'] ?? '';
 
@@ -17,5 +18,6 @@ if (isset($_SESSION['user'])) {
     }
 }
 
-header('Location: /auth/login.php');
+// If not logged in, show the landing page
+header('Location: /public/index.html');
 exit;
