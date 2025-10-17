@@ -4,8 +4,8 @@ login_required();
 $user = current_user();
 require_once __DIR__ . '/../config.php';
 
-// Define base path for consistent navigation
-$base_path = '/Main';
+// Define base path for consistent navigation (empty for production where Main is root)
+$base_path = '';
 
 $unread_count = 0;
 if ($user && isset($user['user_id'])) {
