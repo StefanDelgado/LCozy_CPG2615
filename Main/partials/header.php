@@ -150,11 +150,13 @@ if ($user['role'] === 'student') {
     
     .sidebar.collapsed {
       transform: translateX(-280px);
+      pointer-events: none; /* Disable interactions when collapsed */
     }
     
     .main {
       transition: margin-left 0.3s ease;
       position: relative;
+      z-index: 1; /* Ensure main content is below sidebar but above nothing */
     }
     
     .main.expanded {
