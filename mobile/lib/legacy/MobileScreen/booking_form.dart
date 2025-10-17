@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -194,13 +195,13 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final orange = const Color(0xFFFF9800);
+    final purple = AppTheme.primary;
     final availableRooms = widget.rooms.where((room) => room['is_available'] == true).toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Book Dorm Room'),
-        backgroundColor: orange,
+        backgroundColor: purple,
       ),
       body: availableRooms.isEmpty
           ? Center(
@@ -252,11 +253,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                     ...availableRooms.map((room) {
                       final isSelected = selectedRoom?['room_id'] == room['room_id'];
                       return Card(
-                        color: isSelected ? orange.withOpacity(0.1) : Colors.white,
+                        color: isSelected ? purple.withOpacity(0.1) : Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: isSelected ? orange : Colors.grey.shade300,
+                            color: isSelected ? purple : Colors.grey.shade300,
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -276,11 +277,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: isSelected ? orange : Colors.black,
+                                        color: isSelected ? purple : Colors.black,
                                       ),
                                     ),
                                     if (isSelected)
-                                      Icon(Icons.check_circle, color: orange),
+                                      Icon(Icons.check_circle, color: purple),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
@@ -307,7 +308,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: orange,
+                                    color: purple,
                                   ),
                                 ),
                               ],
@@ -334,7 +335,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                             value: 'shared',
                             groupValue: bookingType,
                             onChanged: (value) => setState(() => bookingType = value!),
-                            activeColor: orange,
+                            activeColor: purple,
                           ),
                         ),
                         Expanded(
@@ -344,7 +345,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                             value: 'whole',
                             groupValue: bookingType,
                             onChanged: (value) => setState(() => bookingType = value!),
-                            activeColor: orange,
+                            activeColor: purple,
                           ),
                         ),
                       ],
@@ -439,7 +440,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       child: ElevatedButton(
                         onPressed: isSubmitting ? null : _submitBooking,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: orange,
+                          backgroundColor: purple,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

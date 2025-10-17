@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../services/location_service.dart';
 import '../../../utils/map_helpers.dart';
@@ -186,7 +187,7 @@ class _LocationTabState extends State<LocationTab> {
                 Marker(
                   markerId: const MarkerId('dorm_location'),
                   position: dormLocation,
-                  icon: MapHelpers.createColoredMarker(hue: 30.0), // Orange
+                  icon: MapHelpers.createColoredMarker(hue: 30.0), // purple
                   infoWindow: InfoWindow(
                     title: dormName,
                     snippet: address,
@@ -221,7 +222,7 @@ class _LocationTabState extends State<LocationTab> {
                       children: [
                         const Icon(
                           Icons.location_on,
-                          color: Color(0xFFFF9800),
+                          color: AppTheme.primary,
                           size: 24,
                         ),
                         const SizedBox(width: 12),
@@ -297,7 +298,7 @@ class _LocationTabState extends State<LocationTab> {
                                           _locationError!,
                                           style: const TextStyle(
                                             fontSize: 14,
-                                            color: Colors.orange,
+                                            color: AppTheme.primary,
                                           ),
                                         )
                                       : _distanceInKm != null

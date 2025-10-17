@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/auth/auth_text_field.dart';
 import '../../widgets/auth/auth_button.dart';
@@ -170,7 +171,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final orangeColor = const Color(0xFFFF9800);
+    final orangeColor = AppTheme.primary;
 
     return Scaffold(
       backgroundColor: orangeColor,

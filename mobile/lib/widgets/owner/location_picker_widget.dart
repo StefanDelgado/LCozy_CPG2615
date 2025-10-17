@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../services/location_service.dart';
 import '../../utils/map_helpers.dart';
@@ -268,18 +269,18 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
             padding: const EdgeInsets.all(8),
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
+              color: AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange.shade200),
+              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
-                Icon(Icons.warning_amber, color: Colors.orange.shade700, size: 20),
+                Icon(Icons.warning_amber, color: AppTheme.primaryDark, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     _error!,
-                    style: TextStyle(color: Colors.orange.shade900, fontSize: 12),
+                    style: TextStyle(color: AppTheme.textDark, fontSize: 12),
                   ),
                 ),
                 IconButton(
@@ -412,7 +413,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Icon(Icons.location_on, size: 16, color: Color(0xFFFF9800)),
+                    const Icon(Icons.location_on, size: 16, color: AppTheme.primary),
                     const SizedBox(width: 8),
                     Text(
                       'Address',

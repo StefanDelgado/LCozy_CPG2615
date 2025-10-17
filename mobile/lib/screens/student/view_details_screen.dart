@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import '../../services/dorm_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart' show ErrorDisplayWidget;
@@ -342,7 +343,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
                       StatChip(
                         icon: Icons.star,
                         text: rating > 0 ? '$rating ($reviewCount)' : 'N/A',
-                        color: Colors.orange,
+                        color: AppTheme.primary,
                       ),
                     ],
                   ),

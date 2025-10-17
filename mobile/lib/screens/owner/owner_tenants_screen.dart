@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import '../../services/tenant_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_display_widget.dart';
@@ -37,7 +38,7 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
   List<Map<String, dynamic>> _pastTenants = [];
 
   // Theme
-  static const Color _orange = Color(0xFFFF9800);
+  static const Color _orange = AppTheme.primary;
   static const Color _background = Color(0xFFFDF6F0);
 
   @override

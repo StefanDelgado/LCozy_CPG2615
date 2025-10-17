@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 class PaymentCard extends StatelessWidget {
   final Map<String, dynamic> payment;
@@ -15,7 +16,7 @@ class PaymentCard extends StatelessWidget {
       case 'paid':
         return Colors.green;
       case 'pending':
-        return Colors.orange;
+        return AppTheme.primary;
       case 'submitted':
         return Colors.blue;
       case 'rejected':
@@ -117,7 +118,7 @@ class PaymentCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.orange,
+                color: AppTheme.primary,
               ),
             ),
             const SizedBox(height: 8),
@@ -161,7 +162,7 @@ class PaymentCard extends StatelessWidget {
                   icon: const Icon(Icons.upload_file),
                   label: const Text('Upload Receipt'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
+                    backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
                   ),
                 ),

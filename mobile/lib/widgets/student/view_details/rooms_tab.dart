@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import '../../../utils/helpers.dart';
 import '../../../screens/student/booking_form_screen.dart';
 
@@ -111,7 +112,7 @@ class RoomsTab extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: AppTheme.primary,
                   ),
                 ),
                 if (isAvailable) ...[

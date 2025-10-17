@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -105,7 +106,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
       backgroundColor: const Color(0xFFFDF6F0),
       appBar: AppBar(
         title: const Text('Booking Requests'),
-        backgroundColor: const Color(0xFFFF9800),
+        backgroundColor: AppTheme.primary,
       ),
       body: Column(
         children: [
@@ -182,7 +183,7 @@ class _TabButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? const Color(0xFFFF9800) : Colors.grey[200],
+        backgroundColor: isSelected ? AppTheme.primary : Colors.grey[200],
         foregroundColor: isSelected ? Colors.white : Colors.black87,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 /// Message bubble widget
 /// Displays an individual message with sender-based styling
@@ -22,7 +23,7 @@ class MessageBubble extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
         decoration: BoxDecoration(
-          color: isMe ? const Color(0xFFFF9800) : Colors.grey[200],
+          color: isMe ? AppTheme.primary : Colors.grey[200],
           borderRadius: BorderRadius.circular(16),
         ),
         child: Text(

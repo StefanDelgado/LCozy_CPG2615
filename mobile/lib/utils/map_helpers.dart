@@ -120,10 +120,10 @@ class MapHelpers {
       }
     } catch (e) {
       // Fallback to default marker if custom marker fails
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
+      return BitmapDescriptor.defaultMarkerWithHue(270.0);
     }
 
-    return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
+    return BitmapDescriptor.defaultMarkerWithHue(270.0);
   }
 
   /// Create a default custom marker with specified color.
@@ -131,12 +131,12 @@ class MapHelpers {
   /// Parameters:
   /// - [hue]: Hue value (0-360). Common values:
   ///   - 0: Red
-  ///   - 30: Orange (default for CozyDorm)
+  ///   - 270: Purple (default for CozyDorm)
   ///   - 120: Green
   ///   - 240: Blue
   /// 
   /// Returns [BitmapDescriptor] for use in Marker objects.
-  static BitmapDescriptor createColoredMarker({double hue = 30.0}) {
+  static BitmapDescriptor createColoredMarker({double hue = 270.0}) {
     return BitmapDescriptor.defaultMarkerWithHue(hue);
   }
 

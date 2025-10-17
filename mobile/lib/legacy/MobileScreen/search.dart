@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 // ==================== SearchScreen Widget ====================
 class SearchScreen extends StatefulWidget {
@@ -164,7 +165,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               : null,
                           title: Text(dorm['title'] ?? '', style: TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Text(dorm['location'] ?? ''),
-                          trailing: Icon(Icons.arrow_forward_ios, color: Colors.orange),
+                          trailing: Icon(Icons.arrow_forward_ios, color: AppTheme.primary),
                           onTap: () {
                             // Show details or do something
                           },

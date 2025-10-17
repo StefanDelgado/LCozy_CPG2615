@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/dashboard_service.dart';
+import '../../../utils/app_theme.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/owner/dashboard/owner_stat_card.dart';
 import '../../widgets/owner/dashboard/owner_quick_action_tile.dart';
@@ -34,23 +35,39 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   int _selectedIndex = 0;
   Map<String, dynamic> dashboardData = {};
   bool isLoading = true;
-  
-  static const Color _orange = Color(0xFFFF9800);
-  static const Color _scaffoldBg = Color(0xFFF9F6FB);
+  String ownerName = ''; // Store owner name
 
   @override
   void initState() {
     super.initState();
     fetchDashboardData();
+    _fetchOwnerName();
+  }
+
+  Future<void> _fetchOwnerName() async {
+    // Extract name from email or fetch from API
+    // For now, use email prefix as name
+    final emailPrefix = widget.ownerEmail.split('@')[0];
+    setState(() {
+      ownerName = emailPrefix.replaceAll('.', ' ').split(' ').map((word) => 
+        word[0].toUpperCase() + word.substring(1)
+      ).join(' ');
+    });
   }
 
   Future<void> fetchDashboardData() async {
+    setState(() => isLoading = true);
+    
     try {
       final result = await _dashboardService.getOwnerDashboard(widget.ownerEmail);
 
       if (result['success'] == true) {
         setState(() {
           dashboardData = result['data'];
+          // Extract owner name from API response if available
+          if (dashboardData['owner_info'] != null && dashboardData['owner_info']['name'] != null) {
+            ownerName = dashboardData['owner_info']['name'];
+          }
           isLoading = false;
         });
       } else {
@@ -58,6 +75,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       }
     } catch (e) {
       setState(() {
+        dashboardData = {
+          'stats': {
+            'rooms': 0,
+            'tenants': 0,
+            'monthly_revenue': 0.0,
+          },
+          'recent_activities': [],
+        };
         isLoading = false;
       });
     }
@@ -69,7 +94,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         context,
         MaterialPageRoute(
           builder: (context) => OwnerSettingScreen(
-            ownerName: widget.ownerEmail,
+            ownerName: ownerName.isNotEmpty ? ownerName : widget.ownerEmail,
             ownerEmail: widget.ownerEmail,
             ownerRole: widget.ownerRole,
           ),
@@ -91,18 +116,22 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: AppTheme.scaffoldBg,
       bottomNavigationBar: _buildBottomNavBar(),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          _buildDashboardHome(),
-          OwnerBookingScreen(ownerEmail: widget.ownerEmail),
-          OwnerMessagesList(ownerEmail: widget.ownerEmail),
-          OwnerPaymentsScreen(ownerEmail: widget.ownerEmail),
-          OwnerTenantsScreen(ownerEmail: widget.ownerEmail),
-          Container(), // Placeholder for settings
-        ],
+      body: SafeArea(
+        child: isLoading
+            ? const LoadingWidget(message: 'Loading dashboard...')
+            : IndexedStack(
+                index: _selectedIndex,
+                children: [
+                  _buildDashboardHome(),
+                  OwnerBookingScreen(ownerEmail: widget.ownerEmail),
+                  OwnerMessagesList(ownerEmail: widget.ownerEmail),
+                  OwnerPaymentsScreen(ownerEmail: widget.ownerEmail),
+                  OwnerTenantsScreen(ownerEmail: widget.ownerEmail),
+                  Container(), // Placeholder for settings
+                ],
+              ),
       ),
     );
   }
@@ -110,8 +139,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   Widget _buildBottomNavBar() {
     return BottomNavigationBar(
       currentIndex: _selectedIndex,
-      selectedItemColor: _orange,
-      unselectedItemColor: Colors.grey,
+      selectedItemColor: AppTheme.primary,
+      unselectedItemColor: AppTheme.muted,
       type: BottomNavigationBarType.fixed,
       onTap: _onNavTap,
       items: const [
@@ -126,17 +155,22 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   }
 
   Widget _buildDashboardHome() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          const SizedBox(height: 24),
-          _buildQuickActionsSection(),
-          const SizedBox(height: 28),
-          _buildRecentActivitiesSection(),
-          const SizedBox(height: 24),
-        ],
+    return RefreshIndicator(
+      onRefresh: fetchDashboardData,
+      color: AppTheme.primary,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 24),
+            _buildQuickActionsSection(),
+            const SizedBox(height: 28),
+            _buildRecentActivitiesSection(),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
@@ -146,32 +180,54 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
       decoration: const BoxDecoration(
-        color: _orange,
+        gradient: LinearGradient(
+          colors: [Color(0xFF6B21A8), Color(0xFF7C3AED)], // Darker purple gradient
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Owner Dashboard",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            "Welcome back",
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Welcome back!',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    ownerName.isNotEmpty ? ownerName : 'Owner',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                onPressed: () {},
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           Row(
@@ -190,7 +246,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
               OwnerStatCard(
                 icon: Icons.attach_money,
                 value: "₱${((stats['monthly_revenue'] ?? 0.0) / 1000).toStringAsFixed(1)}K",
-                label: "Monthly Revenue",
+                label: "Revenue",
               ),
             ],
           ),
@@ -204,28 +260,18 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF6E5),
+          color: AppTheme.cardBg,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.orange.withValues(alpha: 0.15), width: 1.3),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.orange.withValues(alpha: 0.07),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          border: Border.all(color: AppTheme.border, width: 1.3),
+          boxShadow: AppTheme.cardShadow,
         ),
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Quick Actions",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.black87,
-              ),
+              style: AppTheme.headingSmall,
             ),
             const SizedBox(height: 18),
             Row(
@@ -234,10 +280,10 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                   child: OwnerQuickActionTile(
                     icon: Icons.apartment,
                     label: "Manage Dorms",
-                    color: const Color(0xFFFFF3E0),
-                    iconColor: const Color(0xFFFF9800),
-                    borderColor: const Color(0xFFFF9800),
-                    textColor: Colors.black87,
+                    color: AppTheme.cardBg,
+                    iconColor: AppTheme.primary,
+                    borderColor: AppTheme.primary,
+                    textColor: AppTheme.textDark,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -250,64 +296,46 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: OwnerQuickActionTile(
-                    icon: Icons.message,
-                    label: "Messages",
-                    color: const Color(0xFFFFF3E0),
-                    iconColor: const Color(0xFFFF9800),
-                    borderColor: const Color(0xFFFF9800),
-                    textColor: Colors.black87,
-                    onTap: () => _switchToTab(2),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OwnerQuickActionTile(
-                    icon: Icons.list_alt,
-                    label: "Booking Requests",
-                    color: const Color(0xFFFFF3E0),
-                    iconColor: const Color(0xFFFF9800),
-                    borderColor: const Color(0xFFFF9800),
-                    textColor: Colors.black87,
-                    onTap: () => _switchToTab(1),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: OwnerQuickActionTile(
-                    icon: Icons.payments,
-                    label: "Payments",
-                    color: const Color(0xFFFFF3E0),
-                    iconColor: const Color(0xFFFF9800),
-                    borderColor: const Color(0xFFFF9800),
-                    textColor: Colors.black87,
-                    onTap: () => _switchToTab(3),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
+                const SizedBox(width: 12),
                 Expanded(
                   child: OwnerQuickActionTile(
                     icon: Icons.people,
-                    label: "Tenants",
-                    color: const Color(0xFFFFF3E0),
-                    iconColor: const Color(0xFFFF9800),
-                    borderColor: const Color(0xFFFF9800),
-                    textColor: Colors.black87,
+                    label: "View Tenants",
+                    color: AppTheme.cardBg,
+                    iconColor: AppTheme.primary,
+                    borderColor: AppTheme.primary,
+                    textColor: AppTheme.textDark,
                     onTap: () => _switchToTab(4),
                   ),
                 ),
-                const SizedBox(width: 16),
-                const Expanded(child: SizedBox()), // Empty for layout symmetry
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OwnerQuickActionTile(
+                    icon: Icons.calendar_today,
+                    label: "Bookings",
+                    color: AppTheme.cardBg,
+                    iconColor: AppTheme.primary,
+                    borderColor: AppTheme.primary,
+                    textColor: AppTheme.textDark,
+                    onTap: () => _switchToTab(1),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OwnerQuickActionTile(
+                    icon: Icons.payment,
+                    label: "Payments",
+                    color: AppTheme.cardBg,
+                    iconColor: AppTheme.primary,
+                    borderColor: AppTheme.primary,
+                    textColor: AppTheme.textDark,
+                    onTap: () => _switchToTab(3),
+                  ),
+                ),
               ],
             ),
           ],
@@ -322,36 +350,33 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             "Recent Activities",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: Colors.black87,
-            ),
+            style: AppTheme.headingSmall,
           ),
         ),
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: isLoading
-              ? const LoadingWidget(message: 'Loading activities...')
-              : activities.isEmpty
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32.0),
-                        child: Text('No recent activities'),
-                      ),
-                    )
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: activities.length,
-                      itemBuilder: (context, index) {
-                        final activity = activities[index];
-                        final isPayment = activity['type'] == 'payment';
+          child: activities.isEmpty
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: Text(
+                      'No recent activities',
+                      style: TextStyle(color: AppTheme.muted),
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: activities.length,
+                  itemBuilder: (context, index) {
+                    final activity = activities[index];
+                    final isPayment = activity['type'] == 'payment';
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
@@ -360,7 +385,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                             iconBg: isPayment
                                 ? const Color(0xFFE0F7E9)
                                 : const Color(0xFFFFF3E0),
-                            iconColor: isPayment ? Colors.green : Colors.orange,
+                            iconColor: isPayment ? Colors.green : AppTheme.primary,
                             title: isPayment
                                 ? 'Payment Received'
                                 : 'New Booking Request',

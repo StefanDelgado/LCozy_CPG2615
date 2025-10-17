@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../providers/dorm_provider.dart';
@@ -299,7 +300,7 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
             ? 'Browse Dorms' 
             : 'Search: ${widget.searchQuery}'
         ),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
         actions: [
           // Near Me filter button
           IconButton(
@@ -531,7 +532,7 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
                           Text(
                             minPrice,
                             style: const TextStyle(
-                              color: Colors.orange,
+                              color: AppTheme.primary,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
@@ -540,14 +541,14 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.1),
+                            color: AppTheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             '$available rooms',
                             style: const TextStyle(
                               fontSize: 12,
-                              color: Colors.orange,
+                              color: AppTheme.primary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),

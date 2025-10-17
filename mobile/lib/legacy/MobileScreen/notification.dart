@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 // ==================== NotificationScreen Widget ====================
 class NotificationScreen extends StatelessWidget {
@@ -28,7 +29,7 @@ class NotificationScreen extends StatelessWidget {
         'desc': 'Your payment for Urban Dorms is due tomorrow.',
         'time': '1 hr ago',
         'icon': Icons.payment,
-        'color': Color(0xFFFF9800), // orange
+        'color': AppTheme.primary, // purple
       },
       {
         'title': 'Special Offer',
@@ -43,7 +44,7 @@ class NotificationScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
         elevation: 0,
         title: Text('Notifications', style: TextStyle(color: Colors.white)),
         centerTitle: true,

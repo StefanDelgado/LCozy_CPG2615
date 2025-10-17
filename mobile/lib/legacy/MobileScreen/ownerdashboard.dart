@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'ownerbooking.dart';
@@ -113,14 +114,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final orange = const Color(0xFFFF9800);
+    final purple = AppTheme.primary;
 
     // ----------- MAIN UI SECTION -----------
     return Scaffold(
       backgroundColor: const Color(0xFFF9F6FB),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        selectedItemColor: orange,
+        selectedItemColor: purple,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         onTap: _onNavTap,
@@ -211,7 +212,7 @@ class _OwnerMessagesListScreenState extends State<OwnerMessagesListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Messages'),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
       ),
       body: chats.isEmpty
           ? Center(child: Text('No messages yet.'))
@@ -224,7 +225,7 @@ class _OwnerMessagesListScreenState extends State<OwnerMessagesListScreen> {
                 final lastMessage = chat['last_message'] ?? '';
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: Colors.orange,
+                    backgroundColor: AppTheme.primary,
                     child: Icon(Icons.person, color: Colors.white),
                   ),
                   title: FutureBuilder<String>(
@@ -280,19 +281,19 @@ class _DashboardHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final orange = const Color(0xFFFF9800);
+    final purple = AppTheme.primary;
 
     // ----------- DASHBOARD HOME UI SECTION -----------
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ----------- ORANGE HEADER SECTION -----------
+          // ----------- purple HEADER SECTION -----------
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
             decoration: BoxDecoration(
-              color: orange,
+              color: purple,
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(24),
                 bottomRight: Radius.circular(24),
@@ -349,10 +350,10 @@ class _DashboardHome extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFFFFF6E5),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.orange.withOpacity(0.15), width: 1.3),
+                border: Border.all(color: AppTheme.primary.withOpacity(0.15), width: 1.3),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.orange.withOpacity(0.07),
+                    color: AppTheme.primary.withOpacity(0.07),
                     blurRadius: 14,
                     offset: const Offset(0, 4),
                   ),
@@ -378,8 +379,8 @@ class _DashboardHome extends StatelessWidget {
                           icon: Icons.apartment,
                           label: "Manage Dorms",
                           color: const Color(0xFFFFF3E0),
-                          iconColor: const Color(0xFFFF9800),
-                          borderColor: const Color(0xFFFF9800),
+                          iconColor: AppTheme.primary,
+                          borderColor: AppTheme.primary,
                           textColor: Colors.black87,
                           onTap: () {
                             Navigator.push(
@@ -399,8 +400,8 @@ class _DashboardHome extends StatelessWidget {
                           icon: Icons.message,
                           label: "Messages",
                           color: const Color(0xFFFFF3E0),
-                          iconColor: const Color(0xFFFF9800),
-                          borderColor: const Color(0xFFFF9800),
+                          iconColor: AppTheme.primary,
+                          borderColor: AppTheme.primary,
                           textColor: Colors.black87,
                           onTap: onMessagesTap,
                         ),
@@ -415,8 +416,8 @@ class _DashboardHome extends StatelessWidget {
                           icon: Icons.list_alt,
                           label: "Booking Requests",
                           color: const Color(0xFFFFF3E0),
-                          iconColor: const Color(0xFFFF9800),
-                          borderColor: const Color(0xFFFF9800),
+                          iconColor: AppTheme.primary,
+                          borderColor: AppTheme.primary,
                           textColor: Colors.black87,
                           onTap: onBookingRequestsTap,
                         ),
@@ -427,8 +428,8 @@ class _DashboardHome extends StatelessWidget {
                           icon: Icons.payments,
                           label: "Payments",
                           color: const Color(0xFFFFF3E0),
-                          iconColor: const Color(0xFFFF9800),
-                          borderColor: const Color(0xFFFF9800),
+                          iconColor: AppTheme.primary,
+                          borderColor: AppTheme.primary,
                           textColor: Colors.black87,
                           onTap: onPaymentsTap,
                         ),
@@ -443,8 +444,8 @@ class _DashboardHome extends StatelessWidget {
                           icon: Icons.people,
                           label: "Tenants",
                           color: const Color(0xFFFFF3E0),
-                          iconColor: const Color(0xFFFF9800),
-                          borderColor: const Color(0xFFFF9800),
+                          iconColor: AppTheme.primary,
+                          borderColor: AppTheme.primary,
                           textColor: Colors.black87,
                           onTap: onTenantsTap,
                         ),
@@ -492,7 +493,7 @@ class _DashboardHome extends StatelessWidget {
                             child: _ActivityTile(
                               icon: isPayment ? Icons.payments : Icons.meeting_room,
                               iconBg: isPayment ? const Color(0xFFE0F7E9) : const Color(0xFFFFF3E0),
-                              iconColor: isPayment ? Colors.green : Colors.orange,
+                              iconColor: isPayment ? Colors.green : AppTheme.primary,
                               title: isPayment ? 'Payment Received' : 'New Booking Request',
                               subtitle: isPayment 
                                 ? "${activity['student_name']} paid ₱${activity['amount']} for ${activity['dorm_name']}"

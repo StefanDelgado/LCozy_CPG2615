@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 /// Reusable header for authentication screens
 /// Displays CozyDorm logo and customizable title/subtitle
@@ -16,7 +17,7 @@ class AuthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final orangeColor = const Color(0xFFFF9800);
+    final orangeColor = AppTheme.primary;
 
     return Container(
       color: orangeColor,

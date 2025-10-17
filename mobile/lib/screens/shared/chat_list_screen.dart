@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import '../../services/chat_service.dart';
 import '../../widgets/common/error_display_widget.dart';
 import 'chat_conversation_screen.dart';
@@ -78,7 +79,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       appBar: widget.showAppBar
           ? AppBar(
               title: const Text("Messages"),
-              backgroundColor: const Color(0xFFFF9800),
+              backgroundColor: AppTheme.primary,
             )
           : null,
       backgroundColor: const Color(0xFFF9F6FB),
@@ -137,7 +138,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                             ),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: const Color(0xFFFF9800),
+                                backgroundColor: AppTheme.primary,
                                 child: Text(
                                   chat['other_user_name']
                                           ?.substring(0, 1)

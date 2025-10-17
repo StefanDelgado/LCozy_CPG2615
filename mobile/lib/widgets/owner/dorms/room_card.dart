@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import '../../../utils/helpers.dart';
 
 /// Card widget for displaying room information
@@ -108,7 +109,7 @@ class RoomCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: AppTheme.primary,
                   ),
                 ),
                 Container(

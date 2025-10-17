@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/services.dart';
@@ -160,7 +161,7 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
+              backgroundColor: AppTheme.primary,
             ),
             child: Text('Add Dorm'),
           ),
@@ -174,7 +175,7 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('My Dorms'),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
       ),
       body: isLoading 
         ? Center(child: CircularProgressIndicator())
@@ -196,7 +197,7 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddDormDialog,
         child: Icon(Icons.add),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
       ),
     );
   }
@@ -343,7 +344,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
+              backgroundColor: AppTheme.primary,
             ),
             child: Text('Add Room'),
           ),
@@ -462,7 +463,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
+              backgroundColor: AppTheme.primary,
             ),
             child: Text('Save Changes'),
           ),
@@ -476,7 +477,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Manage Rooms'),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -502,7 +503,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
                           decoration: BoxDecoration(
                             color: room['status'] == 'vacant'
                                 ? Colors.green.withOpacity(0.1)
-                                : Colors.orange.withOpacity(0.1),
+                                : AppTheme.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -510,7 +511,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
                             style: TextStyle(
                               color: room['status'] == 'vacant'
                                   ? Colors.green
-                                  : Colors.orange,
+                                  : AppTheme.primary,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -567,7 +568,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddRoomDialog,
         child: Icon(Icons.add),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
       ),
     );
   }
@@ -680,7 +681,7 @@ class DormCard extends StatelessWidget {
       color = Colors.red;
       text = 'Rejected';
     } else {
-      color = Colors.orange;
+      color = AppTheme.primary;
       text = 'Pending';
     }
 

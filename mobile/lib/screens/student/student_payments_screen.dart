@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import '../../services/payment_service.dart';
@@ -152,7 +153,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Payments'),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
       ),
       body: isLoading
@@ -193,7 +194,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
                   label: 'Pending',
                   value: '${statistics['pending_count'] ?? 0}',
                   icon: Icons.schedule,
-                  color: Colors.orange,
+                  color: AppTheme.primary,
                 ),
               ),
               const SizedBox(width: 12),

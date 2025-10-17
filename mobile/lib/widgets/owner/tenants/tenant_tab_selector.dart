@@ -1,11 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 class TenantTabSelector extends StatelessWidget {
   final int selectedTab;
   final int currentTenantsCount;
   final Function(int) onTabChanged;
 
-  static const Color _orange = Color(0xFFFF9800);
+  static const Color _orange = AppTheme.primary;
 
   const TenantTabSelector({
     super.key,

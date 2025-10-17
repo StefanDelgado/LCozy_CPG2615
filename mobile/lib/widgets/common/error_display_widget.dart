@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 class ErrorDisplayWidget extends StatelessWidget {
   final String message;
@@ -48,7 +49,7 @@ class ErrorDisplayWidget extends StatelessWidget {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF9800),
+                  backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

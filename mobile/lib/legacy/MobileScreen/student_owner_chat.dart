@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:http/http.dart' as http;
 
 // ==================== StudentChatListScreen Widget ====================
@@ -59,7 +60,7 @@ class _StudentChatListScreenState extends State<StudentChatListScreen> {
       appBar: widget.showAppBar
           ? AppBar(
               title: const Text("Messages"),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppTheme.primary,
             )
           : null,
       backgroundColor: const Color(0xFFF9F6FB),
@@ -80,7 +81,7 @@ class _StudentChatListScreenState extends State<StudentChatListScreen> {
                 final lastMessage = chat['last_message'] ?? '';
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: Colors.orange,
+                    backgroundColor: AppTheme.primary,
                     child: Icon(Icons.person, color: Colors.white),
                   ),
                   title: FutureBuilder<String>(
@@ -203,7 +204,7 @@ class _StudentOwnerChatScreenState extends State<StudentOwnerChatScreen> {
             return Text(displayName);
           },
         ),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppTheme.primary,
       ),
       body: Column(
         children: [
@@ -219,7 +220,7 @@ class _StudentOwnerChatScreenState extends State<StudentOwnerChatScreen> {
                     margin: EdgeInsets.symmetric(vertical: 4),
                     padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                     decoration: BoxDecoration(
-                      color: isMe ? Colors.orange : Colors.grey[200],
+                      color: isMe ? AppTheme.primary : Colors.grey[200],
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
@@ -256,7 +257,7 @@ class _StudentOwnerChatScreenState extends State<StudentOwnerChatScreen> {
                 ),
                 const SizedBox(width: 8),
                 CircleAvatar(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: AppTheme.primary,
                   child: IconButton(
                     icon: const Icon(Icons.send, color: Colors.white),
                     onPressed: () {

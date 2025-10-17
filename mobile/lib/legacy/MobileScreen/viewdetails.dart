@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
@@ -116,7 +117,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
     if (isLoading) {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.orange,
+          backgroundColor: AppTheme.primary,
           title: const Text('Loading...'),
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -126,7 +127,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
     if (error.isNotEmpty) {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.orange,
+          backgroundColor: AppTheme.primary,
           title: const Text('Error'),
         ),
         body: Center(
@@ -172,7 +173,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
               SliverAppBar(
                 expandedHeight: 250,
                 pinned: true,
-                backgroundColor: Colors.orange,
+                backgroundColor: AppTheme.primary,
                 flexibleSpace: FlexibleSpaceBar(
                   background: images.isNotEmpty
                       ? PageView.builder(
@@ -237,7 +238,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                           _buildStatChip(
                             Icons.star,
                             '${stats['avg_rating'] ?? 0} (${stats['total_reviews'] ?? 0} reviews)',
-                            Colors.orange,
+                            AppTheme.primary,
                           ),
                           const SizedBox(width: 12),
                           _buildStatChip(
@@ -253,7 +254,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.orange,
+                          color: AppTheme.primary,
                         ),
                       ),
                     ],
@@ -264,9 +265,9 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                 pinned: true,
                 delegate: _SliverAppBarDelegate(
                   const TabBar(
-                    labelColor: Colors.orange,
+                    labelColor: AppTheme.primary,
                     unselectedLabelColor: Colors.grey,
-                    indicatorColor: Colors.orange,
+                    indicatorColor: AppTheme.primary,
                     tabs: [
                       Tab(text: 'Overview'),
                       Tab(text: 'Rooms'),
@@ -326,7 +327,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                 icon: const Icon(Icons.message),
                 label: const Text('Message Owner'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: AppTheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -546,7 +547,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: AppTheme.primary,
                   ),
                 ),
                 if (isAvailable) ...[
@@ -592,7 +593,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
                     ),
                     Text(
                       _safeText(review['stars'], ''),
-                      style: const TextStyle(color: Colors.orange),
+                      style: const TextStyle(color: AppTheme.primary),
                     ),
                   ],
                 ),
@@ -644,7 +645,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
               icon: const Icon(Icons.message),
               label: const Text('Send Message'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
+                backgroundColor: AppTheme.primary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),
@@ -659,7 +660,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: Colors.orange),
+          Icon(icon, color: AppTheme.primary),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

@@ -5,6 +5,7 @@ import '../../widgets/common/error_display_widget.dart';
 import '../../widgets/owner/payments/payment_stats_widget.dart';
 import '../../widgets/owner/payments/payment_filter_chips.dart';
 import '../../widgets/owner/payments/payment_card.dart';
+import '../../../utils/app_theme.dart';
 
 /// Screen for managing and tracking tenant payments
 /// 
@@ -39,10 +40,6 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
   // Data
   Map<String, dynamic> _stats = {};
   List<dynamic> _payments = [];
-
-  // Theme
-  static const Color _orange = Color(0xFFFF9800);
-  static const Color _background = Color(0xFFF9F6FB);
 
   @override
   void initState() {
@@ -223,7 +220,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result['message'] ?? 'Payment rejected'),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppTheme.primary,
             duration: const Duration(seconds: 2),
           ),
         );
@@ -278,7 +275,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
           children: [
             AppBar(
               title: const Text('Payment Receipt'),
-              backgroundColor: _orange,
+              backgroundColor: AppTheme.primary,
               leading: IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.pop(context),
@@ -418,7 +415,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _background,
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: _buildAppBar(),
       body: SafeArea(
         child: _buildBody(),
@@ -429,7 +426,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
   /// Builds the app bar
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: _orange,
+      backgroundColor: AppTheme.primary,
       elevation: 0,
       title: const Text(
         'Payment History',
@@ -460,7 +457,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
 
     return RefreshIndicator(
       onRefresh: _fetchPayments,
-      color: _orange,
+      color: AppTheme.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
@@ -468,7 +465,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
             // Statistics Cards
             PaymentStatsWidget(
               stats: _stats,
-              backgroundColor: _orange,
+              backgroundColor: AppTheme.primary,
             ),
             
             // Search and Filter

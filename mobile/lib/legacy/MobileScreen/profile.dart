@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 // ==================== ProfileScreen Widget ====================
 class ProfileScreen extends StatelessWidget {
@@ -17,13 +18,13 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final orange = Color(0xFFFF9800);
+    final purple = AppTheme.primary;
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
       // ----------- APPBAR SECTION -----------
       appBar: AppBar(
-        backgroundColor: orange,
+        backgroundColor: purple,
         elevation: 0,
         title: const Text('Profile', style: TextStyle(color: Colors.white)),
         centerTitle: true,
@@ -33,7 +34,7 @@ class ProfileScreen extends StatelessWidget {
           children: [
             // ----------- PROFILE HEADER SECTION -----------
             Container(
-              color: orange,
+              color: purple,
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Column(
@@ -45,7 +46,7 @@ class ProfileScreen extends StatelessWidget {
                         ? NetworkImage(avatarUrl)
                         : null,
                     child: avatarUrl.isEmpty
-                        ? Icon(Icons.person, size: 48, color: orange)
+                        ? Icon(Icons.person, size: 48, color: purple)
                         : null,
                   ),
                   const SizedBox(height: 12),
@@ -69,7 +70,7 @@ class ProfileScreen extends StatelessWidget {
                   Chip(
                     label: Text(userRole),
                     backgroundColor: Colors.white,
-                    labelStyle: TextStyle(color: orange, fontWeight: FontWeight.w600),
+                    labelStyle: TextStyle(color: purple, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -84,7 +85,7 @@ class ProfileScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                     child: ListTile(
-                      leading: Icon(Icons.edit, color: orange),
+                      leading: Icon(Icons.edit, color: purple),
                       title: const Text('Edit Profile'),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 18),
                       onTap: () {
@@ -97,7 +98,7 @@ class ProfileScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                     child: ListTile(
-                      leading: Icon(Icons.lock_outline, color: orange),
+                      leading: Icon(Icons.lock_outline, color: purple),
                       title: const Text('Change Password'),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 18),
                       onTap: () {
@@ -110,7 +111,7 @@ class ProfileScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                     child: ListTile(
-                      leading: Icon(Icons.notifications_none, color: orange),
+                      leading: Icon(Icons.notifications_none, color: purple),
                       title: const Text('Notifications'),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 18),
                       onTap: () {
@@ -123,7 +124,7 @@ class ProfileScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                     child: ListTile(
-                      leading: Icon(Icons.privacy_tip_outlined, color: orange),
+                      leading: Icon(Icons.privacy_tip_outlined, color: purple),
                       title: const Text('Privacy Policy'),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 18),
                       onTap: () {
@@ -136,7 +137,7 @@ class ProfileScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                     child: ListTile(
-                      leading: Icon(Icons.help_outline, color: orange),
+                      leading: Icon(Icons.help_outline, color: purple),
                       title: const Text('Help & Support'),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 18),
                       onTap: () {

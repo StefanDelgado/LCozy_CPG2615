@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 
 class PaymentFilterChips extends StatelessWidget {
   final String selectedFilter;
@@ -43,7 +44,7 @@ class _FilterChip extends StatelessWidget {
         margin: const EdgeInsets.only(right: 8),
         child: Chip(
           label: Text(label, style: TextStyle(color: selected ? Colors.white : Colors.black87)),
-          backgroundColor: selected ? Colors.orange : const Color(0xFFF5F5F5),
+          backgroundColor: selected ? AppTheme.primary : const Color(0xFFF5F5F5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),

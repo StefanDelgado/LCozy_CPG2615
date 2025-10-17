@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import '../../../utils/helpers.dart';
 
 class ContactTab extends StatelessWidget {
@@ -18,7 +19,7 @@ class ContactTab extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: Colors.orange),
+          Icon(icon, color: AppTheme.primary),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -76,7 +77,7 @@ class ContactTab extends StatelessWidget {
               icon: const Icon(Icons.message),
               label: const Text('Send Message'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
+                backgroundColor: AppTheme.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),

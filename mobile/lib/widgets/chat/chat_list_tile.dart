@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import '../../services/chat_service.dart';
 
 /// Chat list tile widget
@@ -21,7 +22,7 @@ class ChatListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: const CircleAvatar(
-        backgroundColor: Color(0xFFFF9800),
+        backgroundColor: AppTheme.primary,
         child: Icon(Icons.person, color: Colors.white),
       ),
       title: FutureBuilder<String>(

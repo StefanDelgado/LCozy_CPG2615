@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/app_theme.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'Login.dart';
@@ -109,7 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // ----------- UI SECTION -----------
   @override
   Widget build(BuildContext context) {
-    final orangeColor = Color(0xFFFF9800);
+    final orangeColor = AppTheme.primary;
 
     return Scaffold(
       backgroundColor: orangeColor,
