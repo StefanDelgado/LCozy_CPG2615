@@ -26,8 +26,8 @@ try {
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM users WHERE role = 'student'");
     $total_students = $stmt->fetch()['count'] ?? 0;
     
-    // Total dorms (using 'dormitories' table)
-    $stmt = $pdo->query("SELECT COUNT(*) as count FROM dormitories WHERE status = 'active'");
+    // Total dorms (count all dormitories, verified or not)
+    $stmt = $pdo->query("SELECT COUNT(*) as count FROM dormitories");
     $total_dorms = $stmt->fetch()['count'] ?? 0;
     
     // Total owners
@@ -45,8 +45,7 @@ try {
                          FROM dormitories d 
                          JOIN users u ON d.owner_id = u.user_id 
                          LEFT JOIN rooms r ON d.dorm_id = r.dorm_id
-                         WHERE d.status = 'active' OR d.verified = 1
-                         GROUP BY d.dorm_id, d.name, d.address, d.description, d.features, d.cover_image, d.status, d.verified, d.created_at, d.owner_id, u.name
+                         GROUP BY d.dorm_id, d.name, d.address, d.description, d.features, d.cover_image, d.verified, d.created_at, d.owner_id, u.name
                          ORDER BY d.created_at DESC 
                          LIMIT 3");
     $featured_dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
