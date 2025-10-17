@@ -4,6 +4,9 @@ login_required();
 $user = current_user();
 require_once __DIR__ . '/../config.php';
 
+// Define base path for consistent navigation
+$base_path = '/Main';
+
 $unread_count = 0;
 if ($user && isset($user['user_id'])) {
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND read_at IS NULL");
@@ -43,11 +46,11 @@ $message_page = "#";
 $announcement_page = "#";
 
 if ($user['role'] === 'student') {
-    $message_page = "../modules/student/student_messages.php";
-    $announcement_page = "../modules/student/student_announcements.php";
+    $message_page = $base_path . "/modules/student/student_messages.php";
+    $announcement_page = $base_path . "/modules/student/student_announcements.php";
 } elseif ($user['role'] === 'owner') {
-    $message_page = "../modules/owner/owner_messages.php";
-    $announcement_page = "../modules/owner/owner_announcements.php";
+    $message_page = $base_path . "/modules/owner/owner_messages.php";
+    $announcement_page = $base_path . "/modules/owner/owner_announcements.php";
 } elseif ($user['role'] === 'admin') {
     $message_page = "../modules/shared/messaging.php";
     $announcement_page = "../modules/admin/announcements.php";
@@ -160,34 +163,34 @@ if ($user['role'] === 'student') {
 
     <nav>
       <?php if ($user['role'] === 'admin'): ?>
-        <a href="../dashboards/admin_dashboard.php">Overview</a>
-        <a href="../modules/admin/user_management.php">User Management</a>
-        <a href="../modules/admin/reports.php">Reports & Analytics</a>
-        <a href="../modules/admin/owner_verification.php">Dorm Owner Verification</a>
-        <a href="../modules/shared/dorm_listings.php">Dorm Listings</a>
-        <a href="../modules/admin/booking_oversight.php">Booking & Reservation</a>
-        <a href="../modules/admin/admin_payments.php">Payment Management</a>
-        <a href="../modules/admin/announcements.php">Broadcast Announcements</a>
+        <a href="<?= $base_path ?>/dashboards/admin_dashboard.php">Overview</a>
+        <a href="<?= $base_path ?>/modules/admin/user_management.php">User Management</a>
+        <a href="<?= $base_path ?>/modules/admin/reports.php">Reports & Analytics</a>
+        <a href="<?= $base_path ?>/modules/admin/owner_verification.php">Dorm Owner Verification</a>
+        <a href="<?= $base_path ?>/modules/shared/dorm_listings.php">Dorm Listings</a>
+        <a href="<?= $base_path ?>/modules/admin/booking_oversight.php">Booking & Reservation</a>
+        <a href="<?= $base_path ?>/modules/admin/admin_payments.php">Payment Management</a>
+        <a href="<?= $base_path ?>/modules/admin/announcements.php">Broadcast Announcements</a>
       
       <?php elseif ($user['role'] === 'student'): ?>
-        <a href="../dashboards/student_dashboard.php">My Dashboard</a>
-        <a href="../modules/shared/available_dorms.php">Available Dorms</a>
-        <a href="../modules/student/student_reservations.php">My Reservations</a>
-        <a href="../modules/student/student_payments.php">Payment Management</a>
+        <a href="<?= $base_path ?>/dashboards/student_dashboard.php">My Dashboard</a>
+        <a href="<?= $base_path ?>/modules/shared/available_dorms.php">Available Dorms</a>
+        <a href="<?= $base_path ?>/modules/student/student_reservations.php">My Reservations</a>
+        <a href="<?= $base_path ?>/modules/student/student_payments.php">Payment Management</a>
 
 
       <?php elseif ($user['role'] === 'owner'): ?>
-        <a href="../dashboards/owner_dashboard.php">My Dashboard</a>
-        <a href="../modules/owner/owner_dorms.php">CozyDorms</a>
-        <a href="../modules/admin/room_management.php">Dorm Room Management</a>
-        <a href="../modules/owner/owner_tenants.php">Tenant Management</a>
-        <a href="../modules/owner/owner_bookings.php">Bookings</a>
-        <a href="../modules/owner/owner_payments.php">Payment Management</a>
+        <a href="<?= $base_path ?>/dashboards/owner_dashboard.php">My Dashboard</a>
+        <a href="<?= $base_path ?>/modules/owner/owner_dorms.php">CozyDorms</a>
+        <a href="<?= $base_path ?>/modules/admin/room_management.php">Dorm Room Management</a>
+        <a href="<?= $base_path ?>/modules/owner/owner_tenants.php">Tenant Management</a>
+        <a href="<?= $base_path ?>/modules/owner/owner_bookings.php">Bookings</a>
+        <a href="<?= $base_path ?>/modules/owner/owner_payments.php">Payment Management</a>
       <?php endif; ?>
     </nav>
 
     <div class="sidebar-foot">
-      <a class="logout" href="../auth/logout.php"><i class="fa fa-sign-out-alt"></i> Logout</a>
+      <a class="logout" href="<?= $base_path ?>/auth/logout.php"><i class="fa fa-sign-out-alt"></i> Logout</a>
     </div>
   </aside>
 
