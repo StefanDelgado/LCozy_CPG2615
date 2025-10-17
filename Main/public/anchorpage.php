@@ -440,23 +440,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
   <!-- Stats -->
   <section id="stats" style="min-height:auto;padding:3rem 1.5rem;">
     <div class="container" data-aos="fade-up">
-      <h2>Trusted Platform</h2>
-      <p class="section-subtitle">Join thousands of students and property owners who trust CozyDorms</p>
+      <h2>Growing Community 📈</h2>
+      <p class="section-subtitle">Be part of our success story! Every student, landlord, and booking helps build a trusted platform for everyone. Join us today and help shape the future of student housing.</p>
       <div class="stats">
         <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
-          <div class="stat-number"><?= number_format($total_students) ?>+</div>
+          <div class="stat-number" data-target="<?= $total_students ?>">0</div>
           <div class="stat-label">Active Students</div>
         </div>
         <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
-          <div class="stat-number"><?= number_format($total_dorms) ?>+</div>
+          <div class="stat-number" data-target="<?= $total_dorms ?>">0</div>
           <div class="stat-label">Listed Dorms</div>
         </div>
         <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
-          <div class="stat-number"><?= number_format($total_bookings) ?>+</div>
+          <div class="stat-number" data-target="<?= $total_bookings ?>">0</div>
           <div class="stat-label">Successful Bookings</div>
         </div>
         <div class="stat-card" data-aos="fade-up" data-aos-delay="400">
-          <div class="stat-number"><?= number_format($total_owners) ?>+</div>
+          <div class="stat-number" data-target="<?= $total_owners ?>">0</div>
           <div class="stat-label">Property Owners</div>
         </div>
       </div>
@@ -756,6 +756,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     initIndicator();
     window.addEventListener('resize', initIndicator);
     setTimeout(initIndicator, 200);
+
+    // Animated counter for statistics
+    function animateCounter(element) {
+      const target = parseInt(element.getAttribute('data-target'));
+      const duration = 2000; // 2 seconds
+      const increment = target / (duration / 16); // 60fps
+      let current = 0;
+      
+      const updateCounter = () => {
+        current += increment;
+        if (current < target) {
+          element.textContent = Math.floor(current).toLocaleString() + '+';
+          requestAnimationFrame(updateCounter);
+        } else {
+          element.textContent = target.toLocaleString() + '+';
+        }
+      };
+      
+      updateCounter();
+    }
+
+    // Trigger counter animation when stats section is visible
+    const observerOptions = {
+      threshold: 0.5,
+      rootMargin: '0px'
+    };
+
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const counters = entry.target.querySelectorAll('.stat-number[data-target]');
+          counters.forEach((counter, index) => {
+            setTimeout(() => {
+              animateCounter(counter);
+            }, index * 100); // Stagger animation
+          });
+          statsObserver.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    const statsSection = document.getElementById('stats');
+    if (statsSection) {
+      statsObserver.observe(statsSection);
+    }
   </script>
 </body>
 </html>
