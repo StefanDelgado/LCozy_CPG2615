@@ -74,8 +74,14 @@ if ($active_student_id && !$active_dorm_id) {
   <p>Communicate with students who booked your dorms</p>
 </div>
 
-<div class="grid-2">
-  <div class="card">
+<?php 
+// Debug: Show counts
+echo "<!-- Debug: Found " . count($threads) . " conversations -->";
+echo "<!-- Active: dorm_id=$active_dorm_id, student_id=$active_student_id -->";
+?>
+
+<div class="grid-2" style="display: grid !important; grid-template-columns: 350px 1fr !important; gap: 20px !important;">
+  <div class="card" style="background: white !important; padding: 20px !important; border-radius: 12px !important;">
     <h3>Your Conversations</h3>
     <ul class="list">
       <?php foreach ($threads as $t): ?>
@@ -97,7 +103,7 @@ if ($active_student_id && !$active_dorm_id) {
     </ul>
   </div>
 
-  <div class="card">
+  <div class="card" style="background: white !important; padding: 20px !important; border-radius: 12px !important;">
     <?php if ($active_dorm_id && $active_student_id): ?>
       <h3>Conversation</h3>
       <div id="chat-box" class="chat-box">
@@ -196,6 +202,10 @@ if (dormId && studentId) {
 
 <style>
 /* Page Header */
+.page-header {
+  margin-bottom: 30px !important;
+}
+
 .page-header h1 {
   margin: 0 0 8px 0;
   font-size: 2rem;
@@ -210,24 +220,29 @@ if (dormId && studentId) {
 
 /* Grid Layout */
 .grid-2 {
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 20px;
-  margin-top: 25px;
+  display: grid !important;
+  grid-template-columns: 350px 1fr !important;
+  gap: 20px !important;
+  margin-top: 25px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 @media (max-width: 768px) {
   .grid-2 {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 }
 
 /* Card Styling */
 .card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  background: white !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+  min-height: 200px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .card h3 {
