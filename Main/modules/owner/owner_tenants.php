@@ -14,26 +14,43 @@ $flash = null;
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'payment_history' && isset($_GET['tenant_id'])) {
     $tenant_id = (int)$_GET['tenant_id'];
     
-    $stmt = $pdo->prepare("
-        SELECT 
-            p.payment_id,
-            p.amount,
-            p.payment_date,
-            p.due_date,
-            p.status,
-            p.payment_method,
-            p.reference_number,
-            p.created_at
-        FROM payments p
-        JOIN tenants t ON p.booking_id = t.booking_id
-        WHERE t.tenant_id = ? AND t.dorm_id IN (SELECT dorm_id FROM dormitories WHERE owner_id = ?)
-        ORDER BY p.created_at DESC
+    // First, verify the tenant belongs to this owner
+    $verify = $pdo->prepare("
+        SELECT t.booking_id, t.student_id 
+        FROM tenants t
+        JOIN dormitories d ON t.dorm_id = d.dorm_id
+        WHERE t.tenant_id = ? AND d.owner_id = ?
     ");
-    $stmt->execute([$tenant_id, $owner_id]);
-    $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $verify->execute([$tenant_id, $owner_id]);
+    $tenant_info = $verify->fetch(PDO::FETCH_ASSOC);
     
-    header('Content-Type: application/json');
-    echo json_encode($payments);
+    if ($tenant_info) {
+        // Fetch payments for this tenant's booking
+        $stmt = $pdo->prepare("
+            SELECT 
+                p.payment_id,
+                p.amount,
+                p.payment_date,
+                p.due_date,
+                p.status,
+                p.payment_method,
+                p.reference_number,
+                p.payment_type,
+                p.created_at
+            FROM payments p
+            WHERE p.booking_id = ?
+            ORDER BY p.created_at DESC
+        ");
+        $stmt->execute([$tenant_info['booking_id']]);
+        $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        header('Content-Type: application/json');
+        echo json_encode($payments);
+    } else {
+        // Tenant not found or doesn't belong to this owner
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Tenant not found or access denied']);
+    }
     exit();
 }
 
@@ -526,9 +543,18 @@ $total_revenue = array_sum(array_column($current_tenants, 'total_paid'));
         
         // Fetch payment history via AJAX
         fetch(`?ajax=payment_history&tenant_id=${tenantId}`)
-            .then(response => response.json())
-            .then(payments => {
-                displayPaymentHistory(payments);
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Check if error response
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                displayPaymentHistory(data);
             })
             .catch(error => {
                 console.error('Error fetching payment history:', error);
@@ -536,14 +562,15 @@ $total_revenue = array_sum(array_column($current_tenants, 'total_paid'));
                     <div class="no-payments">
                         <i class="fa fa-exclamation-triangle"></i>
                         <h3>Error Loading Payment History</h3>
-                        <p>Unable to fetch payment history. Please try again.</p>
+                        <p>${error.message || 'Unable to fetch payment history. Please try again.'}</p>
                     </div>
                 `;
             });
     }
     
     function displayPaymentHistory(payments) {
-        if (payments.length === 0) {
+        // Check for error or empty array
+        if (!payments || payments.length === 0) {
             document.getElementById('paymentHistoryContent').innerHTML = `
                 <div class="no-payments">
                     <i class="fa fa-receipt"></i>
