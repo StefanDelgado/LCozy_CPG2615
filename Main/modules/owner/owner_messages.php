@@ -3,9 +3,12 @@ require_once __DIR__ . '/../../auth/auth.php';
 require_role('owner');
 require_once __DIR__ . '/../../config.php';
 
-$page_title = "Messages";
-include __DIR__ . '/../../partials/header.php';
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
+$page_title = "Messages";
 $owner_id = $_SESSION['user']['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
@@ -14,59 +17,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
     $body = trim($_POST['body']);
 
     if ($receiver_id && $body) {
-        $stmt = $pdo->prepare("
-            INSERT INTO messages (sender_id, receiver_id, dorm_id, body, created_at)
-            VALUES (?, ?, ?, ?, NOW())
-        ");
-        $stmt->execute([$owner_id, $receiver_id, $dorm_id, $body]);
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO messages (sender_id, receiver_id, dorm_id, body, created_at)
+                VALUES (?, ?, ?, ?, NOW())
+            ");
+            $stmt->execute([$owner_id, $receiver_id, $dorm_id, $body]);
+            header("Location: " . $_SERVER['PHP_SELF'] . "?" . http_build_query(['dorm_id' => $dorm_id, 'student_id' => $receiver_id]));
+            exit;
+        } catch (Exception $e) {
+            error_log("Message send error: " . $e->getMessage());
+        }
     }
 }
 
 // Optimized query: Get distinct student-dorm combinations from bookings first
-$threads_sql = "
-    SELECT DISTINCT
-        d.dorm_id, 
-        d.name AS dorm_name,
-        b.student_id, 
-        u.name AS student_name,
-        (SELECT COUNT(*) FROM messages 
-         WHERE receiver_id = ? AND sender_id = b.student_id AND dorm_id = d.dorm_id AND read_at IS NULL) AS unread,
-        (SELECT MAX(created_at) FROM messages 
-         WHERE dorm_id = d.dorm_id AND ((sender_id = ? AND receiver_id = b.student_id) OR (sender_id = b.student_id AND receiver_id = ?))) AS last_message_at
-    FROM bookings b
-    JOIN rooms r ON b.room_id = r.room_id
-    JOIN dormitories d ON r.dorm_id = d.dorm_id
-    JOIN users u ON b.student_id = u.user_id
-    WHERE d.owner_id = ?
-      AND b.status IN ('pending', 'approved', 'active')
-    ORDER BY last_message_at DESC NULLS LAST
-    LIMIT 50
-";
-$threads = $pdo->prepare($threads_sql);
-$threads->execute([$owner_id, $owner_id, $owner_id, $owner_id]);
-$threads = $threads->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $threads_sql = "
+        SELECT DISTINCT
+            d.dorm_id, 
+            d.name AS dorm_name,
+            b.student_id, 
+            u.name AS student_name,
+            (SELECT COUNT(*) FROM messages 
+             WHERE receiver_id = ? AND sender_id = b.student_id AND dorm_id = d.dorm_id AND read_at IS NULL) AS unread,
+            (SELECT MAX(created_at) FROM messages 
+             WHERE dorm_id = d.dorm_id AND ((sender_id = ? AND receiver_id = b.student_id) OR (sender_id = b.student_id AND receiver_id = ?))) AS last_message_at
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN dormitories d ON r.dorm_id = d.dorm_id
+        JOIN users u ON b.student_id = u.user_id
+        WHERE d.owner_id = ?
+          AND b.status IN ('pending', 'approved', 'active')
+        ORDER BY last_message_at DESC NULLS LAST
+        LIMIT 50
+    ";
+    $threads = $pdo->prepare($threads_sql);
+    $threads->execute([$owner_id, $owner_id, $owner_id, $owner_id]);
+    $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    error_log("Threads error: " . $e->getMessage());
+    $threads = [];
+}
 
-$active_dorm_id = intval($_GET['dorm_id'] ?? 0);
 $active_dorm_id = intval($_GET['dorm_id'] ?? 0);
 $active_student_id = intval($_GET['student_id'] ?? $_GET['recipient_id'] ?? 0);
 
 // If recipient_id is provided without dorm_id, find the most recent dorm for this student
 if ($active_student_id && !$active_dorm_id) {
-    $find_dorm = $pdo->prepare("
-        SELECT d.dorm_id 
-        FROM bookings b
-        JOIN rooms r ON b.room_id = r.room_id
-        JOIN dormitories d ON r.dorm_id = d.dorm_id
-        WHERE b.student_id = ? AND d.owner_id = ?
-        ORDER BY b.created_at DESC
-        LIMIT 1
-    ");
-    $find_dorm->execute([$active_student_id, $owner_id]);
-    $result = $find_dorm->fetch(PDO::FETCH_ASSOC);
-    if ($result) {
-        $active_dorm_id = $result['dorm_id'];
+    try {
+        $find_dorm = $pdo->prepare("
+            SELECT d.dorm_id 
+            FROM bookings b
+            JOIN rooms r ON b.room_id = r.room_id
+            JOIN dormitories d ON r.dorm_id = d.dorm_id
+            WHERE b.student_id = ? AND d.owner_id = ?
+            ORDER BY b.created_at DESC
+            LIMIT 1
+        ");
+        $find_dorm->execute([$active_student_id, $owner_id]);
+        $result = $find_dorm->fetch(PDO::FETCH_ASSOC);
+        if ($result) {
+            $active_dorm_id = $result['dorm_id'];
+        }
+    } catch (Exception $e) {
+        error_log("Find dorm error: " . $e->getMessage());
     }
 }
+
+// Include header AFTER all data processing
+include __DIR__ . '/../../partials/header.php';
 ?>
 
 <div class="page-header">
