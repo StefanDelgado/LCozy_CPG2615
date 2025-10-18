@@ -182,7 +182,6 @@ if ($user['role'] === 'student') {
       <?php elseif ($user['role'] === 'owner'): ?>
         <a href="/dashboards/owner_dashboard.php">My Dashboard</a>
         <a href="/modules/owner/owner_dorms.php">Dorm Management</a>
-        <a href="/modules/admin/room_management.php">Dorm Room Management</a>
         <a href="/modules/owner/owner_tenants.php">Tenant Management</a>
         <a href="/modules/owner/owner_bookings.php">Bookings</a>
         <a href="/modules/owner/owner_payments.php">Payment Management</a>

@@ -140,15 +140,20 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <div class="dorm-info">
         <div class="dorm-title-row">
           <h2><?= htmlspecialchars($dorm['name']) ?></h2>
-          <button class="btn-edit-dorm" 
-                  data-dorm-id="<?= $dorm['dorm_id'] ?>"
-                  data-dorm-name="<?= htmlspecialchars($dorm['name']) ?>"
-                  data-dorm-address="<?= htmlspecialchars($dorm['address']) ?>"
-                  data-dorm-description="<?= htmlspecialchars($dorm['description']) ?>"
-                  data-dorm-features="<?= htmlspecialchars($dorm['features']) ?>"
-                  onclick="openEditDormModal(this)">
-            ✏️ Edit
-          </button>
+          <div class="dorm-actions">
+            <button class="btn-edit-dorm" 
+                    data-dorm-id="<?= $dorm['dorm_id'] ?>"
+                    data-dorm-name="<?= htmlspecialchars($dorm['name']) ?>"
+                    data-dorm-address="<?= htmlspecialchars($dorm['address']) ?>"
+                    data-dorm-description="<?= htmlspecialchars($dorm['description']) ?>"
+                    data-dorm-features="<?= htmlspecialchars($dorm['features']) ?>"
+                    onclick="openEditDormModal(this)">
+              ✏️ Edit
+            </button>
+            <a href="/modules/admin/room_management.php?dorm_id=<?= $dorm['dorm_id'] ?>" class="btn-manage-rooms">
+              🏠 Manage Rooms
+            </a>
+          </div>
         </div>
         <p class="dorm-address">📍 <?= htmlspecialchars($dorm['address']) ?></p>
         <div class="dorm-status">
@@ -597,6 +602,11 @@ document.addEventListener('DOMContentLoaded', function() {
   flex: 1;
 }
 
+.dorm-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .btn-edit-dorm {
   background: #17a2b8;
   color: white;
@@ -614,6 +624,28 @@ document.addEventListener('DOMContentLoaded', function() {
   background: #138496;
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(23, 162, 184, 0.3);
+}
+
+.btn-manage-rooms {
+  background: #6f42c1;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-manage-rooms:hover {
+  background: #5a32a3;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(111, 66, 193, 0.3);
 }
 
 .dorm-address {
