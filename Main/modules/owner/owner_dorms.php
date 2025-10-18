@@ -140,7 +140,13 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <div class="dorm-info">
         <div class="dorm-title-row">
           <h2><?= htmlspecialchars($dorm['name']) ?></h2>
-          <button class="btn-edit-dorm" onclick="openEditDormModal(<?= $dorm['dorm_id'] ?>, '<?= htmlspecialchars($dorm['name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($dorm['address'], ENT_QUOTES) ?>', '<?= htmlspecialchars($dorm['description'], ENT_QUOTES) ?>', '<?= htmlspecialchars($dorm['features'], ENT_QUOTES) ?>')">
+          <button class="btn-edit-dorm" 
+                  data-dorm-id="<?= $dorm['dorm_id'] ?>"
+                  data-dorm-name="<?= htmlspecialchars($dorm['name']) ?>"
+                  data-dorm-address="<?= htmlspecialchars($dorm['address']) ?>"
+                  data-dorm-description="<?= htmlspecialchars($dorm['description']) ?>"
+                  data-dorm-features="<?= htmlspecialchars($dorm['features']) ?>"
+                  onclick="openEditDormModal(this)">
             ✏️ Edit
           </button>
         </div>
@@ -195,7 +201,10 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="rooms-section">
       <div class="section-header">
         <h3>Rooms</h3>
-        <button class="btn-add-room" onclick="openRoomModal(<?= $dorm['dorm_id'] ?>, '<?= htmlspecialchars($dorm['name'], ENT_QUOTES) ?>')">
+        <button class="btn-add-room" 
+                data-dorm-id="<?= $dorm['dorm_id'] ?>"
+                data-dorm-name="<?= htmlspecialchars($dorm['name']) ?>"
+                onclick="openRoomModal(this)">
           + Add Room
         </button>
       </div>
@@ -263,7 +272,10 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <?php else: ?>
         <div class="no-rooms">
           <p>No rooms have been added yet.</p>
-          <button class="btn-secondary" onclick="openRoomModal(<?= $dorm['dorm_id'] ?>, '<?= htmlspecialchars($dorm['name'], ENT_QUOTES) ?>')">
+          <button class="btn-secondary" 
+                  data-dorm-id="<?= $dorm['dorm_id'] ?>"
+                  data-dorm-name="<?= htmlspecialchars($dorm['name']) ?>"
+                  onclick="openRoomModal(this)">
             Add Your First Room
           </button>
         </div>
@@ -418,24 +430,83 @@ function closeModal(id) {
   document.getElementById(id).style.display = 'none';
 }
 
-function openEditDormModal(dormId, name, address, description, features) {
-  document.getElementById('editDormModal').style.display = 'flex';
-  document.getElementById('edit_dorm_id').value = dormId;
-  document.getElementById('edit_dorm_name').value = name;
-  document.getElementById('edit_dorm_address').value = address;
-  document.getElementById('edit_dorm_description').value = description;
-  document.getElementById('edit_dorm_features').value = features;
+function openEditDormModal(button) {
+  console.log('openEditDormModal called');
+  
+  const modal = document.getElementById('editDormModal');
+  if (!modal) {
+    console.error('Edit dorm modal not found');
+    alert('Error: Modal not found. Please refresh the page.');
+    return;
+  }
+  
+  // Get data from button attributes
+  const dormId = button.getAttribute('data-dorm-id');
+  const name = button.getAttribute('data-dorm-name');
+  const address = button.getAttribute('data-dorm-address');
+  const description = button.getAttribute('data-dorm-description');
+  const features = button.getAttribute('data-dorm-features');
+  
+  console.log('Edit dorm data:', { dormId, name, address });
+  
+  // Populate form fields
+  const fields = {
+    'edit_dorm_id': dormId,
+    'edit_dorm_name': name,
+    'edit_dorm_address': address,
+    'edit_dorm_description': description,
+    'edit_dorm_features': features
+  };
+  
+  for (const [fieldId, value] of Object.entries(fields)) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+      field.value = value || '';
+    } else {
+      console.error(`Field not found: ${fieldId}`);
+    }
+  }
+  
+  // Show modal
+  modal.style.display = 'flex';
+  console.log('Edit modal opened');
 }
 
-function openRoomModal(dormId, dormName) {
+function openRoomModal(button) {
+  console.log('openRoomModal called');
+  
   const modal = document.getElementById('addRoomModal');
-  if (modal) {
-    modal.style.display = 'flex';
-    document.getElementById('room_dorm_id').value = dormId;
-    document.getElementById('room_dorm_name').value = dormName;
-  } else {
+  if (!modal) {
     console.error('Room modal not found');
+    alert('Error: Modal not found. Please refresh the page.');
+    return;
   }
+  
+  // Get data from button attributes
+  const dormId = button.getAttribute('data-dorm-id');
+  const dormName = button.getAttribute('data-dorm-name');
+  
+  console.log('Add room data:', { dormId, dormName });
+  
+  // Populate form fields
+  const dormIdField = document.getElementById('room_dorm_id');
+  const dormNameField = document.getElementById('room_dorm_name');
+  
+  if (dormIdField) {
+    dormIdField.value = dormId;
+  } else {
+    console.error('room_dorm_id field not found');
+  }
+  
+  if (dormNameField) {
+    dormNameField.value = dormName;
+  } else {
+    console.error('room_dorm_name field not found');
+  }
+  
+  // Show modal
+  modal.style.display = 'flex';
+  console.log('Room modal opened');
 }
 
 function toggleCustomRoomType(select, id) {
@@ -451,6 +522,16 @@ window.onclick = function(event) {
     event.target.style.display = 'none';
   }
 }
+
+// Debug: Log when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Dorm management page loaded');
+  console.log('Modals found:', {
+    addDorm: !!document.getElementById('addDormModal'),
+    editDorm: !!document.getElementById('editDormModal'),
+    addRoom: !!document.getElementById('addRoomModal')
+  });
+});
 </script>
 
 <style>
