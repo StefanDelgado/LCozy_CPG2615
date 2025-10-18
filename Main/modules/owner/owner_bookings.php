@@ -269,4 +269,4 @@ unset($_SESSION['flash']);
 .data-table th { background-color:#f8f9fa; font-weight:bold; }
 </style>
 
-<?php require_once __DIR__ . '/../partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/footer.php'; ?>
