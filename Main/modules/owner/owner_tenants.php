@@ -3,14 +3,11 @@ require_once __DIR__ . '/../../auth/auth.php';
 require_role('owner');
 require_once __DIR__ . '/../../config.php';
 
-$page_title = "Tenant Management";
-include __DIR__ . '/../../partials/header.php';
-
 $owner_id = $_SESSION['user']['user_id'];
-$active_tab = $_GET['tab'] ?? 'current';
-$flash = null;
 
-// Fetch payment history for AJAX request
+// ═══════════════════════════════════════════════════════
+// AJAX ENDPOINT - Must be before ANY HTML output
+// ═══════════════════════════════════════════════════════
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'payment_history' && isset($_GET['tenant_id'])) {
     $tenant_id = (int)$_GET['tenant_id'];
     
@@ -51,8 +48,17 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'payment_history' && isset($_GET['
         header('Content-Type: application/json');
         echo json_encode(['error' => 'Tenant not found or access denied']);
     }
-    exit();
+    exit(); // CRITICAL: Stop execution before HTML
 }
+
+// ═══════════════════════════════════════════════════════
+// NORMAL PAGE RENDERING STARTS HERE
+// ═══════════════════════════════════════════════════════
+$page_title = "Tenant Management";
+include __DIR__ . '/../../partials/header.php';
+
+$active_tab = $_GET['tab'] ?? 'current';
+$flash = null;
 
 // Handle Send Message
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
