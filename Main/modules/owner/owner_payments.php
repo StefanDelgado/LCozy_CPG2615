@@ -229,8 +229,20 @@ document.querySelectorAll('.filter-tab').forEach(tab => {
 
 async function fetchPayments() {
   try {
-    const res = await fetch('fetch_payments.php');
+    const res = await fetch('../api/fetch_payments.php');
+    
+    // Check if response is OK
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    
     const data = await res.json();
+    
+    // Check if there's an error in the response
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    
     allPayments = data;
     renderPayments();
   } catch (err) {
@@ -240,6 +252,7 @@ async function fetchPayments() {
         <div class="empty-icon">⚠️</div>
         <h3>Error Loading Payments</h3>
         <p>Unable to fetch payment data. Please refresh the page.</p>
+        <p style="color: #dc3545; font-size: 0.9rem; margin-top: 10px;">Error: ${err.message}</p>
       </div>
     `;
   }
