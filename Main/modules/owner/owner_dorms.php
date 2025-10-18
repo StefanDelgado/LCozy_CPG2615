@@ -15,6 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_dorm'])) {
     $address = trim($_POST['address']);
     $description = trim($_POST['description']);
     $features = trim($_POST['features']);
+    $deposit_required = isset($_POST['deposit_required']) ? 1 : 0;
+    $deposit_months = $deposit_required ? (int)$_POST['deposit_months'] : 0;
     $cover_image = null;
 
     if (!empty($_FILES['cover_image']['name'])) {
@@ -29,9 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_dorm'])) {
         }
     }
 
-    $stmt = $pdo->prepare("INSERT INTO dormitories (owner_id, name, address, description, features, cover_image, verified, created_at)
-                           VALUES (?, ?, ?, ?, ?, ?, 0, NOW())");
-    $stmt->execute([$owner_id, $name, $address, $description, $features, $cover_image]);
+    $stmt = $pdo->prepare("INSERT INTO dormitories (owner_id, name, address, description, features, cover_image, deposit_required, deposit_months, verified, created_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())");
+    $stmt->execute([$owner_id, $name, $address, $description, $features, $cover_image, $deposit_required, $deposit_months]);
     $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Dorm added successfully! Pending admin verification.'];
     header("Location: " . $_SERVER['PHP_SELF']);
     exit();
@@ -44,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_dorm'])) {
     $address = trim($_POST['address']);
     $description = trim($_POST['description']);
     $features = trim($_POST['features']);
+    $deposit_required = isset($_POST['deposit_required']) ? 1 : 0;
+    $deposit_months = $deposit_required ? (int)$_POST['deposit_months'] : 0;
     
     // Check if owner owns this dorm
     $check = $pdo->prepare("SELECT dorm_id FROM dormitories WHERE dorm_id = ? AND owner_id = ?");
@@ -64,13 +68,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_dorm'])) {
                 move_uploaded_file($_FILES['cover_image']['tmp_name'], $upload_dir . $cover_image);
                 
                 // Update with new image
-                $stmt = $pdo->prepare("UPDATE dormitories SET name=?, address=?, description=?, features=?, cover_image=? WHERE dorm_id=? AND owner_id=?");
-                $stmt->execute([$name, $address, $description, $features, $cover_image, $dorm_id, $owner_id]);
+                $stmt = $pdo->prepare("UPDATE dormitories SET name=?, address=?, description=?, features=?, cover_image=?, deposit_required=?, deposit_months=? WHERE dorm_id=? AND owner_id=?");
+                $stmt->execute([$name, $address, $description, $features, $cover_image, $deposit_required, $deposit_months, $dorm_id, $owner_id]);
             }
         } else {
             // Update without changing image
-            $stmt = $pdo->prepare("UPDATE dormitories SET name=?, address=?, description=?, features=? WHERE dorm_id=? AND owner_id=?");
-            $stmt->execute([$name, $address, $description, $features, $dorm_id, $owner_id]);
+            $stmt = $pdo->prepare("UPDATE dormitories SET name=?, address=?, description=?, features=?, deposit_required=?, deposit_months=? WHERE dorm_id=? AND owner_id=?");
+            $stmt->execute([$name, $address, $description, $features, $deposit_required, $deposit_months, $dorm_id, $owner_id]);
         }
         
         $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Dorm updated successfully!'];
@@ -123,7 +127,7 @@ if (isset($_SESSION['flash'])) {
 
 // ─── Fetch Dorms ───
 $stmt = $pdo->prepare("
-    SELECT dorm_id, name, address, description, verified, cover_image, features
+    SELECT dorm_id, name, address, description, verified, cover_image, features, deposit_required, deposit_months
     FROM dormitories
     WHERE owner_id = ?
     ORDER BY created_at DESC
@@ -159,6 +163,8 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     data-dorm-address="<?= htmlspecialchars($dorm['address']) ?>"
                     data-dorm-description="<?= htmlspecialchars($dorm['description']) ?>"
                     data-dorm-features="<?= htmlspecialchars($dorm['features']) ?>"
+                    data-deposit-required="<?= $dorm['deposit_required'] ?>"
+                    data-deposit-months="<?= $dorm['deposit_months'] ?>"
                     onclick="openEditDormModal(this)">
               ✏️ Edit
             </button>
@@ -212,6 +218,25 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
       </div>
       <?php endif; ?>
+      
+      <div class="detail-section">
+        <h4>Deposit/Advance Payment Policy</h4>
+        <?php if ($dorm['deposit_required']): ?>
+          <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #6f42c1;">
+            <p style="margin: 0; color: #495057;">
+              <strong style="color: #6f42c1;">✓ Deposit Required:</strong> 
+              <?= $dorm['deposit_months'] ?> month(s) advance payment
+            </p>
+            <p style="margin: 8px 0 0 0; color: #6c757d; font-size: 0.9rem;">
+              <em>Example: If room rent is ₱1,000/month, deposit will be ₱<?= number_format($dorm['deposit_months'] * 1000) ?></em>
+            </p>
+          </div>
+        <?php else: ?>
+          <p style="color: #28a745; margin: 0;">
+            <strong>✓ No Deposit Required</strong> - Students can book without advance payment
+          </p>
+        <?php endif; ?>
+      </div>
     </div>
 
     <!-- Rooms Section -->
@@ -322,6 +347,19 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <label>Cover Image</label>
         <input type="file" name="cover_image" accept=".jpg,.jpeg,.png">
       </div>
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" name="deposit_required" id="add_deposit_required" checked onchange="toggleDepositMonths('add')">
+          <span>Require Deposit/Advance Payment</span>
+        </label>
+      </div>
+      <div class="form-group" id="add_deposit_months_group">
+        <label>Number of Months Deposit</label>
+        <input type="number" name="deposit_months" id="add_deposit_months" min="1" max="12" value="1" required>
+        <small style="color: #6c757d; font-size: 0.85rem;">
+          Students will pay this many months' rent in advance (e.g., 3 months = ₱3,000 if room is ₱1,000/month)
+        </small>
+      </div>
       <div class="modal-actions">
         <button type="submit" name="add_dorm" class="btn">Add Dormitory</button>
         <button type="button" class="btn-secondary" onclick="closeModal('addDormModal')">Cancel</button>
@@ -357,6 +395,19 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <label>Cover Image (leave empty to keep current)</label>
         <input type="file" name="cover_image" accept=".jpg,.jpeg,.png">
       </div>
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" name="deposit_required" id="edit_deposit_required" onchange="toggleDepositMonths('edit')">
+          <span>Require Deposit/Advance Payment</span>
+        </label>
+      </div>
+      <div class="form-group" id="edit_deposit_months_group">
+        <label>Number of Months Deposit</label>
+        <input type="number" name="deposit_months" id="edit_deposit_months" min="1" max="12" value="1" required>
+        <small style="color: #6c757d; font-size: 0.85rem;">
+          Students will pay this many months' rent in advance (e.g., 3 months = ₱3,000 if room is ₱1,000/month)
+        </small>
+      </div>
       <div class="modal-actions">
         <button type="submit" name="edit_dorm" class="btn">Update Dormitory</button>
         <button type="button" class="btn-secondary" onclick="closeModal('editDormModal')">Cancel</button>
@@ -390,8 +441,10 @@ function openEditDormModal(button) {
   const address = button.getAttribute('data-dorm-address');
   const description = button.getAttribute('data-dorm-description');
   const features = button.getAttribute('data-dorm-features');
+  const depositRequired = button.getAttribute('data-deposit-required');
+  const depositMonths = button.getAttribute('data-deposit-months');
   
-  console.log('Edit dorm data:', { dormId, name, address });
+  console.log('Edit dorm data:', { dormId, name, address, depositRequired, depositMonths });
   
   // Populate form fields
   const fields = {
@@ -411,6 +464,17 @@ function openEditDormModal(button) {
     }
   }
   
+  // Set deposit fields
+  const depositCheckbox = document.getElementById('edit_deposit_required');
+  const depositMonthsInput = document.getElementById('edit_deposit_months');
+  if (depositCheckbox) {
+    depositCheckbox.checked = depositRequired === '1';
+  }
+  if (depositMonthsInput) {
+    depositMonthsInput.value = depositMonths || 1;
+  }
+  toggleDepositMonths('edit');
+  
   // Show modal
   modal.style.display = 'flex';
   console.log('Edit modal opened');
@@ -420,6 +484,20 @@ function toggleCustomRoomType(select, id) {
   const custom = document.getElementById(id);
   if (custom) {
     custom.style.display = select.value === 'Custom' ? 'block' : 'none';
+  }
+}
+
+function toggleDepositMonths(mode) {
+  const checkbox = document.getElementById(mode + '_deposit_required');
+  const monthsGroup = document.getElementById(mode + '_deposit_months_group');
+  const monthsInput = document.getElementById(mode + '_deposit_months');
+  
+  if (checkbox.checked) {
+    monthsGroup.style.display = 'block';
+    monthsInput.required = true;
+  } else {
+    monthsGroup.style.display = 'none';
+    monthsInput.required = false;
   }
 }
 
