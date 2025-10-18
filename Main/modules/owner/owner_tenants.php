@@ -8,12 +8,46 @@ include __DIR__ . '/../../partials/header.php';
 
 $owner_id = $_SESSION['user']['user_id'];
 $active_tab = $_GET['tab'] ?? 'current';
+$flash = null;
+
+// Handle Send Message
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
+    $student_id = (int)$_POST['student_id'];
+    $dorm_id = (int)$_POST['dorm_id'];
+    $message_body = trim($_POST['message_body']);
+    
+    if (!empty($message_body)) {
+        $stmt = $pdo->prepare("
+            INSERT INTO messages (sender_id, receiver_id, dorm_id, body, created_at)
+            VALUES (?, ?, ?, ?, NOW())
+        ");
+        $stmt->execute([$owner_id, $student_id, $dorm_id, $message_body]);
+        $flash = ['type' => 'success', 'msg' => 'Message sent successfully!'];
+    }
+}
+
+// Handle Add Payment Reminder
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_payment_reminder'])) {
+    $booking_id = (int)$_POST['booking_id'];
+    $amount = (float)$_POST['amount'];
+    $due_date = $_POST['due_date'];
+    $student_id = (int)$_POST['student_id'];
+    
+    $stmt = $pdo->prepare("
+        INSERT INTO payments (booking_id, student_id, owner_id, amount, due_date, status, created_at)
+        VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+    ");
+    $stmt->execute([$booking_id, $student_id, $owner_id, $amount, $due_date]);
+    $flash = ['type' => 'success', 'msg' => 'Payment reminder added successfully!'];
+}
 
 // Fetch tenants
 $stmt = $pdo->prepare("
     SELECT 
         t.tenant_id,
         t.booking_id,
+        t.student_id,
+        t.dorm_id,
         u.name AS tenant_name,
         u.email AS tenant_email,
         u.phone AS tenant_phone,
@@ -45,6 +79,12 @@ $total_revenue = array_sum(array_column($current_tenants, 'total_paid'));
         <p>Track and manage your current and past tenants</p>
     </div>
 </div>
+
+<?php if ($flash): ?>
+<div class="alert alert-<?= $flash['type'] ?>" style="margin: 20px 0; padding: 15px; border-radius: 8px; background: <?= $flash['type'] === 'success' ? '#d4edda' : '#f8d7da' ?>; color: <?= $flash['type'] === 'success' ? '#155724' : '#721c24' ?>;">
+    <?= htmlspecialchars($flash['msg']) ?>
+</div>
+<?php endif; ?>
 
 <!-- Statistics -->
 <div class="stats-grid">
@@ -110,9 +150,217 @@ $total_revenue = array_sum(array_column($current_tenants, 'total_paid'));
                         <span style="font-size: 14px; color: #333;">₱<?= number_format($tenant['total_paid'], 2) ?></span>
                     </div>
                 </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                    <button onclick="openMessageModal(<?= $tenant['student_id'] ?>, <?= $tenant['dorm_id'] ?>, '<?= htmlspecialchars($tenant['tenant_name']) ?>')" 
+                            class="btn btn-primary" style="flex: 1;">
+                        <i class="fa fa-envelope"></i> Send Message
+                    </button>
+                    <button onclick="openPaymentModal(<?= $tenant['booking_id'] ?>, <?= $tenant['student_id'] ?>, '<?= htmlspecialchars($tenant['tenant_name']) ?>')" 
+                            class="btn btn-secondary" style="flex: 1;">
+                        <i class="fa fa-dollar-sign"></i> Add Payment
+                    </button>
+                    <a href="/modules/owner/owner_payments.php?tenant_id=<?= $tenant['tenant_id'] ?>" 
+                       class="btn btn-outline" style="flex: 1; text-align: center; padding: 10px;">
+                        <i class="fa fa-history"></i> View History
+                    </a>
+                </div>
             </div>
         <?php endforeach; ?>
     <?php endif; ?>
 </div>
+
+<!-- Send Message Modal -->
+<div id="messageModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2>Send Message to <span id="messageTenantName"></span></h2>
+            <button onclick="closeModal('messageModal')" class="close-btn">&times;</button>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="student_id" id="messageStudentId">
+            <input type="hidden" name="dorm_id" id="messageDormId">
+            
+            <div class="form-group">
+                <label>Message:</label>
+                <textarea name="message_body" required rows="5" placeholder="Type your message here..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;"></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" name="send_message" class="btn btn-primary" style="flex: 1;">
+                    <i class="fa fa-paper-plane"></i> Send Message
+                </button>
+                <button type="button" onclick="closeModal('messageModal')" class="btn btn-secondary" style="flex: 1;">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Payment Modal -->
+<div id="paymentModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2>Add Payment Reminder for <span id="paymentTenantName"></span></h2>
+            <button onclick="closeModal('paymentModal')" class="close-btn">&times;</button>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="booking_id" id="paymentBookingId">
+            <input type="hidden" name="student_id" id="paymentStudentId">
+            
+            <div class="form-group">
+                <label>Amount (₱):</label>
+                <input type="number" name="amount" required step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+            </div>
+            
+            <div class="form-group">
+                <label>Due Date:</label>
+                <input type="date" name="due_date" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" name="add_payment_reminder" class="btn btn-primary" style="flex: 1;">
+                    <i class="fa fa-plus"></i> Add Reminder
+                </button>
+                <button type="button" onclick="closeModal('paymentModal')" class="btn btn-secondary" style="flex: 1;">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        width: 90%;
+        max-width: 600px;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .modal-header h2 {
+        margin: 0;
+        font-size: 20px;
+    }
+    
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: #999;
+        line-height: 1;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+    }
+    
+    .close-btn:hover {
+        color: #333;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background: #8b5cf6;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #7c3aed;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+    
+    .btn-outline {
+        background: white;
+        color: #8b5cf6;
+        border: 2px solid #8b5cf6;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-outline:hover {
+        background: #8b5cf6;
+        color: white;
+    }
+</style>
+
+<script>
+    function openMessageModal(studentId, dormId, tenantName) {
+        document.getElementById('messageStudentId').value = studentId;
+        document.getElementById('messageDormId').value = dormId;
+        document.getElementById('messageTenantName').textContent = tenantName;
+        document.getElementById('messageModal').style.display = 'flex';
+    }
+    
+    function openPaymentModal(bookingId, studentId, tenantName) {
+        document.getElementById('paymentBookingId').value = bookingId;
+        document.getElementById('paymentStudentId').value = studentId;
+        document.getElementById('paymentTenantName').textContent = tenantName;
+        document.getElementById('paymentModal').style.display = 'flex';
+    }
+    
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    }
+</script>
 
 <?php include __DIR__ . '/../../partials/footer.php'; ?>
