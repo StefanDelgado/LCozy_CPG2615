@@ -79,7 +79,10 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div class="page-header">
-  <p>Manage your dorm listings and rooms here.</p>
+  <div>
+    <h1>My Dormitories</h1>
+    <p>Manage your dorm listings and rooms here.</p>
+  </div>
   <button class="btn" onclick="openModal('addDormModal')">+ Add Dormitory</button>
 </div>
 
@@ -87,90 +90,148 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="alert <?= $flash['type'] ?>"><?= htmlspecialchars($flash['msg']) ?></div>
 <?php endif; ?>
 
-<div class="grid-2">
 <?php if ($dorms): ?>
   <?php foreach ($dorms as $dorm): ?>
-  <div class="card">
-    <h2><?= htmlspecialchars($dorm['name']) ?></h2>
-
-    <?php if (!empty($dorm['cover_image'])): ?>
-      <img src="../uploads/<?= htmlspecialchars($dorm['cover_image']) ?>" 
-           alt="<?= htmlspecialchars($dorm['name']) ?>" 
-           style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:10px;">
-    <?php else: ?>
-      <div class="no-img">No Image</div>
-    <?php endif; ?>
-
-    <p><strong>Address:</strong> <?= htmlspecialchars($dorm['address']) ?></p>
-    <p><?= nl2br(htmlspecialchars($dorm['description'])) ?></p>
-    <p><strong>Features:</strong> <?= htmlspecialchars($dorm['features'] ?: 'None listed') ?></p>
-
-    <p>
-      <strong>Status:</strong>
-      <?php if ($dorm['verified'] == 1): ?>
-        <span class="badge success">Approved</span>
-      <?php elseif ($dorm['verified'] == -1): ?>
-        <span class="badge error">Rejected</span>
-      <?php else: ?>
-        <span class="badge warning">Pending</span>
+  <div class="dorm-card">
+    <!-- Header Section -->
+    <div class="dorm-header">
+      <div class="dorm-info">
+        <h2><?= htmlspecialchars($dorm['name']) ?></h2>
+        <p class="dorm-address">📍 <?= htmlspecialchars($dorm['address']) ?></p>
+        <div class="dorm-status">
+          <?php if ($dorm['verified'] == 1): ?>
+            <span class="status-badge approved">✓ Approved</span>
+          <?php elseif ($dorm['verified'] == -1): ?>
+            <span class="status-badge rejected">✗ Rejected</span>
+          <?php else: ?>
+            <span class="status-badge pending">⏳ Pending Verification</span>
+          <?php endif; ?>
+        </div>
+      </div>
+      
+      <?php if (!empty($dorm['cover_image'])): ?>
+        <div class="dorm-image">
+          <img src="../uploads/<?= htmlspecialchars($dorm['cover_image']) ?>" 
+               alt="<?= htmlspecialchars($dorm['name']) ?>">
+        </div>
       <?php endif; ?>
-    </p>
+    </div>
 
-    <h3>Rooms</h3>
-    <table class="data-table">
-      <thead>
-        <tr><th>Image</th><th>Type</th><th>Size</th><th>Occupancy</th><th>Price</th><th>Status</th></tr>
-      </thead>
-      <tbody>
-        <?php
-        $room_stmt = $pdo->prepare("
-          SELECT r.*, 
-                 (SELECT COUNT(*) FROM bookings b WHERE b.room_id = r.room_id AND b.status IN ('approved','active')) AS occupants
-          FROM rooms r 
-          WHERE r.dorm_id = ?
-        ");
-        $room_stmt->execute([$dorm['dorm_id']]);
-        $rooms = $room_stmt->fetchAll(PDO::FETCH_ASSOC);
-        ?>
-        <?php if ($rooms): foreach ($rooms as $r): ?>
-          <?php
-            $img_stmt = $pdo->prepare("SELECT image_path FROM room_images WHERE room_id=? LIMIT 1");
-            $img_stmt->execute([$r['room_id']]);
-            $room_img = $img_stmt->fetchColumn();
+    <!-- Details Section -->
+    <div class="dorm-details">
+      <div class="detail-section">
+        <h4>Description</h4>
+        <p><?= nl2br(htmlspecialchars($dorm['description'])) ?></p>
+      </div>
+      
+      <?php if ($dorm['features']): ?>
+      <div class="detail-section">
+        <h4>Features & Amenities</h4>
+        <div class="features-tags">
+          <?php 
+          $features = explode(',', $dorm['features']);
+          foreach ($features as $feature): 
+            $feature = trim($feature);
+            if ($feature):
           ?>
-          <tr>
-            <td>
-              <?php if ($room_img): ?>
-                <img src="../uploads/<?= htmlspecialchars($room_img) ?>" style="width:50px;height:50px;border-radius:6px;object-fit:cover;">
-              <?php else: ?><span style="color:#777;">No Img</span><?php endif; ?>
-            </td>
-            <td><?= htmlspecialchars($r['room_type']) ?></td>
-            <td><?= !empty($r['size']) ? htmlspecialchars($r['size']).' sqm' : '—' ?></td>
-            <td><?= intval($r['occupants']) ?> / <?= intval($r['capacity']) ?></td>
-            <td>₱<?= number_format($r['price'],2) ?></td>
-            <td>
-              <?php if ($r['occupants'] >= $r['capacity']): ?>
-                <span class="badge error">Full</span>
-              <?php elseif ($r['status']==='vacant'): ?>
-                <span class="badge success">Vacant</span>
-              <?php else: ?>
-                <span class="badge warning">Occupied</span>
-              <?php endif; ?>
-            </td>
-          </tr>
-        <?php endforeach; else: ?>
-          <tr><td colspan="6"><em>No rooms listed</em></td></tr>
-        <?php endif; ?>
-      </tbody>
-    </table>
+            <span class="feature-tag"><?= htmlspecialchars($feature) ?></span>
+          <?php 
+            endif;
+          endforeach; 
+          ?>
+        </div>
+      </div>
+      <?php endif; ?>
+    </div>
 
-    <button class="btn-secondary" onclick="openRoomModal(<?= $dorm['dorm_id'] ?>, '<?= htmlspecialchars($dorm['name'], ENT_QUOTES) ?>')">+ Add Room</button>
+    <!-- Rooms Section -->
+    <div class="rooms-section">
+      <div class="section-header">
+        <h3>Rooms</h3>
+        <button class="btn-add-room" onclick="openRoomModal(<?= $dorm['dorm_id'] ?>, '<?= htmlspecialchars($dorm['name'], ENT_QUOTES) ?>')">
+          + Add Room
+        </button>
+      </div>
+      
+      <?php
+      $room_stmt = $pdo->prepare("
+        SELECT r.*, 
+               (SELECT COUNT(*) FROM bookings b WHERE b.room_id = r.room_id AND b.status IN ('approved','active')) AS occupants
+        FROM rooms r 
+        WHERE r.dorm_id = ?
+        ORDER BY r.room_type, r.capacity
+      ");
+      $room_stmt->execute([$dorm['dorm_id']]);
+      $rooms = $room_stmt->fetchAll(PDO::FETCH_ASSOC);
+      ?>
+      
+      <?php if ($rooms): ?>
+        <div class="rooms-grid">
+          <?php foreach ($rooms as $r): ?>
+            <?php
+              $img_stmt = $pdo->prepare("SELECT image_path FROM room_images WHERE room_id=? LIMIT 1");
+              $img_stmt->execute([$r['room_id']]);
+              $room_img = $img_stmt->fetchColumn();
+              $is_full = $r['occupants'] >= $r['capacity'];
+            ?>
+            
+            <div class="room-card <?= $is_full ? 'room-full' : '' ?>">
+              <div class="room-image">
+                <?php if ($room_img): ?>
+                  <img src="../uploads/<?= htmlspecialchars($room_img) ?>" alt="Room">
+                <?php else: ?>
+                  <div class="no-image">No Image</div>
+                <?php endif; ?>
+                
+                <div class="room-status-overlay">
+                  <?php if ($is_full): ?>
+                    <span class="status-tag full">Full</span>
+                  <?php elseif ($r['status']==='vacant'): ?>
+                    <span class="status-tag vacant">Vacant</span>
+                  <?php else: ?>
+                    <span class="status-tag occupied">Occupied</span>
+                  <?php endif; ?>
+                </div>
+              </div>
+              
+              <div class="room-info">
+                <h4><?= htmlspecialchars($r['room_type']) ?></h4>
+                <div class="room-details-grid">
+                  <div class="detail-item">
+                    <span class="label">Size</span>
+                    <span class="value"><?= !empty($r['size']) ? htmlspecialchars($r['size']).' m²' : 'N/A' ?></span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="label">Occupancy</span>
+                    <span class="value <?= $is_full ? 'full-occupancy' : '' ?>">
+                      <?= intval($r['occupants']) ?> / <?= intval($r['capacity']) ?>
+                    </span>
+                  </div>
+                </div>
+                <div class="room-price">₱<?= number_format($r['price'], 2) ?><span>/month</span></div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php else: ?>
+        <div class="no-rooms">
+          <p>No rooms have been added yet.</p>
+          <button class="btn-secondary" onclick="openRoomModal(<?= $dorm['dorm_id'] ?>, '<?= htmlspecialchars($dorm['name'], ENT_QUOTES) ?>')">
+            Add Your First Room
+          </button>
+        </div>
+      <?php endif; ?>
+    </div>
   </div>
   <?php endforeach; ?>
 <?php else: ?>
-  <p><em>You haven’t added any dorms yet.</em></p>
+  <div class="empty-state">
+    <div class="empty-icon">🏠</div>
+    <h3>No Dormitories Yet</h3>
+    <p>Start by adding your first dormitory to manage rooms and tenants.</p>
+    <button class="btn" onclick="openModal('addDormModal')">+ Add Your First Dormitory</button>
+  </div>
 <?php endif; ?>
-</div>
 
 <!-- ADD DORM MODAL -->
 <div id="addDormModal" class="modal">
@@ -191,7 +252,7 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
       </div>
       <div class="form-group">
         <label>Features (comma separated)</label>
-        <input type="text" name="features" placeholder="WiFi, Aircon, Laundry, etc.">
+        <input type="text" name="features" placeholder="Wi-Fi, Study Lounge, CCTV Security, Air-conditioned Rooms, Laundry Area">
       </div>
       <div class="form-group">
         <label>Cover Image</label>
@@ -231,7 +292,7 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
       </div>
 
       <div class="form-group">
-        <label>Room Size (sqm)</label>
+        <label>Room Size (m²)</label>
         <input type="number" name="size" step="0.1" placeholder="e.g. 15.5">
       </div>
 
@@ -241,7 +302,7 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
       </div>
 
       <div class="form-group">
-        <label>Price (₱)</label>
+        <label>Price (₱ per month)</label>
         <input type="number" step="0.01" name="price" required>
       </div>
 
@@ -285,21 +346,463 @@ function toggleCustomRoomType(select, id) {
 </script>
 
 <style>
-.no-img {
-  width:100%;height:200px;background:#eee;
-  display:flex;align-items:center;justify-content:center;
-  border-radius:8px;color:#777;
-}
-.badge { padding:4px 8px;border-radius:6px;font-size:0.85em;color:#fff; }
-.badge.success { background:#28a745; }
-.badge.warning { background:#ffc107;color:#000; }
-.badge.error { background:#dc3545; }
+/* ========== Professional Dorm Management Styling ========== */
 
-.modal { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
-  justify-content:center;align-items:center;z-index:9999; }
-.modal-content { background:#fff;padding:20px;border-radius:10px;width:400px;max-width:90%; }
-.form-group { margin-bottom:10px; }
-.modal-actions { text-align:right;margin-top:10px; }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  color: #2c3e50;
+  margin: 0 0 8px 0;
+}
+
+.page-header p {
+  color: #7f8c8d;
+  margin: 0;
+  font-size: 15px;
+}
+
+/* Dorm Card */
+.dorm-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+  overflow: hidden;
+  border: 1px solid #e8e8e8;
+  transition: box-shadow 0.3s ease;
+}
+
+.dorm-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+/* Dorm Header */
+.dorm-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 25px;
+  padding: 25px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #dee2e6;
+}
+
+.dorm-info h2 {
+  font-size: 28px;
+  color: #2c3e50;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+.dorm-address {
+  color: #6c757d;
+  font-size: 15px;
+  margin: 0 0 12px 0;
+}
+
+.dorm-image {
+  width: 200px;
+  height: 150px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.dorm-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.approved {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.rejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* Dorm Details */
+.dorm-details {
+  padding: 25px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.detail-section {
+  margin-bottom: 20px;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section h4 {
+  font-size: 16px;
+  color: #495057;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+}
+
+.detail-section p {
+  color: #6c757d;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Feature Tags */
+.features-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.feature-tag {
+  background: #e7f3ff;
+  color: #0066cc;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #b3d9ff;
+}
+
+/* Rooms Section */
+.rooms-section {
+  padding: 25px;
+  background: #fafbfc;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  font-size: 20px;
+  color: #2c3e50;
+  margin: 0;
+  font-weight: 600;
+}
+
+.btn-add-room {
+  background: #6f42c1;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-add-room:hover {
+  background: #5a32a3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+/* Rooms Grid */
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* Room Card */
+.room-card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  border: 1px solid #e8e8e8;
+}
+
+.room-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.room-card.room-full {
+  opacity: 0.8;
+}
+
+.room-image {
+  position: relative;
+  height: 180px;
+  background: #f8f9fa;
+}
+
+.room-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  color: #adb5bd;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.room-status-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.status-tag {
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.status-tag.full {
+  background: #dc3545;
+  color: white;
+}
+
+.status-tag.vacant {
+  background: #28a745;
+  color: white;
+}
+
+.status-tag.occupied {
+  background: #ffc107;
+  color: #000;
+}
+
+.room-info {
+  padding: 15px;
+}
+
+.room-info h4 {
+  font-size: 18px;
+  color: #2c3e50;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+.room-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-item .label {
+  font-size: 11px;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.detail-item .value {
+  font-size: 15px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.full-occupancy {
+  color: #dc3545;
+}
+
+.room-price {
+  font-size: 24px;
+  color: #6f42c1;
+  font-weight: 700;
+}
+
+.room-price span {
+  font-size: 13px;
+  color: #6c757d;
+  font-weight: 400;
+}
+
+/* No Rooms State */
+.no-rooms {
+  background: white;
+  border-radius: 10px;
+  padding: 40px;
+  text-align: center;
+  border: 2px dashed #dee2e6;
+}
+
+.no-rooms p {
+  color: #6c757d;
+  margin: 0 0 15px 0;
+}
+
+/* Empty State */
+.empty-state {
+  background: white;
+  border-radius: 12px;
+  padding: 60px 40px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  font-size: 24px;
+  color: #2c3e50;
+  margin: 0 0 10px 0;
+}
+
+.empty-state p {
+  color: #6c757d;
+  margin: 0 0 25px 0;
+  font-size: 15px;
+}
+
+/* Modal Styling */
+.modal { 
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content { 
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  width: 500px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.modal-content h2 {
+  margin: 0 0 25px 0;
+  color: #2c3e50;
+  font-size: 24px;
+}
+
+.form-group { 
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: #495057;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #6f42c1;
+  box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+}
+
+.modal-actions { 
+  text-align: right;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e8e8e8;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dorm-header {
+    grid-template-columns: 1fr;
+  }
+  
+  .dorm-image {
+    width: 100%;
+    height: 200px;
+  }
+  
+  .rooms-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .page-header .btn {
+    width: 100%;
+  }
+}
 </style>
 
-<?php include __DIR__ . '/../partials/footer.php'; ?>
+<?php include __DIR__ . '/../../partials/footer.php'; ?>

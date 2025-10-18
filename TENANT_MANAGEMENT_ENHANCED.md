@@ -17,7 +17,8 @@ Added messaging, payment reminders, and quick action buttons to the tenant manag
 
 ### 2. **Add Payment Reminder**
 - Click "Add Payment" button on any tenant card
-- Opens a modal to create payment reminder
+- Opens a modal to
+ create payment reminder
 - Set amount and due date
 - Creates pending payment in the system
 - Tenant will see it in their payment dashboard
