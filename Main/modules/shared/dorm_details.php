@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . '/../auth/auth.php';
+require_once __DIR__ . '/../../auth/auth.php';
 require_role('student');
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../config.php';
 
 $dorm_id = intval($_GET['id'] ?? 0);
 $student_id = $_SESSION['user']['user_id'];
@@ -52,7 +52,7 @@ $dorm = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$dorm) {
     echo "<p><em>Dorm not found.</em></p>";
-    include __DIR__ . '/../partials/footer.php';
+    include __DIR__ . '/../../partials/footer.php';
     exit;
 }
 
@@ -165,4 +165,4 @@ $can_review = $stmt->fetchColumn() > 0;
 }
 </style>
 
-<?php include __DIR__ . '/../partials/footer.php'; ?>
+<?php include __DIR__ . '/../../partials/footer.php'; ?>

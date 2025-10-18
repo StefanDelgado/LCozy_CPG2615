@@ -1,10 +1,10 @@
 <?php
-require_once __DIR__ . '/../auth/auth.php';
+require_once __DIR__ . '/../../auth/auth.php';
 require_role('admin');
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../config.php';
 
 $page_title = "Dorm Listings";
-include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../../partials/header.php';
 
 if (isset($_GET['action'], $_GET['id'])) {
     $dorm_id = (int)$_GET['id'];
@@ -120,4 +120,4 @@ $total_dorms = count($dorms);
 <?php endforeach; ?>
 </div>
 
-<?php include __DIR__ . '/../partials/footer.php'; ?>
+<?php include __DIR__ . '/../../partials/footer.php'; ?>

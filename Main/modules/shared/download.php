@@ -1,5 +1,5 @@
 <?php 
-include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../../partials/header.php';
 ?>
 
 <div class="page-header center">
@@ -38,4 +38,4 @@ include __DIR__ . '/../partials/header.php';
   </ul>
 </div>
 
-<?php include __DIR__ . '/../partials/footer.php'; ?>
+<?php include __DIR__ . '/../../partials/footer.php'; ?>

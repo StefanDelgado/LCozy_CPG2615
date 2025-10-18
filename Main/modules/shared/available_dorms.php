@@ -1,10 +1,10 @@
 <?php
-require_once __DIR__ . '/../auth/auth.php';
+require_once __DIR__ . '/../../auth/auth.php';
 require_role('student');
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../config.php';
 
 $page_title = "Available Dorms";
-include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../../partials/header.php';
 
 $flash = null;
 $student_id = $_SESSION['user']['user_id'];
@@ -264,4 +264,4 @@ select { padding: 4px; border-radius: 5px; }
 }
 </style>
 
-<?php include __DIR__ . '/../partials/footer.php'; ?>
+<?php include __DIR__ . '/../../partials/footer.php'; ?>
