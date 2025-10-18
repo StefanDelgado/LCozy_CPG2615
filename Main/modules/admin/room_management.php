@@ -53,7 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $flash = ['type'=>'success','msg'=>'Room added successfully!'];
+            $_SESSION['flash'] = ['type'=>'success','msg'=>'Room added successfully!'];
+            // Redirect to prevent form resubmission
+            $redirect_url = $filter_dorm_id ? "?dorm_id=$filter_dorm_id" : "";
+            header("Location: " . $_SERVER['PHP_SELF'] . $redirect_url);
+            exit();
         }
     }
 
@@ -73,7 +77,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             WHERE r.room_id=? AND d.owner_id=?
         ");
         $stmt->execute([$room_type, $size, $capacity, $price, $status, $id, $owner_id]);
-        $flash = ['type'=>'success','msg'=>'Room updated successfully!'];
+        $_SESSION['flash'] = ['type'=>'success','msg'=>'Room updated successfully!'];
+        // Redirect to prevent form resubmission
+        $redirect_url = $filter_dorm_id ? "?dorm_id=$filter_dorm_id" : "";
+        header("Location: " . $_SERVER['PHP_SELF'] . $redirect_url);
+        exit();
     }
 
     // Delete Room
@@ -85,8 +93,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             WHERE r.room_id=? AND d.owner_id=?
         ");
         $stmt->execute([$id, $owner_id]);
-        $flash = ['type'=>'error','msg'=>'Room deleted successfully!'];
+        $_SESSION['flash'] = ['type'=>'error','msg'=>'Room deleted successfully!'];
+        // Redirect to prevent form resubmission
+        $redirect_url = $filter_dorm_id ? "?dorm_id=$filter_dorm_id" : "";
+        header("Location: " . $_SERVER['PHP_SELF'] . $redirect_url);
+        exit();
     }
+}
+
+// Check for flash message from session
+if (isset($_SESSION['flash'])) {
+    $flash = $_SESSION['flash'];
+    unset($_SESSION['flash']);
 }
 
 // ───── Fetch Data ─────

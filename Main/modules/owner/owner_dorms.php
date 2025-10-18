@@ -32,7 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_dorm'])) {
     $stmt = $pdo->prepare("INSERT INTO dormitories (owner_id, name, address, description, features, cover_image, verified, created_at)
                            VALUES (?, ?, ?, ?, ?, ?, 0, NOW())");
     $stmt->execute([$owner_id, $name, $address, $description, $features, $cover_image]);
-    $flash = ['type' => 'success', 'msg' => 'Dorm added successfully! Pending admin verification.'];
+    $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Dorm added successfully! Pending admin verification.'];
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
 }
 
 // ─── Edit Dormitory ───
@@ -71,10 +73,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_dorm'])) {
             $stmt->execute([$name, $address, $description, $features, $dorm_id, $owner_id]);
         }
         
-        $flash = ['type' => 'success', 'msg' => 'Dorm updated successfully!'];
+        $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Dorm updated successfully!'];
     } else {
-        $flash = ['type' => 'error', 'msg' => 'Unauthorized action.'];
+        $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Unauthorized action.'];
     }
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
 }
 
 // ─── Add Room ───
@@ -106,7 +110,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_room'])) {
         }
     }
 
-    $flash = ['type'=>'success','msg'=>'Room added successfully!'];
+    $_SESSION['flash'] = ['type'=>'success','msg'=>'Room added successfully!'];
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
+// Check for flash message from session
+if (isset($_SESSION['flash'])) {
+    $flash = $_SESSION['flash'];
+    unset($_SESSION['flash']);
 }
 
 // ─── Fetch Dorms ───
