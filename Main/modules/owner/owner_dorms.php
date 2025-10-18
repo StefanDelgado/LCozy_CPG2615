@@ -365,11 +365,14 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <div class="modal-content">
     <h2>Add New Room</h2>
     <form method="post" enctype="multipart/form-data" class="form-area">
-      <input type="hidden" name="dorm_id" id="room_dorm_id">
-
       <div class="form-group">
-        <label>Dormitory</label>
-        <input type="text" id="room_dorm_name" readonly>
+        <label>Select Dormitory *</label>
+        <select name="dorm_id" id="room_dorm_select" required>
+          <option value="">-- Select a Dormitory --</option>
+          <?php foreach ($dorms as $d): ?>
+            <option value="<?= $d['dorm_id'] ?>"><?= htmlspecialchars($d['name']) ?></option>
+          <?php endforeach; ?>
+        </select>
       </div>
 
       <div class="form-group">
@@ -484,24 +487,16 @@ function openRoomModal(button) {
   
   // Get data from button attributes
   const dormId = button.getAttribute('data-dorm-id');
-  const dormName = button.getAttribute('data-dorm-name');
   
-  console.log('Add room data:', { dormId, dormName });
+  console.log('Add room for dorm ID:', dormId);
   
-  // Populate form fields
-  const dormIdField = document.getElementById('room_dorm_id');
-  const dormNameField = document.getElementById('room_dorm_name');
-  
-  if (dormIdField) {
-    dormIdField.value = dormId;
+  // Set the selected dormitory in dropdown
+  const dormSelect = document.getElementById('room_dorm_select');
+  if (dormSelect) {
+    dormSelect.value = dormId;
+    console.log('Selected dorm in dropdown:', dormId);
   } else {
-    console.error('room_dorm_id field not found');
-  }
-  
-  if (dormNameField) {
-    dormNameField.value = dormName;
-  } else {
-    console.error('room_dorm_name field not found');
+    console.error('room_dorm_select field not found');
   }
   
   // Show modal
