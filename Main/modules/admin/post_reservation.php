@@ -1,6 +1,6 @@
 <?php 
 $page_title = "Post-Reservation Management";
-include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../../partials/header.php';
 ?>
 
 <div class="card-grid">
@@ -110,4 +110,4 @@ include __DIR__ . '/../partials/header.php';
   </table>
 </div>
 
-<?php include __DIR__ . '/../partials/footer.php'; ?>
+<?php include __DIR__ . '/../../partials/footer.php'; ?>

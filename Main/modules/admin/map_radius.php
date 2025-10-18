@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . '/../auth/auth.php';
+require_once __DIR__ . '/../../auth/auth.php';
 require_role('admin');
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../config.php';
 
 $page_title = "Map & Radius Management";
 
@@ -22,7 +22,7 @@ $sql = "
 ";
 $dorms = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
-include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../../partials/header.php';
 ?>
 
 <div class="page-header">
@@ -166,4 +166,4 @@ function initMap() {
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
 
-<?php include __DIR__ . '/../partials/footer.php'; ?>
+<?php include __DIR__ . '/../../partials/footer.php'; ?>

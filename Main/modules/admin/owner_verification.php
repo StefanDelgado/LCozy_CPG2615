@@ -1,6 +1,6 @@
 <?php 
-require_once __DIR__ . '/../partials/header.php'; 
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../partials/header.php'; 
+require_once __DIR__ . '/../../config.php';
 
 $role = $_SESSION['user']['role'];
 $user_id = $_SESSION['user']['user_id'];
@@ -12,7 +12,7 @@ if ($role === 'owner') {
     $maxSize = 5 * 1024 * 1024; // 5 MB
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_docs'])) {
-        $uploadDir = __DIR__ . '/../uploads/';
+        $uploadDir = __DIR__ . '/../../uploads/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
         $updates = [];
@@ -222,5 +222,5 @@ if ($role === 'owner') {
     echo "<p>Access denied</p>";
 }
 
-require_once __DIR__ . '/../partials/footer.php'; 
+require_once __DIR__ . '/../../partials/footer.php'; 
 ?>

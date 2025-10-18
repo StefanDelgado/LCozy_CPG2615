@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../auth/auth.php';
+require_once __DIR__ . '/../../auth/auth.php';
 require_role('admin');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
@@ -73,7 +73,7 @@ $users = $pdo->query("
 ")->fetchAll();
 
 $page_title = "User Management";
-require_once __DIR__ . '/../partials/header.php';
+require_once __DIR__ . '/../../partials/header.php';
 ?>
 
 <div class="page-header">
@@ -273,4 +273,4 @@ function closeEdit() {
 .btn-secondary:hover { background: #ccc; }
 </style>
 
-<?php require_once __DIR__ . '/../partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/footer.php'; ?>

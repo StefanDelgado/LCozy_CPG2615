@@ -1,10 +1,10 @@
 <?php
-require_once __DIR__ . '/../auth/auth.php';
+require_once __DIR__ . '/../../auth/auth.php';
 require_role('admin');
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../config.php';
 
 $page_title = "All Payments Overview";
-include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../../partials/header.php';
 
 $flash = null;
 
@@ -183,4 +183,4 @@ function closeEditModal(){
 }
 </script>
 
-<?php require_once __DIR__ . '/../partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/footer.php'; ?>

@@ -1,5 +1,5 @@
 <?php 
-require_once __DIR__ . '/../partials/header.php'; 
+require_once __DIR__ . '/../../partials/header.php'; 
 ?>
 
 <div class="page-header">
@@ -100,4 +100,4 @@ require_once __DIR__ . '/../partials/header.php';
   </ul>
 </div>
 
-<?php require_once __DIR__ . '/../partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/footer.php'; ?>

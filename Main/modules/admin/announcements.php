@@ -1,7 +1,7 @@
 <?php 
-require_once __DIR__ . '/../partials/header.php'; 
+require_once __DIR__ . '/../../partials/header.php'; 
 require_role('admin');
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../config.php';
 
 $page_title = "Broadcast Announcement System";
 
@@ -140,4 +140,4 @@ function toggleEditForm(id) {
 }
 </script>
 
-<?php require_once __DIR__ . '/../partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/footer.php'; ?>

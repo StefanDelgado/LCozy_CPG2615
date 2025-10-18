@@ -3,8 +3,8 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../auth/auth.php';
+require_once __DIR__ . '/../../config.php';
+require_once __DIR__ . '/../../auth/auth.php';
 require_role('admin');
 
 // Date range filter
@@ -65,7 +65,7 @@ $payment_stats = $pdo->query("
     GROUP BY status
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-require_once __DIR__ . '/../partials/header.php';
+require_once __DIR__ . '/../../partials/header.php';
 ?>
 
 <div class="page-header">
@@ -223,4 +223,4 @@ new Chart(document.getElementById('paymentStats').getContext('2d'), {
 .table-responsive { overflow-x: auto; }
 </style>
 
-<?php require_once __DIR__ . '/../partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/footer.php'; ?>
