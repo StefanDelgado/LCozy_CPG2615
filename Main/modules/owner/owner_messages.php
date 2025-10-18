@@ -47,10 +47,30 @@ $threads->execute([$owner_id, $owner_id, $owner_id, $owner_id]);
 $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
 
 $active_dorm_id = intval($_GET['dorm_id'] ?? 0);
-$active_student_id = intval($_GET['student_id'] ?? 0);
+$active_dorm_id = intval($_GET['dorm_id'] ?? 0);
+$active_student_id = intval($_GET['student_id'] ?? $_GET['recipient_id'] ?? 0);
+
+// If recipient_id is provided without dorm_id, find the most recent dorm for this student
+if ($active_student_id && !$active_dorm_id) {
+    $find_dorm = $pdo->prepare("
+        SELECT d.dorm_id 
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN dormitories d ON r.dorm_id = d.dorm_id
+        WHERE b.student_id = ? AND d.owner_id = ?
+        ORDER BY b.created_at DESC
+        LIMIT 1
+    ");
+    $find_dorm->execute([$active_student_id, $owner_id]);
+    $result = $find_dorm->fetch(PDO::FETCH_ASSOC);
+    if ($result) {
+        $active_dorm_id = $result['dorm_id'];
+    }
+}
 ?>
 
 <div class="page-header">
+  <h1>Messages</h1>
   <p>Communicate with students who booked your dorms</p>
 </div>
 

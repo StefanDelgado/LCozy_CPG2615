@@ -340,7 +340,7 @@ unset($_SESSION['flash']);
             </button>
           </form>
         <?php else: ?>
-          <a href="owner_messages.php?recipient_id=<?= $b['student_id'] ?>" class="btn btn-contact">
+          <a href="owner_messages.php?student_id=<?= $b['student_id'] ?>&dorm_id=<?= $b['dorm_id'] ?>" class="btn btn-contact">
             <span>💬</span> Contact Student
           </a>
         <?php endif; ?>
