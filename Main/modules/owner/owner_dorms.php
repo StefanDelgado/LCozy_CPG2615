@@ -206,12 +206,6 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="rooms-section">
       <div class="section-header">
         <h3>Rooms</h3>
-        <button class="btn-add-room" 
-                data-dorm-id="<?= $dorm['dorm_id'] ?>"
-                data-dorm-name="<?= htmlspecialchars($dorm['name']) ?>"
-                onclick="openRoomModal(this)">
-          + Add Room
-        </button>
       </div>
       
       <?php
@@ -276,13 +270,7 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
       <?php else: ?>
         <div class="no-rooms">
-          <p>No rooms have been added yet.</p>
-          <button class="btn-secondary" 
-                  data-dorm-id="<?= $dorm['dorm_id'] ?>"
-                  data-dorm-name="<?= htmlspecialchars($dorm['name']) ?>"
-                  onclick="openRoomModal(this)">
-            Add Your First Room
-          </button>
+          <p>No rooms have been added yet. Click "Manage Rooms" to add rooms to this dormitory.</p>
         </div>
       <?php endif; ?>
     </div>
@@ -365,70 +353,6 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
   </div>
 </div>
 
-<!-- ADD ROOM MODAL -->
-<div id="addRoomModal" class="modal">
-  <div class="modal-content">
-    <h2>Add New Room</h2>
-    <form method="post" enctype="multipart/form-data" class="form-area">
-      <div class="form-group">
-        <label>Select Dormitory *</label>
-        <select name="dorm_id" id="room_dorm_select" required>
-          <option value="">-- Select a Dormitory --</option>
-          <?php foreach ($dorms as $d): ?>
-            <option value="<?= $d['dorm_id'] ?>"><?= htmlspecialchars($d['name']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Room Type</label>
-        <select name="room_type_select" onchange="toggleCustomRoomType(this, 'customRoomTypeAdd')" required>
-          <option value="">Select Room Type</option>
-          <option value="Single">Single</option>
-          <option value="Double">Double</option>
-          <option value="Twin">Twin</option>
-          <option value="Suite">Suite</option>
-          <option value="Custom">Custom</option>
-        </select>
-        <input type="text" id="customRoomTypeAdd" name="room_type" placeholder="Custom Room Type" style="display:none;">
-      </div>
-
-      <div class="form-group">
-        <label>Room Size (m²)</label>
-        <input type="number" name="size" step="0.1" placeholder="e.g. 15.5">
-      </div>
-
-      <div class="form-group">
-        <label>Capacity</label>
-        <input type="number" name="capacity" min="1" required>
-      </div>
-
-      <div class="form-group">
-        <label>Price (₱ per month)</label>
-        <input type="number" step="0.01" name="price" required>
-      </div>
-
-      <div class="form-group">
-        <label>Status</label>
-        <select name="status">
-          <option value="vacant">Vacant</option>
-          <option value="occupied">Occupied</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Room Images (multiple)</label>
-        <input type="file" name="room_images[]" accept=".jpg,.jpeg,.png" multiple>
-      </div>
-
-      <div class="modal-actions">
-        <button type="submit" name="add_room" class="btn">Add Room</button>
-        <button type="button" class="btn-secondary" onclick="closeModal('addRoomModal')">Cancel</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <script>
 function openModal(id) {
   document.getElementById(id).style.display = 'flex';
@@ -478,35 +402,6 @@ function openEditDormModal(button) {
   // Show modal
   modal.style.display = 'flex';
   console.log('Edit modal opened');
-}
-
-function openRoomModal(button) {
-  console.log('openRoomModal called');
-  
-  const modal = document.getElementById('addRoomModal');
-  if (!modal) {
-    console.error('Room modal not found');
-    alert('Error: Modal not found. Please refresh the page.');
-    return;
-  }
-  
-  // Get data from button attributes
-  const dormId = button.getAttribute('data-dorm-id');
-  
-  console.log('Add room for dorm ID:', dormId);
-  
-  // Set the selected dormitory in dropdown
-  const dormSelect = document.getElementById('room_dorm_select');
-  if (dormSelect) {
-    dormSelect.value = dormId;
-    console.log('Selected dorm in dropdown:', dormId);
-  } else {
-    console.error('room_dorm_select field not found');
-  }
-  
-  // Show modal
-  modal.style.display = 'flex';
-  console.log('Room modal opened');
 }
 
 function toggleCustomRoomType(select, id) {
