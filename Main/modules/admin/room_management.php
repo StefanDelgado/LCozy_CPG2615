@@ -312,8 +312,16 @@ $dorms = $dorms->fetchAll(PDO::FETCH_ASSOC);
       <input type="hidden" name="room_id" id="edit_room_id">
 
       <div class="form-group">
-        <label for="edit_room_type">Room Type *</label>
-        <input type="text" id="edit_room_type" name="room_type" required>
+        <label for="edit_room_type_select">Room Type *</label>
+        <select id="edit_room_type_select" onchange="toggleCustomRoomType(this, 'customRoomTypeEdit')" required>
+          <option value="">Select Room Type</option>
+          <option value="Single">Single</option>
+          <option value="Double">Double</option>
+          <option value="Twin">Twin</option>
+          <option value="Suite">Suite</option>
+          <option value="Custom">Custom</option>
+        </select>
+        <input type="text" id="customRoomTypeEdit" name="room_type" placeholder="Enter custom room type" style="display:none;">
       </div>
 
       <div class="form-group">
@@ -363,12 +371,30 @@ function openEditModal(button) {
   const price = button.getAttribute('data-price');
   const status = button.getAttribute('data-status');
   
+  // Set basic fields
   document.getElementById('edit_room_id').value = roomId;
-  document.getElementById('edit_room_type').value = roomType;
   document.getElementById('edit_size').value = size || '';
   document.getElementById('edit_capacity').value = capacity;
   document.getElementById('edit_price').value = price;
   document.getElementById('edit_status').value = status;
+  
+  // Handle room type dropdown
+  const roomTypeSelect = document.getElementById('edit_room_type_select');
+  const customRoomTypeInput = document.getElementById('customRoomTypeEdit');
+  
+  // Check if room type matches standard options
+  const standardTypes = ['Single', 'Double', 'Twin', 'Suite'];
+  if (standardTypes.includes(roomType)) {
+    roomTypeSelect.value = roomType;
+    customRoomTypeInput.style.display = 'none';
+    customRoomTypeInput.value = roomType;
+  } else {
+    // Custom room type
+    roomTypeSelect.value = 'Custom';
+    customRoomTypeInput.style.display = 'block';
+    customRoomTypeInput.value = roomType;
+  }
+  
   document.getElementById('editModal').style.display = 'flex';
 }
 
