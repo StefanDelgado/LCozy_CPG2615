@@ -35,6 +35,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_dorm'])) {
     $flash = ['type' => 'success', 'msg' => 'Dorm added successfully! Pending admin verification.'];
 }
 
+// ─── Edit Dormitory ───
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_dorm'])) {
+    $dorm_id = (int)$_POST['dorm_id'];
+    $name = trim($_POST['name']);
+    $address = trim($_POST['address']);
+    $description = trim($_POST['description']);
+    $features = trim($_POST['features']);
+    
+    // Check if owner owns this dorm
+    $check = $pdo->prepare("SELECT dorm_id FROM dormitories WHERE dorm_id = ? AND owner_id = ?");
+    $check->execute([$dorm_id, $owner_id]);
+    
+    if ($check->fetch()) {
+        $cover_image = null;
+        
+        // Handle new image upload
+        if (!empty($_FILES['cover_image']['name'])) {
+            $upload_dir = __DIR__ . '/../uploads/';
+            if (!file_exists($upload_dir)) mkdir($upload_dir, 0777, true);
+
+            $ext = strtolower(pathinfo($_FILES['cover_image']['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png'];
+            if (in_array($ext, $allowed)) {
+                $cover_image = uniqid('dorm_') . '.' . $ext;
+                move_uploaded_file($_FILES['cover_image']['tmp_name'], $upload_dir . $cover_image);
+                
+                // Update with new image
+                $stmt = $pdo->prepare("UPDATE dormitories SET name=?, address=?, description=?, features=?, cover_image=? WHERE dorm_id=? AND owner_id=?");
+                $stmt->execute([$name, $address, $description, $features, $cover_image, $dorm_id, $owner_id]);
+            }
+        } else {
+            // Update without changing image
+            $stmt = $pdo->prepare("UPDATE dormitories SET name=?, address=?, description=?, features=? WHERE dorm_id=? AND owner_id=?");
+            $stmt->execute([$name, $address, $description, $features, $dorm_id, $owner_id]);
+        }
+        
+        $flash = ['type' => 'success', 'msg' => 'Dorm updated successfully!'];
+    } else {
+        $flash = ['type' => 'error', 'msg' => 'Unauthorized action.'];
+    }
+}
+
 // ─── Add Room ───
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_room'])) {
     $dorm_id = (int)$_POST['dorm_id'];
@@ -96,7 +138,12 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <!-- Header Section -->
     <div class="dorm-header">
       <div class="dorm-info">
-        <h2><?= htmlspecialchars($dorm['name']) ?></h2>
+        <div class="dorm-title-row">
+          <h2><?= htmlspecialchars($dorm['name']) ?></h2>
+          <button class="btn-edit-dorm" onclick="openEditDormModal(<?= $dorm['dorm_id'] ?>, '<?= htmlspecialchars($dorm['name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($dorm['address'], ENT_QUOTES) ?>', '<?= htmlspecialchars($dorm['description'], ENT_QUOTES) ?>', '<?= htmlspecialchars($dorm['features'], ENT_QUOTES) ?>')">
+            ✏️ Edit
+          </button>
+        </div>
         <p class="dorm-address">📍 <?= htmlspecialchars($dorm['address']) ?></p>
         <div class="dorm-status">
           <?php if ($dorm['verified'] == 1): ?>
@@ -266,6 +313,41 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
   </div>
 </div>
 
+<!-- EDIT DORM MODAL -->
+<div id="editDormModal" class="modal">
+  <div class="modal-content">
+    <h2>Edit Dormitory</h2>
+    <form method="post" enctype="multipart/form-data" class="form-area">
+      <input type="hidden" name="dorm_id" id="edit_dorm_id">
+      
+      <div class="form-group">
+        <label>Dorm Name</label>
+        <input type="text" name="name" id="edit_dorm_name" required>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" name="address" id="edit_dorm_address" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" id="edit_dorm_description" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Features (comma separated)</label>
+        <input type="text" name="features" id="edit_dorm_features" placeholder="Wi-Fi, Study Lounge, CCTV Security, Air-conditioned Rooms, Laundry Area">
+      </div>
+      <div class="form-group">
+        <label>Cover Image (leave empty to keep current)</label>
+        <input type="file" name="cover_image" accept=".jpg,.jpeg,.png">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" name="edit_dorm" class="btn">Update Dormitory</button>
+        <button type="button" class="btn-secondary" onclick="closeModal('editDormModal')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ADD ROOM MODAL -->
 <div id="addRoomModal" class="modal">
   <div class="modal-content">
@@ -331,17 +413,43 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
 function openModal(id) {
   document.getElementById(id).style.display = 'flex';
 }
+
 function closeModal(id) {
   document.getElementById(id).style.display = 'none';
 }
-function openRoomModal(dormId, dormName) {
-  document.getElementById('addRoomModal').style.display = 'flex';
-  document.getElementById('room_dorm_id').value = dormId;
-  document.getElementById('room_dorm_name').value = dormName;
+
+function openEditDormModal(dormId, name, address, description, features) {
+  document.getElementById('editDormModal').style.display = 'flex';
+  document.getElementById('edit_dorm_id').value = dormId;
+  document.getElementById('edit_dorm_name').value = name;
+  document.getElementById('edit_dorm_address').value = address;
+  document.getElementById('edit_dorm_description').value = description;
+  document.getElementById('edit_dorm_features').value = features;
 }
+
+function openRoomModal(dormId, dormName) {
+  const modal = document.getElementById('addRoomModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.getElementById('room_dorm_id').value = dormId;
+    document.getElementById('room_dorm_name').value = dormName;
+  } else {
+    console.error('Room modal not found');
+  }
+}
+
 function toggleCustomRoomType(select, id) {
   const custom = document.getElementById(id);
-  custom.style.display = select.value === 'Custom' ? 'block' : 'none';
+  if (custom) {
+    custom.style.display = select.value === 'Custom' ? 'block' : 'none';
+  }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  if (event.target.classList.contains('modal')) {
+    event.target.style.display = 'none';
+  }
 }
 </script>
 
@@ -399,6 +507,37 @@ function toggleCustomRoomType(select, id) {
   color: #2c3e50;
   margin: 0 0 10px 0;
   font-weight: 600;
+}
+
+.dorm-title-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.dorm-title-row h2 {
+  margin: 0;
+  flex: 1;
+}
+
+.btn-edit-dorm {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-edit-dorm:hover {
+  background: #138496;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(23, 162, 184, 0.3);
 }
 
 .dorm-address {
