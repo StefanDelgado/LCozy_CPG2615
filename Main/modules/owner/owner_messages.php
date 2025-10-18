@@ -38,7 +38,7 @@ $threads_sql = "
     JOIN dormitories d ON r.dorm_id = d.dorm_id
     JOIN users u ON b.student_id = u.user_id
     WHERE d.owner_id = ?
-      AND b.status IN ('approved', 'active')
+      AND b.status IN ('pending', 'approved', 'active')
     ORDER BY last_message_at DESC NULLS LAST
     LIMIT 50
 ";
@@ -151,5 +151,205 @@ function fetchMessages() {
 setInterval(fetchMessages, 5000);
 fetchMessages();
 </script>
+
+<style>
+/* Page Header */
+.page-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 2rem;
+  color: #2c3e50;
+}
+
+.page-header p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+/* Grid Layout */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 20px;
+  margin-top: 25px;
+}
+
+@media (max-width: 768px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card Styling */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.card h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.3rem;
+  color: #2c3e50;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #6f42c1;
+}
+
+/* Conversation List */
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list li {
+  margin: 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.list li:last-child {
+  border-bottom: none;
+}
+
+.thread-link {
+  display: block;
+  padding: 12px 10px;
+  color: #2c3e50;
+  text-decoration: none;
+  transition: all 0.2s;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.thread-link:hover {
+  background: #f8f9fa;
+  padding-left: 15px;
+  color: #6f42c1;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.badge.warning {
+  background: #ffc107;
+  color: #000;
+}
+
+/* Chat Box */
+.chat-box {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  min-height: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+.chat-box div {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.chat-box div[style*="right"] {
+  background: #6f42c1;
+  color: white;
+  margin-left: 20%;
+}
+
+.chat-box div[style*="right"] strong {
+  color: #fff;
+}
+
+.chat-box div:not([style*="right"]) {
+  background: white;
+  margin-right: 20%;
+}
+
+.chat-box strong {
+  color: #6f42c1;
+  font-size: 0.9rem;
+}
+
+.chat-box p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.chat-box small {
+  color: #6c757d;
+  font-size: 0.75rem;
+}
+
+/* Message Form */
+#message-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#message-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s;
+}
+
+#message-form textarea:focus {
+  outline: none;
+  border-color: #6f42c1;
+}
+
+.btn-primary {
+  background: #6f42c1;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-self: flex-end;
+}
+
+.btn-primary:hover {
+  background: #5a32a3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+/* Empty State */
+.card > p > em {
+  color: #6c757d;
+  display: block;
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 1rem;
+}
+
+.list li em {
+  color: #6c757d;
+  display: block;
+  text-align: center;
+  padding: 20px;
+  font-size: 0.95rem;
+}
+</style>
 
 <?php include __DIR__ . '/../../partials/footer.php'; ?>
