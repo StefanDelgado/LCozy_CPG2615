@@ -1,10 +1,10 @@
 <?php
-require_once __DIR__ . '/../auth/auth.php';
+require_once __DIR__ . '/../../auth/auth.php';
 require_role('student');
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../config.php';
 
 $page_title = "Announcements";
-include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../../partials/header.php';
 
 $student_id = $_SESSION['user']['user_id'];
 
@@ -161,4 +161,4 @@ $announcements = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 </style>
 
-<?php include __DIR__ . '/../partials/footer.php'; ?>
+<?php include __DIR__ . '/../../partials/footer.php'; ?>
