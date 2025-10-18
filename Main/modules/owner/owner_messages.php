@@ -39,6 +39,7 @@ try {
             d.name AS dorm_name,
             b.student_id, 
             u.name AS student_name,
+            u.email AS student_email,
             (SELECT COUNT(*) FROM messages 
              WHERE receiver_id = ? AND sender_id = b.student_id AND dorm_id = d.dorm_id AND read_at IS NULL) AS unread,
             (SELECT MAX(created_at) FROM messages 
@@ -48,8 +49,7 @@ try {
         JOIN dormitories d ON r.dorm_id = d.dorm_id
         JOIN users u ON b.student_id = u.user_id
         WHERE d.owner_id = ?
-          AND b.status IN ('pending', 'approved', 'active')
-        ORDER BY last_message_at DESC NULLS LAST
+        ORDER BY last_message_at DESC, b.created_at DESC
         LIMIT 50
     ";
     $threads = $pdo->prepare($threads_sql);
@@ -62,6 +62,46 @@ try {
 
 $active_dorm_id = intval($_GET['dorm_id'] ?? 0);
 $active_student_id = intval($_GET['student_id'] ?? $_GET['recipient_id'] ?? 0);
+
+// If student_id is provided but not in the threads list, add them manually
+if ($active_student_id && $active_dorm_id) {
+    $found = false;
+    foreach ($threads as $t) {
+        if ($t['student_id'] == $active_student_id && $t['dorm_id'] == $active_dorm_id) {
+            $found = true;
+            break;
+        }
+    }
+    
+    // If not found in existing threads, fetch this student's info and add to list
+    if (!$found) {
+        try {
+            $student_sql = "
+                SELECT 
+                    d.dorm_id,
+                    d.name AS dorm_name,
+                    u.user_id AS student_id,
+                    u.name AS student_name,
+                    u.email AS student_email,
+                    0 AS unread,
+                    NULL AS last_message_at
+                FROM users u
+                JOIN dormitories d ON d.dorm_id = ?
+                WHERE u.user_id = ?
+            ";
+            $student_stmt = $pdo->prepare($student_sql);
+            $student_stmt->execute([$active_dorm_id, $active_student_id]);
+            $student_data = $student_stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($student_data) {
+                // Add to beginning of threads array
+                array_unshift($threads, $student_data);
+            }
+        } catch (Exception $e) {
+            error_log("Student fetch error: " . $e->getMessage());
+        }
+    }
+}
 
 // If recipient_id is provided without dorm_id, find the most recent dorm for this student
 if ($active_student_id && !$active_dorm_id) {
