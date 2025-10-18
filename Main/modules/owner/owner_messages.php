@@ -100,12 +100,11 @@ if ($active_student_id && !$active_dorm_id) {
   <div class="card">
     <?php if ($active_dorm_id && $active_student_id): ?>
       <h3>Conversation</h3>
-      <div id="chat-box" class="chat-box" 
-           style="max-height:300px;overflow-y:auto;padding:10px;border:1px solid #ddd;">
-        <p><em>Loading messages...</em></p>
+      <div id="chat-box" class="chat-box">
+        <p style="text-align:center;color:#6c757d;padding:20px;"><em>Loading messages...</em></p>
       </div>
 
-      <form method="post" style="margin-top:10px;" id="message-form">
+      <form method="post" id="message-form">
         <input type="hidden" name="receiver_id" value="<?= $active_student_id ?>">
         <input type="hidden" name="dorm_id" value="<?= $active_dorm_id ?>">
         <textarea name="body" required placeholder="Type your message..."></textarea>
@@ -122,34 +121,77 @@ let chatBox = document.getElementById('chat-box');
 let dormId = <?= json_encode($active_dorm_id) ?>;
 let studentId = <?= json_encode($active_student_id) ?>;
 
+console.log('Chat initialized:', { dormId, studentId });
+
 function fetchMessages() {
-  if (!dormId || !studentId) return;
-  fetch(`fetch_messages.php?dorm_id=${dormId}&other_id=${studentId}`)
-    .then(res => res.json())
+  if (!dormId || !studentId) {
+    console.log('Missing dormId or studentId');
+    return;
+  }
+  
+  const url = `fetch_messages.php?dorm_id=${dormId}&other_id=${studentId}`;
+  console.log('Fetching messages from:', url);
+  
+  fetch(url)
+    .then(res => {
+      console.log('Response received:', res.status);
+      return res.json();
+    })
     .then(data => {
-      if (data.messages) {
-        chatBox.innerHTML = '';
-        data.messages.forEach(msg => {
-          let div = document.createElement('div');
-          div.style.marginBottom = '10px';
-          if (msg.sender_id == <?= $owner_id ?>) {
-            div.style.textAlign = 'right';
-          }
-          div.innerHTML = `
-            <strong>${msg.sender_name}:</strong>
-            <p>${msg.body}</p>
-            <small>${msg.created_at}</small>
-          `;
-          chatBox.appendChild(div);
-        });
+      console.log('Messages data:', data);
+      if (data.messages && Array.isArray(data.messages)) {
+        if (data.messages.length === 0) {
+          chatBox.innerHTML = '<p style="text-align:center;color:#6c757d;padding:20px;"><em>No messages yet. Start the conversation!</em></p>';
+        } else {
+          chatBox.innerHTML = '';
+          data.messages.forEach(msg => {
+            let div = document.createElement('div');
+            div.style.marginBottom = '12px';
+            div.style.padding = '10px 12px';
+            div.style.borderRadius = '8px';
+            div.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+            
+            if (msg.sender_id == <?= $owner_id ?>) {
+              div.style.textAlign = 'right';
+              div.style.background = '#6f42c1';
+              div.style.color = 'white';
+              div.style.marginLeft = '20%';
+              div.innerHTML = `
+                <strong style="color:#fff;">${msg.sender_name}:</strong>
+                <p style="margin:8px 0;line-height:1.5;">${msg.body}</p>
+                <small style="color:rgba(255,255,255,0.8);font-size:0.75rem;">${msg.created_at}</small>
+              `;
+            } else {
+              div.style.background = 'white';
+              div.style.marginRight = '20%';
+              div.innerHTML = `
+                <strong style="color:#6f42c1;">${msg.sender_name}:</strong>
+                <p style="margin:8px 0;line-height:1.5;">${msg.body}</p>
+                <small style="color:#6c757d;font-size:0.75rem;">${msg.created_at}</small>
+              `;
+            }
+            chatBox.appendChild(div);
+          });
+        }
         chatBox.scrollTop = chatBox.scrollHeight;
+      } else {
+        console.error('Invalid data format:', data);
+        chatBox.innerHTML = '<p style="text-align:center;color:#dc3545;padding:20px;">Error loading messages. Please refresh the page.</p>';
       }
+    })
+    .catch(error => {
+      console.error('Fetch error:', error);
+      chatBox.innerHTML = '<p style="text-align:center;color:#dc3545;padding:20px;">Error loading messages. Please check your connection.</p>';
     });
 }
 
 // Poll every 5 seconds instead of 1 to reduce server load
-setInterval(fetchMessages, 5000);
-fetchMessages();
+if (dormId && studentId) {
+  setInterval(fetchMessages, 5000);
+  fetchMessages();
+} else {
+  console.log('No active conversation selected');
+}
 </script>
 
 <style>
