@@ -10,6 +10,33 @@ $owner_id = $_SESSION['user']['user_id'];
 $active_tab = $_GET['tab'] ?? 'current';
 $flash = null;
 
+// Fetch payment history for AJAX request
+if (isset($_GET['ajax']) && $_GET['ajax'] === 'payment_history' && isset($_GET['tenant_id'])) {
+    $tenant_id = (int)$_GET['tenant_id'];
+    
+    $stmt = $pdo->prepare("
+        SELECT 
+            p.payment_id,
+            p.amount,
+            p.payment_date,
+            p.due_date,
+            p.status,
+            p.payment_method,
+            p.reference_number,
+            p.created_at
+        FROM payments p
+        JOIN tenants t ON p.booking_id = t.booking_id
+        WHERE t.tenant_id = ? AND t.dorm_id IN (SELECT dorm_id FROM dormitories WHERE owner_id = ?)
+        ORDER BY p.created_at DESC
+    ");
+    $stmt->execute([$tenant_id, $owner_id]);
+    $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    header('Content-Type: application/json');
+    echo json_encode($payments);
+    exit();
+}
+
 // Handle Send Message
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
     $student_id = (int)$_POST['student_id'];
@@ -161,10 +188,10 @@ $total_revenue = array_sum(array_column($current_tenants, 'total_paid'));
                             class="btn btn-secondary" style="flex: 1;">
                         <i class="fa fa-dollar-sign"></i> Add Payment
                     </button>
-                    <a href="/modules/owner/owner_payments.php?tenant_id=<?= $tenant['tenant_id'] ?>" 
-                       class="btn btn-outline" style="flex: 1; text-align: center; padding: 10px;">
+                    <button onclick="openPaymentHistoryModal(<?= $tenant['tenant_id'] ?>, '<?= htmlspecialchars($tenant['tenant_name']) ?>')" 
+                            class="btn btn-outline" style="flex: 1;">
                         <i class="fa fa-history"></i> View History
-                    </a>
+                    </button>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -229,6 +256,29 @@ $total_revenue = array_sum(array_column($current_tenants, 'total_paid'));
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Payment History Modal -->
+<div id="paymentHistoryModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h2>Payment History - <span id="historyTenantName"></span></h2>
+            <button onclick="closeModal('paymentHistoryModal')" class="close-btn">&times;</button>
+        </div>
+        
+        <div id="paymentHistoryContent">
+            <div style="text-align: center; padding: 40px;">
+                <div class="spinner"></div>
+                <p>Loading payment history...</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: right;">
+            <button type="button" onclick="closeModal('paymentHistoryModal')" class="btn btn-secondary">
+                Close
+            </button>
+        </div>
     </div>
 </div>
 
@@ -334,6 +384,113 @@ $total_revenue = array_sum(array_column($current_tenants, 'total_paid'));
         background: #8b5cf6;
         color: white;
     }
+    
+    .payment-history-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    
+    .payment-history-table thead {
+        background: #f8f9fa;
+    }
+    
+    .payment-history-table th {
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+        border-bottom: 2px solid #dee2e6;
+        font-size: 13px;
+    }
+    
+    .payment-history-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 14px;
+    }
+    
+    .payment-history-table tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-badge.paid {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-badge.pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-badge.overdue {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .no-payments {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    
+    .no-payments i {
+        font-size: 48px;
+        color: #ccc;
+        margin-bottom: 15px;
+    }
+    
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #8b5cf6;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .payment-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .summary-item {
+        text-align: center;
+    }
+    
+    .summary-item h3 {
+        margin: 0 0 5px 0;
+        font-size: 24px;
+        color: #8b5cf6;
+    }
+    
+    .summary-item p {
+        margin: 0;
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
 </style>
 
 <script>
@@ -353,6 +510,117 @@ $total_revenue = array_sum(array_column($current_tenants, 'total_paid'));
     
     function closeModal(modalId) {
         document.getElementById(modalId).style.display = 'none';
+    }
+    
+    function openPaymentHistoryModal(tenantId, tenantName) {
+        document.getElementById('historyTenantName').textContent = tenantName;
+        document.getElementById('paymentHistoryModal').style.display = 'flex';
+        
+        // Show loading state
+        document.getElementById('paymentHistoryContent').innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <div class="spinner"></div>
+                <p>Loading payment history...</p>
+            </div>
+        `;
+        
+        // Fetch payment history via AJAX
+        fetch(`?ajax=payment_history&tenant_id=${tenantId}`)
+            .then(response => response.json())
+            .then(payments => {
+                displayPaymentHistory(payments);
+            })
+            .catch(error => {
+                console.error('Error fetching payment history:', error);
+                document.getElementById('paymentHistoryContent').innerHTML = `
+                    <div class="no-payments">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <h3>Error Loading Payment History</h3>
+                        <p>Unable to fetch payment history. Please try again.</p>
+                    </div>
+                `;
+            });
+    }
+    
+    function displayPaymentHistory(payments) {
+        if (payments.length === 0) {
+            document.getElementById('paymentHistoryContent').innerHTML = `
+                <div class="no-payments">
+                    <i class="fa fa-receipt"></i>
+                    <h3>No Payment History</h3>
+                    <p>This tenant hasn't made any payments yet.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Calculate summary
+        const totalPaid = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + parseFloat(p.amount), 0);
+        const totalPending = payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + parseFloat(p.amount), 0);
+        const totalPayments = payments.length;
+        
+        let html = `
+            <div class="payment-summary">
+                <div class="summary-item">
+                    <h3>₱${totalPaid.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+                    <p>Total Paid</p>
+                </div>
+                <div class="summary-item">
+                    <h3>₱${totalPending.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+                    <p>Pending</p>
+                </div>
+                <div class="summary-item">
+                    <h3>${totalPayments}</h3>
+                    <p>Total Payments</p>
+                </div>
+            </div>
+            
+            <table class="payment-history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Method</th>
+                        <th>Reference</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        payments.forEach(payment => {
+            const paymentDate = payment.payment_date ? formatDate(payment.payment_date) : 'Not paid';
+            const dueDate = formatDate(payment.due_date);
+            const amount = parseFloat(payment.amount).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const status = payment.status || 'pending';
+            const method = payment.payment_method || '-';
+            const reference = payment.reference_number || '-';
+            
+            html += `
+                <tr>
+                    <td>${paymentDate}</td>
+                    <td style="font-weight: 600;">₱${amount}</td>
+                    <td>${dueDate}</td>
+                    <td><span class="status-badge ${status}">${status.toUpperCase()}</span></td>
+                    <td>${method}</td>
+                    <td style="font-family: monospace; font-size: 12px;">${reference}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                </tbody>
+            </table>
+        `;
+        
+        document.getElementById('paymentHistoryContent').innerHTML = html;
+    }
+    
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return date.toLocaleDateString('en-US', options);
     }
     
     // Close modal when clicking outside
