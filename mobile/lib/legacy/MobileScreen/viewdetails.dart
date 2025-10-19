@@ -65,7 +65,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/dorm_details_api.php?dorm_id=$dormId'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/dorms/dorm_details_api.php?dorm_id=$dormId'),
       );
 
       print('Dorm Details API Response: ${response.statusCode}');

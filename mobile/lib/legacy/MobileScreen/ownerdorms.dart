@@ -36,7 +36,7 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
   Future<void> fetchDorms() async {
     try {
       final response = await http.get(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/owner_dorms_api.php?owner_email=${widget.ownerEmail}'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/owner/owner_dorms_api.php?owner_email=${widget.ownerEmail}'),
       );
 
       if (response.statusCode == 200) {
@@ -63,7 +63,7 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
   Future<void> _addDorm() async {
     try {
       final response = await http.post(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/add_dorm_api.php'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/dorms/add_dorm_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'owner_email': widget.ownerEmail,
@@ -264,7 +264,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
   Future<void> _addRoom() async {
     try {
       final response = await http.post(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/add_room_api.php'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/rooms/add_room_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'owner_email': widget.ownerEmail,
@@ -356,7 +356,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
   Future<void> _deleteRoom(int roomId) async {
     try {
       final response = await http.post(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/delete_room_api.php'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/rooms/delete_room_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'owner_email': widget.ownerEmail,
@@ -434,7 +434,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
               if (_formKey.currentState?.validate() ?? false) {
                 try {
                   final response = await http.post(
-                    Uri.parse('http://cozydorms.life/modules/mobile-api/edit_room_api.php'),
+                    Uri.parse('http://cozydorms.life/modules/mobile-api/rooms/edit_room_api.php'),
                     headers: {'Content-Type': 'application/json'},
                     body: jsonEncode({
                       'owner_email': widget.ownerEmail,

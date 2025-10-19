@@ -36,7 +36,7 @@ class _BrowseDormsScreenState extends State<BrowseDormsScreen> {
     });
 
     try {
-      final uri = Uri.parse('http://cozydorms.life/modules/mobile-api/student_home_api.php');
+      final uri = Uri.parse('http://cozydorms.life/modules/mobile-api/student/student_home_api.php');
       final rsp = await http.get(uri);
       if (rsp.statusCode != 200) throw Exception('Server ${rsp.statusCode}');
       final data = jsonDecode(rsp.body);

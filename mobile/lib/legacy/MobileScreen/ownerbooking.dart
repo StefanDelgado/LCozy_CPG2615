@@ -39,7 +39,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/owner_bookings_api.php?owner_email=${widget.ownerEmail}'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/owner/owner_bookings_api.php?owner_email=${widget.ownerEmail}'),
         headers: {'Accept': 'application/json'},
       );
 
@@ -68,7 +68,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
   Future<void> approveBooking(int bookingId) async {
     try {
       final response = await http.post(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/owner_bookings_api.php'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/owner/owner_bookings_api.php'),
         body: {
           'action': 'approve',
           'booking_id': bookingId.toString(),

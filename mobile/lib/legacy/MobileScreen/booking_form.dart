@@ -92,7 +92,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       print('End Date: ${endDate!.year}-${endDate!.month.toString().padLeft(2, '0')}-${endDate!.day.toString().padLeft(2, '0')}');
       
       final response = await http.post(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/create_booking_api.php'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/bookings/create_booking_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'student_email': widget.studentEmail,

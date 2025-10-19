@@ -54,7 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/register_api.php'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/auth/register_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': nameController.text.trim(),

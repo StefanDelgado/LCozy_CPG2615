@@ -33,7 +33,7 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
   Future<void> fetchTenants() async {
     try {
       final response = await http.get(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/owner_tenants_api.php?owner_email=${widget.ownerEmail}'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/owner/owner_tenants_api.php?owner_email=${widget.ownerEmail}'),
       );
 
       if (response.statusCode == 200) {

@@ -34,7 +34,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/student_payments_api.php?student_email=${widget.userEmail}'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/student/student_payments_api.php?student_email=${widget.userEmail}'),
       );
 
       print('Payments Response: ${response.statusCode}');
@@ -93,7 +93,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
 
       // Send to API
       final response = await http.post(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/upload_receipt_api.php'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/payments/upload_receipt_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'payment_id': paymentId,

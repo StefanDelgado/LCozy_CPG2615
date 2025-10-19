@@ -32,7 +32,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
   Future<void> fetchPayments() async {
     try {
       final response = await http.get(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/owner_payments_api.php?owner_email=${widget.ownerEmail}'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/owner/owner_payments_api.php?owner_email=${widget.ownerEmail}'),
       );
 
       if (response.statusCode == 200) {

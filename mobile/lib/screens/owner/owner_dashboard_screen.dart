@@ -6,14 +6,12 @@ import '../../widgets/owner/dashboard/owner_stat_card.dart';
 import '../../widgets/owner/dashboard/owner_quick_action_tile.dart';
 import '../../widgets/owner/dashboard/owner_activity_tile.dart';
 import '../../widgets/owner/dashboard/owner_messages_list.dart';
-// New refactored screens
+// Modern refactored screens (using correct API paths)
 import 'owner_dorms_screen.dart';
-import 'owner_payments_screen.dart'; // Updated to use new payments screen
-// Temporary imports from legacy structure
-import '../../legacy/MobileScreen/ownerbooking.dart';
-// import '../../legacy/MobileScreen/ownerpayments.dart'; // Replaced with new version
-import '../../legacy/MobileScreen/ownertenants.dart';
-import '../../legacy/MobileScreen/ownersetting.dart';
+import 'owner_payments_screen.dart';
+import 'owner_booking_screen.dart';
+import 'owner_tenants_screen.dart';
+import 'owner_settings_screen.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
   final String ownerEmail;
@@ -93,7 +91,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => OwnerSettingScreen(
+          builder: (context) => OwnerSettingsScreen(
             ownerName: ownerName.isNotEmpty ? ownerName : widget.ownerEmail,
             ownerEmail: widget.ownerEmail,
             ownerRole: widget.ownerRole,

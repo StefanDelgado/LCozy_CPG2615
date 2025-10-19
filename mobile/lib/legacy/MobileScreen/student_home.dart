@@ -41,7 +41,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://cozydorms.life/modules/mobile-api/student_dashboard_api.php?student_email=${Uri.encodeComponent(widget.userEmail)}'),
+        Uri.parse('http://cozydorms.life/modules/mobile-api/student/student_dashboard_api.php?student_email=${Uri.encodeComponent(widget.userEmail)}'),
       );
 
       print('Dashboard API Response: ${response.statusCode}');

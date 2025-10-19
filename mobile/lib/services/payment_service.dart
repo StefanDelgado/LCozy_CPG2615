@@ -176,7 +176,7 @@ class PaymentService {
       print('📡 [PaymentService] Completing payment: $paymentId');
       
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner_payments_api.php'),
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner/owner_payments_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'action': 'complete',
@@ -231,7 +231,7 @@ class PaymentService {
       print('📡 [PaymentService] Rejecting payment: $paymentId');
       
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner_payments_api.php'),
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner/owner_payments_api.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'action': 'reject',
