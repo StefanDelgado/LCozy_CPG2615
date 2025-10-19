@@ -26,10 +26,32 @@ class AuthHeader extends StatelessWidget {
       child: Column(
         children: [
           if (showLogo) ...[
-            CircleAvatar(
-              radius: 40,
-              backgroundColor: Colors.white,
-              child: Icon(Icons.home, color: orangeColor, size: 48),
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Image.asset(
+                    'lib/Logo.jpg',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.home, color: orangeColor, size: 48);
+                    },
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             const Text(

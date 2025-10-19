@@ -171,12 +171,5 @@ try {
 } catch (Exception $e) {
     error_log('Owner dashboard API error: ' . $e->getMessage());
     error_log('Stack trace: ' . $e->getTraceAsString());
-    
-    // Detailed error for debugging (remove in production)
-    echo json_encode([
-        'error' => 'Server error',
-        'details' => $e->getMessage(),
-        'file' => $e->getFile(),
-        'line' => $e->getLine()
-    ]);
+    echo json_encode(['error' => 'Server error']);
 }

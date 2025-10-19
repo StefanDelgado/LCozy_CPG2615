@@ -127,7 +127,7 @@ class RecentPaymentsWidget extends StatelessWidget {
     final status = payment['status'] ?? 'pending';
     final statusColor = _getStatusColor(status);
     final statusText = _getStatusText(status);
-    final amount = payment['amount'] ?? 0.0;
+    final amount = payment['amount'];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -169,7 +169,7 @@ class RecentPaymentsWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '₱${amount.toStringAsFixed(2)}',
+                  _formatAmount(amount),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -253,6 +253,22 @@ class RecentPaymentsWidget extends StatelessWidget {
         return 'Overdue';
       default:
         return status[0].toUpperCase() + status.substring(1);
+    }
+  }
+
+  String _formatAmount(dynamic amount) {
+    try {
+      // Convert to double regardless of whether it's a string or number
+      double value = 0.0;
+      if (amount is String) {
+        value = double.tryParse(amount) ?? 0.0;
+      } else if (amount is num) {
+        value = amount.toDouble();
+      }
+      
+      return '₱${value.toStringAsFixed(2)}';
+    } catch (e) {
+      return '₱0.00';
     }
   }
 }
