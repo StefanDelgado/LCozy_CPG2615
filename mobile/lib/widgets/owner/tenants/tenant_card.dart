@@ -42,7 +42,7 @@ class TenantCard extends StatelessWidget {
       
       if (difference < 0) return 'Overdue';
       if (difference == 0) return 'Due today';
-      return ' days';
+      return '$difference days';
     } catch (e) {
       return 'Invalid date';
     }

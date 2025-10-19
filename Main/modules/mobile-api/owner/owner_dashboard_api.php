@@ -154,16 +154,18 @@ try {
     $recent_messages = $recentMessagesStmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
-        'ok' => true,
-        'stats' => [
-            'rooms' => (int)$total_rooms,
-            'tenants' => (int)$total_tenants,
-            'monthly_revenue' => (float)$monthly_revenue,
-            'recent_activities' => $recent_activities
-        ],
-        'recent_bookings' => $recent_bookings,
-        'recent_payments' => $recent_payments,
-        'recent_messages' => $recent_messages
+        'success' => true,
+        'data' => [
+            'stats' => [
+                'rooms' => (int)$total_rooms,
+                'tenants' => (int)$total_tenants,
+                'monthly_revenue' => (float)$monthly_revenue,
+                'recent_activities' => $recent_activities
+            ],
+            'recent_bookings' => $recent_bookings,
+            'recent_payments' => $recent_payments,
+            'recent_messages' => $recent_messages
+        ]
     ]);
 
 } catch (Exception $e) {

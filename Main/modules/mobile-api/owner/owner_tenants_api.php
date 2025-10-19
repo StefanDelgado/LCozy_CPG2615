@@ -36,7 +36,7 @@ try {
             b.start_date,
             b.end_date,
             b.booking_type,
-            r.price AS monthly_rent,
+            r.price,
             (SELECT p.status 
              FROM payments p 
              WHERE p.booking_id = b.booking_id 
