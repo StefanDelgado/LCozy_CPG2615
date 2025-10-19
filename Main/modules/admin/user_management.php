@@ -39,8 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
         ");
         $stmt->execute([
             $name, $email, $hash, $role, $address, $phone, $license,
-            $paths['profile_pic'],$paths['id_image'],$paths['selfie_image']
+            $paths['profile_pic'], $paths['id_document']
         ]);
+
         header("Location: user_management.php?msg=User+created");
         exit;
     }
