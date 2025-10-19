@@ -60,9 +60,13 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     setState(() => isLoading = true);
     
     try {
+      print('🔄 Fetching dashboard data for: ${widget.ownerEmail}');
       final result = await _dashboardService.getOwnerDashboard(widget.ownerEmail);
 
+      print('📊 Dashboard API Response: $result');
+
       if (result['success'] == true) {
+        print('✅ Success! Dashboard data: ${result['data']}');
         setState(() {
           dashboardData = result['data'];
           // Extract owner name from API response if available
@@ -71,10 +75,13 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
           }
           isLoading = false;
         });
+        print('📈 Stats loaded: ${dashboardData['stats']}');
       } else {
+        print('❌ Error: ${result['error']}');
         throw Exception(result['error'] ?? 'Failed to load dashboard data');
       }
     } catch (e) {
+      print('💥 Exception caught: $e');
       setState(() {
         dashboardData = {
           'stats': {

@@ -50,23 +50,25 @@ class DashboardService {
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final responseData = jsonDecode(response.body);
 
-        if (data['ok'] == true) {
+        if (responseData['success'] == true) {
+          final data = responseData['data'];
           return {
             'success': true,
             'data': {
               'stats': data['stats'] ?? {},
-              'recent_activities': data['recent_activities'] ?? [],
-              'upcoming_payments': data['upcoming_payments'] ?? [],
-              'pending_approvals': data['pending_approvals'] ?? [],
+              'recent_activities': data['stats']?['recent_activities'] ?? [],
+              'recent_bookings': data['recent_bookings'] ?? [],
+              'recent_payments': data['recent_payments'] ?? [],
+              'recent_messages': data['recent_messages'] ?? [],
             },
             'message': 'Dashboard data loaded successfully',
           };
         } else {
           return {
             'success': false,
-            'error': data['error'] ?? 'Failed to load dashboard data',
+            'error': responseData['error'] ?? 'Failed to load dashboard data',
           };
         }
       } else {
