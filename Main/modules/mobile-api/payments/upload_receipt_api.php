@@ -86,7 +86,15 @@ try {
         // Create upload directory if it doesn't exist
         $upload_dir = __DIR__ . '/../../uploads/receipts/';
         if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
+            $mkdir_result = mkdir($upload_dir, 0777, true);
+            error_log("[DEBUG] mkdir called for $upload_dir, result: " . ($mkdir_result ? "success" : "failure"));
+        }
+        // Log directory permissions
+        if (file_exists($upload_dir)) {
+            $perms = substr(sprintf('%o', fileperms($upload_dir)), -4);
+            error_log("[DEBUG] Upload directory exists. Permissions: $perms");
+        } else {
+            error_log("[DEBUG] Upload directory does NOT exist: $upload_dir");
         }
 
         // Generate unique filename
@@ -98,8 +106,14 @@ try {
         $filepath = $upload_dir . $filename;
 
         // Save file
-        if (file_put_contents($filepath, $receipt_data) === false) {
+        error_log("[DEBUG] Attempting to save receipt to: $filepath");
+        $file_save_result = file_put_contents($filepath, $receipt_data);
+        if ($file_save_result === false) {
+            error_log("[ERROR] Failed to save receipt file: $filepath");
+            error_log("[ERROR] file_put_contents error: " . print_r(error_get_last(), true));
             throw new Exception('Failed to save receipt file');
+        } else {
+            error_log("[DEBUG] Receipt file saved successfully: $filepath, bytes written: $file_save_result");
         }
 
         // Update payment record with receipt

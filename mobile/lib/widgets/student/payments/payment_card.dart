@@ -171,29 +171,31 @@ class PaymentCard extends StatelessWidget {
               ),
             ],
             
-            // Rejection reason
-            if (status.toLowerCase() == 'rejected' && payment['rejection_reason'] != null) ...[
+            // Rejection reason and Upload Again button
+            if (status.toLowerCase() == 'rejected') ...[
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline, size: 20, color: Colors.red),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Rejected: ${payment['rejection_reason']}',
-                        style: const TextStyle(color: Colors.red, fontSize: 12),
+              if (payment['rejection_reason'] != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 20, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Rejected: ${payment['rejection_reason']}',
+                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
+              ],
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(

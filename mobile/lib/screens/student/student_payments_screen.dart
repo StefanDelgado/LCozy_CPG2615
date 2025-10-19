@@ -110,7 +110,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
       final result = await _paymentService.uploadPaymentProof({
         'payment_id': paymentId,
         'student_email': widget.userEmail,
-        'receipt_image': 'data:image/jpeg;base64,$base64Image',
+        'receipt_base64': 'data:image/jpeg;base64,$base64Image',
         'receipt_filename': image.name,
       });
 
@@ -268,20 +268,28 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
           payment: payment,
           onUploadReceipt: () => uploadReceipt(paymentId),
           onUploadAgain: () async {
-            // Call backend to reset status to pending
-            final result = await _paymentService.resetPaymentStatus(paymentId, widget.userEmail);
-            if (result['ok'] == true) {
-              await fetchPayments(); // Refresh stats and list
-              await uploadReceipt(paymentId); // Allow re-upload
-            } else {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(result['error'] ?? 'Failed to reset payment status'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+            final status = payment['status']?.toString().toLowerCase() ?? '';
+            print('[DEBUG] onUploadAgain: paymentId=$paymentId, studentEmail=${widget.userEmail}, status=$status');
+            if (status == 'rejected') {
+              print('[DEBUG] Calling resetPaymentStatus API...');
+              final result = await _paymentService.resetPaymentStatus(paymentId, widget.userEmail);
+              print('[DEBUG] API response: $result');
+              if (result['ok'] == true) {
+                await fetchPayments(); // Refresh stats and list
+                await uploadReceipt(paymentId); // Allow re-upload
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(result['error'] ?? 'Failed to reset payment status'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
+            } else {
+              print('[DEBUG] Status is not rejected, skipping reset API.');
+              await uploadReceipt(paymentId);
             }
           },
         );
