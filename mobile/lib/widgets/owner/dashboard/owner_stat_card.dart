@@ -24,8 +24,28 @@ class OwnerStatCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, color: Colors.white, size: 28),
-          const SizedBox(height: 6),
+          // Enhanced gradient icon container
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF9333EA), Color(0xFFC084FC)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(50),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF9333EA).withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            width: 50,
+            height: 50,
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(height: 8),
           Text(
             value,
             style: const TextStyle(

@@ -54,13 +54,17 @@ try {
         }
     }
 
-    // Insert new dorm with latitude/longitude
+    // Insert new dorm with latitude/longitude and deposit fields
     $stmt = $pdo->prepare("
         INSERT INTO dormitories (
             owner_id, name, address, description, 
-            features, latitude, longitude, verified, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, NOW())
+            features, latitude, longitude, verified, 
+            deposit_required, deposit_months, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NOW())
     ");
+    
+    $deposit_required = isset($data['deposit_required']) ? (int)$data['deposit_required'] : 0;
+    $deposit_months = isset($data['deposit_months']) ? (int)$data['deposit_months'] : 1;
     
     $stmt->execute([
         $owner['user_id'],
@@ -69,7 +73,9 @@ try {
         $data['description'],
         $data['features'] ?? '',
         $latitude,
-        $longitude
+        $longitude,
+        $deposit_required,
+        $deposit_months
     ]);
 
     echo json_encode([

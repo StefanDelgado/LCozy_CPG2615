@@ -25,6 +25,13 @@ class _AddDormDialogState extends State<AddDormDialog> {
   bool _isSubmitting = false;
   LatLng? _selectedLocation;
   String? _selectedAddress;
+  
+  // Deposit fields
+  bool _depositRequired = false;
+  int _depositMonths = 1;
+  
+  // Multiple images
+  List<String> _selectedImages = []; // Will store base64 or file paths
 
   @override
   void dispose() {
@@ -51,14 +58,23 @@ class _AddDormDialogState extends State<AddDormDialog> {
     setState(() => _isSubmitting = true);
 
     try {
-      await widget.onAdd({
+      final dormData = {
         'name': _nameController.text.trim(),
         'address': _addressController.text.trim(),
         'description': _descriptionController.text.trim(),
         'features': _featuresController.text.trim(),
         'latitude': _selectedLocation!.latitude.toString(),
         'longitude': _selectedLocation!.longitude.toString(),
-      });
+        'deposit_required': _depositRequired ? '1' : '0',
+        'deposit_months': _depositMonths.toString(),
+      };
+      
+      // Add images if any (to be implemented in service layer)
+      if (_selectedImages.isNotEmpty) {
+        dormData['images'] = _selectedImages.join('|');
+      }
+      
+      await widget.onAdd(dormData);
 
       if (mounted) {
         Navigator.pop(context);
@@ -140,6 +156,124 @@ class _AddDormDialogState extends State<AddDormDialog> {
                   ),
                   maxLines: 2,
                   enabled: !_isSubmitting,
+                ),
+                const SizedBox(height: 24),
+                
+                // Deposit Section
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFAF5FF), Color(0xFFF3E8FF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE9D5FF), width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.account_balance_wallet, 
+                            color: Color(0xFF9333EA), size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Deposit Requirements',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1F2937),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SwitchListTile(
+                        title: const Text('Require Deposit', 
+                          style: TextStyle(fontSize: 14)),
+                        subtitle: Text(
+                          _depositRequired 
+                            ? 'Tenants must pay deposit' 
+                            : 'No deposit required',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        ),
+                        value: _depositRequired,
+                        activeColor: const Color(0xFF9333EA),
+                        onChanged: _isSubmitting ? null : (value) {
+                          setState(() => _depositRequired = value);
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      if (_depositRequired) ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Number of Months:',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF4B5563),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFF9333EA)),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<int>(
+                                    value: _depositMonths,
+                                    isExpanded: true,
+                                    items: List.generate(12, (index) => index + 1)
+                                        .map((month) => DropdownMenuItem(
+                                              value: month,
+                                              child: Text('$month ${month == 1 ? "month" : "months"}'),
+                                            ))
+                                        .toList(),
+                                    onChanged: _isSubmitting ? null : (value) {
+                                      if (value != null) {
+                                        setState(() => _depositMonths = value);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF9333EA), Color(0xFFC084FC)],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '₱${(_depositMonths * 5000).toStringAsFixed(0)}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Estimated: ₱5,000 per month',
+                          style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 24),
                 

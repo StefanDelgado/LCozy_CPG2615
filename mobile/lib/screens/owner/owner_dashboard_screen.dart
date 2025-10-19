@@ -6,6 +6,9 @@ import '../../widgets/owner/dashboard/owner_stat_card.dart';
 import '../../widgets/owner/dashboard/owner_quick_action_tile.dart';
 import '../../widgets/owner/dashboard/owner_activity_tile.dart';
 import '../../widgets/owner/dashboard/owner_messages_list.dart';
+import '../../widgets/owner/dashboard/recent_bookings_widget.dart';
+import '../../widgets/owner/dashboard/recent_payments_widget.dart';
+import '../../widgets/owner/dashboard/recent_messages_preview_widget.dart';
 // Modern refactored screens (using correct API paths)
 import 'owner_dorms_screen.dart';
 import 'owner_payments_screen.dart';
@@ -164,7 +167,25 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             _buildHeader(),
             const SizedBox(height: 24),
             _buildQuickActionsSection(),
-            const SizedBox(height: 28),
+            const SizedBox(height: 20),
+            // Recent Bookings Preview
+            RecentBookingsWidget(
+              bookings: dashboardData['recent_bookings'] ?? [],
+              onViewAll: () => _switchToTab(1),
+            ),
+            const SizedBox(height: 16),
+            // Recent Payments Preview
+            RecentPaymentsWidget(
+              payments: dashboardData['recent_payments'] ?? [],
+              onViewAll: () => _switchToTab(3),
+            ),
+            const SizedBox(height: 16),
+            // Recent Messages Preview
+            RecentMessagesPreviewWidget(
+              messages: dashboardData['recent_messages'] ?? [],
+              onViewAll: () => _switchToTab(2),
+            ),
+            const SizedBox(height: 20),
             _buildRecentActivitiesSection(),
             const SizedBox(height: 24),
           ],
