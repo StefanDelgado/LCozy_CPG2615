@@ -60,7 +60,7 @@ try {
             SELECT COUNT(*) 
             FROM messages 
             WHERE receiver_id = ? 
-            AND (status = 'unread' OR status IS NULL)
+            AND read_at IS NULL
         ");
         $messagesStmt->execute([$student_id]);
         $unread_messages = (int)$messagesStmt->fetchColumn();

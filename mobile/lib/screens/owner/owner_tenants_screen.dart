@@ -61,10 +61,10 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
         final data = result['data'];
         setState(() {
           _currentTenants = List<Map<String, dynamic>>.from(
-            data['tenants']?.where((t) => t['status'] == 'active') ?? []
+            data['current_tenants'] ?? []
           );
           _pastTenants = List<Map<String, dynamic>>.from(
-            data['tenants']?.where((t) => t['status'] != 'active') ?? []
+            data['past_tenants'] ?? []
           );
           _isLoading = false;
         });

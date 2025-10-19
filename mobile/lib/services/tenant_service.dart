@@ -31,8 +31,8 @@ class TenantService {
           return {
             'success': true,
             'data': {
-              'stats': data['stats'] ?? {},
-              'tenants': data['tenants'] ?? [],
+              'current_tenants': data['current_tenants'] ?? [],
+              'past_tenants': data['past_tenants'] ?? [],
             },
           };
         } else {
