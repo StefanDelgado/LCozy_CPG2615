@@ -72,7 +72,6 @@ include __DIR__ . '/../partials/header.php';
     <a class="module" href="../modules/admin/booking_oversight.php"><span class="module-title">Booking Oversight</span></a>
     <a class="module" href="../modules/shared/payments.php"><span class="module-title">Payment Management</span></a>
     <a class="module" href="../modules/shared/messaging.php"><span class="module-title">Messaging</span></a>
-    <a class="module" href="../modules/admin/system_config.php"><span class="module-title">System Configuration</span></a>
   </div>
 </section>
 
