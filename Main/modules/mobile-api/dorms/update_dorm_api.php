@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . '/../../config.php';
-require_once __DIR__ . '/cors.php';
-require_once __DIR__ . '/geocoding_helper.php';
+require_once __DIR__ . '/../../../config.php';
+require_once __DIR__ . '/../shared/cors.php';
+require_once __DIR__ . '/../shared/geocoding_helper.php';
 
 header('Content-Type: application/json');
 

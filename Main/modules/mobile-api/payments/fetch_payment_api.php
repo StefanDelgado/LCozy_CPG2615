@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . 'cors.php';
+require_once __DIR__ . '/../../../config.php';
+require_once __DIR__ . '/../shared/cors.php';
 
 // Example: GET /Main/api/fetch_payments.php?role=student&user_id=123
 $role = $_GET['role'] ?? null;
