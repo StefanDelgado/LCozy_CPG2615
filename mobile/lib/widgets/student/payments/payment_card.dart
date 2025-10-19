@@ -4,11 +4,13 @@ import '../../../utils/app_theme.dart';
 class PaymentCard extends StatelessWidget {
   final Map<String, dynamic> payment;
   final VoidCallback onUploadReceipt;
+  final VoidCallback onUploadAgain;
 
   const PaymentCard({
     super.key,
     required this.payment,
     required this.onUploadReceipt,
+    required this.onUploadAgain,
   });
 
   Color _getStatusColor(String status) {
@@ -189,6 +191,19 @@ class PaymentCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: onUploadAgain,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Upload Again'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ),
             ],

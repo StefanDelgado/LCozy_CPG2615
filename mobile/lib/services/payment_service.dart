@@ -270,5 +270,42 @@ class PaymentService {
       };
     }
   }
+
+  /// Resets a rejected payment to pending so student can upload again
+  /// 
+  /// Parameters:
+  /// - [paymentId]: ID of the payment
+  /// - [studentEmail]: Email of the student
+  /// 
+  /// Returns:
+  /// - Map with keys:
+  ///   - success: boolean indicating if the payment status was reset
+  ///   - message: Success or error message
+  Future<Map<String, dynamic>> resetPaymentStatus(int paymentId, String studentEmail) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/payments/reset_payment_status_api.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'payment_id': paymentId,
+          'student_email': studentEmail,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data;
+      } else {
+        return {
+          'ok': false,
+          'error': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'ok': false,
+        'error': 'Network error: ${e.toString()}',
+      };
+    }
+  }
 }
 

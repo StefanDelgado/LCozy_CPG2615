@@ -316,6 +316,7 @@ class _AddDormDialogState extends State<AddDormDialog> {
           onPressed: _isSubmitting ? null : _handleSubmit,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primary,
+            foregroundColor: Colors.white,
           ),
           child: _isSubmitting
               ? const SizedBox(

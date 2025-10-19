@@ -132,10 +132,10 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _priceController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Price',
-                  prefixIcon: Icon(Icons.attach_money),
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.attach_money),
+                  border: const OutlineInputBorder(),
                   helperText: 'Monthly rent in PHP',
                   prefixText: '₱ ',
                 ),
@@ -168,6 +168,7 @@ class _AddRoomDialogState extends State<AddRoomDialog> {
           onPressed: _isSubmitting ? null : _handleSubmit,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primary,
+            foregroundColor: Colors.white,
           ),
           child: _isSubmitting
               ? const SizedBox(

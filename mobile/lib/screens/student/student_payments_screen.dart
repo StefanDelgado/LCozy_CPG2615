@@ -110,7 +110,7 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
       final result = await _paymentService.uploadPaymentProof({
         'payment_id': paymentId,
         'student_email': widget.userEmail,
-        'receipt_base64': 'data:image/jpeg;base64,$base64Image',
+        'receipt_image': 'data:image/jpeg;base64,$base64Image',
         'receipt_filename': image.name,
       });
 
@@ -264,10 +264,26 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
       itemBuilder: (context, index) {
         final payment = payments[index];
         final paymentId = payment['payment_id'];
-        
         return PaymentCard(
           payment: payment,
           onUploadReceipt: () => uploadReceipt(paymentId),
+          onUploadAgain: () async {
+            // Call backend to reset status to pending
+            final result = await _paymentService.resetPaymentStatus(paymentId, widget.userEmail);
+            if (result['ok'] == true) {
+              await fetchPayments(); // Refresh stats and list
+              await uploadReceipt(paymentId); // Allow re-upload
+            } else {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(result['error'] ?? 'Failed to reset payment status'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          },
         );
       },
     );
