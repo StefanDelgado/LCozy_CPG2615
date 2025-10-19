@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
         ");
         $stmt->execute([
             $name, $email, $hash, $role, $address, $phone, $license,
-            $paths['profile_pic'], $paths['id_image']
+            $paths['profile_pic'], $paths['id_document']
         ]);
         header("Location: user_management.php?msg=User+created");
         exit;
@@ -156,7 +156,6 @@ require_once __DIR__ . '/../../partials/header.php';
       <label>Address <input type="text" name="address"></label>
       <label>Profile Image <input type="file" name="profile_pic" accept="image/*"></label>
       <label>ID Image <input type="file" name="id_image" accept="image/*"></label>
-      <label>Selfie Verification <input type="file" name="selfie_image" accept="image/*"></label>
       <button type="submit" name="create_user" class="btn-primary">Create User</button>
       <button type="button" class="btn-secondary" onclick="closeCreate()">Cancel</button>
     </form>
