@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
                 mkdir(__DIR__ . "/../uploads", 0777, true);
             }
             move_uploaded_file($_FILES[$u]['tmp_name'], $target);
-            $paths[$u] = "/uploads/$filename";
+            $paths[$u] = "/,,/uploads/$filename";
         } else {
             $paths[$u] = null;
         }
