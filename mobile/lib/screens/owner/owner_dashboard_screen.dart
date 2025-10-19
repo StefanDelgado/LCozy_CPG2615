@@ -60,13 +60,9 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     setState(() => isLoading = true);
     
     try {
-      print('🔄 Fetching dashboard data for: ${widget.ownerEmail}');
       final result = await _dashboardService.getOwnerDashboard(widget.ownerEmail);
 
-      print('📊 Dashboard API Response: $result');
-
       if (result['success'] == true) {
-        print('✅ Success! Dashboard data: ${result['data']}');
         setState(() {
           dashboardData = result['data'];
           // Extract owner name from API response if available
@@ -75,13 +71,10 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
           }
           isLoading = false;
         });
-        print('📈 Stats loaded: ${dashboardData['stats']}');
       } else {
-        print('❌ Error: ${result['error']}');
         throw Exception(result['error'] ?? 'Failed to load dashboard data');
       }
     } catch (e) {
-      print('💥 Exception caught: $e');
       setState(() {
         dashboardData = {
           'stats': {
@@ -90,9 +83,21 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             'monthly_revenue': 0.0,
           },
           'recent_activities': [],
+          'recent_bookings': [],
+          'recent_payments': [],
+          'recent_messages': [],
         };
         isLoading = false;
       });
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load dashboard: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -221,27 +226,64 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Logo and Header Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
                 children: [
-                  const Text(
-                    'Welcome back!',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
+                  // App Logo
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'lib/Logo.jpg',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.apartment,
+                            color: Color(0xFF6B21A8),
+                            size: 30,
+                          );
+                        },
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    ownerName.isNotEmpty ? ownerName : 'Owner',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'CozyDorms',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        ownerName.isNotEmpty ? ownerName : 'Owner Dashboard',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -271,7 +313,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
               ),
               OwnerStatCard(
                 icon: Icons.attach_money,
-                value: "₱${((stats['monthly_revenue'] ?? 0.0) / 1000).toStringAsFixed(1)}K",
+                value: _formatRevenue(stats['monthly_revenue']),
                 label: "Revenue",
               ),
             ],
@@ -279,6 +321,27 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         ],
       ),
     );
+  }
+
+  String _formatRevenue(dynamic revenue) {
+    try {
+      // Convert to double regardless of whether it's a string or number
+      double amount = 0.0;
+      if (revenue is String) {
+        amount = double.tryParse(revenue) ?? 0.0;
+      } else if (revenue is num) {
+        amount = revenue.toDouble();
+      }
+      
+      // Format to K (thousands)
+      if (amount >= 1000) {
+        return "₱${(amount / 1000).toStringAsFixed(1)}K";
+      } else {
+        return "₱${amount.toStringAsFixed(0)}";
+      }
+    } catch (e) {
+      return "₱0";
+    }
   }
 
   Widget _buildQuickActionsSection() {

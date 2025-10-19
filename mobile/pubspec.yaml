@@ -32,3 +32,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  
+  # App assets
+  assets:
+    - assets/images/
+    - lib/Logo.jpg
