@@ -16,10 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
     foreach ($uploads as $u) {
         if (!empty($_FILES[$u]['name'])) {
             $filename = time() . "_" . basename($_FILES[$u]['name']);
-            $target = __DIR__ . "/../uploads/$filename";
-            if (!is_dir(__DIR__ . "/../uploads")) {
-                mkdir(__DIR__ . "/../uploads", 0777, true);
-            }
+            $targetDir = __DIR__ . "/../uploads";
+            if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+            $target = "$targetDir/$filename";
             move_uploaded_file($_FILES[$u]['tmp_name'], $target);
             $paths[$u] = "/,,/uploads/$filename";
         } else {
@@ -31,12 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
         $hash = password_hash($pass, PASSWORD_DEFAULT);
         $stmt = $pdo->prepare("
             INSERT INTO users 
-            (name, email, password, role, address, phone, license_no, profile_pic, id_document, selfie_image, created_at) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,NOW())
+            (name, email, password, role, address, phone, license_no, profile_pic, id_document, created_at) 
+            VALUES (?,?,?,?,?,?,?,?,?,NOW())
         ");
         $stmt->execute([
             $name, $email, $hash, $role, $address, $phone, $license,
-            $paths['profile_pic'],$paths['id_image'],$paths['selfie_image']
+            $paths['profile_pic'], $paths['id_image']
         ]);
         header("Location: user_management.php?msg=User+created");
         exit;
