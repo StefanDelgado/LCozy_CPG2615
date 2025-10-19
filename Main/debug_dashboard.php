@@ -150,14 +150,14 @@ if (isset($pdo)) {
             $recentMessagesStmt = $pdo->prepare("
                 SELECT 
                     m.message_id,
-                    m.message,
-                    m.sent_at,
+                    m.body as message,
+                    m.created_at as sent_at,
                     m.read_at,
                     u.name as sender_name
                 FROM messages m
                 JOIN users u ON m.sender_id = u.user_id
                 WHERE m.receiver_id = ?
-                ORDER BY m.sent_at DESC
+                ORDER BY m.created_at DESC
                 LIMIT 5
             ");
             $recentMessagesStmt->execute([$owner_id]);
