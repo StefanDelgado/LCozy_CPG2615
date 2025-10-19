@@ -84,7 +84,7 @@ try {
         }
 
         // Create upload directory if it doesn't exist
-        $upload_dir = __DIR__ . '/../../uploads/receipts/';
+        $upload_dir = __DIR__ . '/../../../uploads/receipts/';
         if (!is_dir($upload_dir)) {
             $mkdir_result = mkdir($upload_dir, 0777, true);
             error_log("[DEBUG] mkdir called for $upload_dir, result: " . ($mkdir_result ? "success" : "failure"));
