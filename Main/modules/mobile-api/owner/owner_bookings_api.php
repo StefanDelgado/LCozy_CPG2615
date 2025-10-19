@@ -14,19 +14,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$owner_email) {
         http_response_code(400);
-        echo json_encode(['ok' => false, 'error' => 'Owner email required']);
+        echo json_encode([
+            'ok' => false,
+            'success' => false,
+            'error' => 'Owner email required'
+        ]);
         exit;
     }
 
     if (!$booking_id) {
         http_response_code(400);
-        echo json_encode(['ok' => false, 'error' => 'Booking ID required']);
+        echo json_encode([
+            'ok' => false,
+            'success' => false,
+            'error' => 'Booking ID required'
+        ]);
         exit;
     }
 
     if (!in_array($action, ['approve', 'reject'])) {
         http_response_code(400);
-        echo json_encode(['ok' => false, 'error' => 'Invalid action']);
+        echo json_encode([
+            'ok' => false,
+            'success' => false,
+            'error' => 'Invalid action'
+        ]);
         exit;
     }
 
@@ -55,7 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$booking) {
             http_response_code(403);
-            echo json_encode(['ok' => false, 'error' => 'Booking not found or access denied']);
+            echo json_encode([
+                'ok' => false,
+                'success' => false,
+                'error' => 'Booking not found or access denied'
+            ]);
             exit;
         }
 
@@ -131,8 +147,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         error_log("Booking $booking_id $new_status successfully");
 
+        http_response_code(200);
         echo json_encode([
             'ok' => true,
+            'success' => true,
             'message' => 'Booking ' . $new_status . ' successfully'
         ]);
         exit;
@@ -140,7 +158,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Exception $e) {
         error_log('Booking action error: ' . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['ok' => false, 'error' => 'Server error: ' . $e->getMessage()]);
+        echo json_encode([
+            'ok' => false,
+            'success' => false,
+            'error' => 'Server error: ' . $e->getMessage()
+        ]);
         exit;
     }
 }
@@ -149,7 +171,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $owner_email = $_GET['owner_email'] ?? '';
 
 if (!$owner_email) {
-    echo json_encode(['error' => 'Owner email required']);
+    http_response_code(400);
+    echo json_encode([
+        'ok' => false,
+        'success' => false,
+        'error' => 'Owner email required'
+    ]);
     exit;
 }
 
@@ -160,7 +187,12 @@ try {
     $owner = $stmt->fetch();
 
     if (!$owner) {
-        echo json_encode(['error' => 'Owner not found']);
+        http_response_code(404);
+        echo json_encode([
+            'ok' => false,
+            'success' => false,
+            'error' => 'Owner not found'
+        ]);
         exit;
     }
 
@@ -254,11 +286,21 @@ try {
     }, $bookings);
 
     error_log("Formatted " . count($formatted) . " bookings for response");
-    echo json_encode(['ok' => true, 'bookings' => $formatted]);
+    http_response_code(200);
+    echo json_encode([
+        'ok' => true,
+        'success' => true,
+        'bookings' => $formatted
+    ]);
 
 } catch (Exception $e) {
     error_log('Owner bookings API error: ' . $e->getMessage());
-    echo json_encode(['error' => 'Server error: ' . $e->getMessage()]);
+    http_response_code(500);
+    echo json_encode([
+        'ok' => false,
+        'success' => false,
+        'error' => 'Server error: ' . $e->getMessage()
+    ]);
 }
 
 function timeAgo($datetime) {
