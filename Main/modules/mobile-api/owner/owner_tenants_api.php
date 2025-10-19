@@ -57,7 +57,7 @@ try {
         JOIN rooms r ON b.room_id = r.room_id
         JOIN dormitories d ON r.dorm_id = d.dorm_id
         WHERE d.owner_id = ? 
-        AND b.status = 'approved'
+        AND b.status IN ('approved', 'active')
         AND b.end_date >= CURDATE()
         ORDER BY b.start_date DESC
     ");
