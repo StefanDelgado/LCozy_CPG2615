@@ -1,36 +1,12 @@
 <?php 
 require_once __DIR__ . '/../../partials/header.php'; 
 require_role('admin');
-?>
 
-<div class="page-header">
-  <h1>Messaging & Inquiry</h1>
-  <p>Monitor messages between students and dorm owners</p>
-</div>
-
-<div class="stats-grid">
-  <div class="stat-card"><h3>120</h3><p>Open Conversations</p></div>
-  <div class="stat-card"><h3>45</h3><p>Unanswered Inquiries</p></div>
-</div>
-
-<div class="section">
-  <h2>Recent Inquiries</h2>
-  <ul class="log-list">
-    <li><strong>John Doe</strong> asked <em>“Is WiFi included?”</em> — <small>Pending Reply</small></li>
-    <li><strong>Maria Lopez</strong> asked <em>“Can I extend my stay?”</em> — <small>Answered</small></li>
-    <li><strong>Michael Smith</strong> asked <em>“Are utilities separate?”</em> — <small>Pending Reply</small></li>
-  </ul>
-</div>
-
-<?php require_once __DIR__ . '/../partials/footer.php'; ?>
-<?php
-require_once __DIR__ . '/../../auth/auth.php';
-require_role('admin');
+// Ensure DB connection is available (header.php already includes config but keep a safe require)
 require_once __DIR__ . '/../../config.php';
-require_once __DIR__ . '/../../partials/header.php';
 
 try {
-    // 🟢 Count distinct conversation threads (undirected per dorm)
+    // Count distinct conversation threads (undirected per dorm)
     $stmt = $pdo->query("
         SELECT COUNT(DISTINCT CONCAT(
             LEAST(sender_id, receiver_id), '-', 
@@ -41,11 +17,11 @@ try {
     ");
     $open_conversations = (int) $stmt->fetchColumn();
 
-    // 🟢 Count unread messages
+    // Count unread messages
     $stmt = $pdo->query("SELECT COUNT(*) FROM messages WHERE read_at IS NULL");
     $unanswered = (int) $stmt->fetchColumn();
 
-    // 🟢 Fetch recent inquiries (latest 5 messages)
+    // Fetch recent inquiries (latest 5 messages)
     $stmt = $pdo->prepare("
         SELECT 
             m.message_id,
@@ -116,40 +92,3 @@ try {
 </div>
 
 <?php require_once __DIR__ . '/../../partials/footer.php'; ?>
-
-<style>
-.page-header h1 { margin-bottom: 0; }
-.stats-grid {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-.stat-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  padding: 20px;
-  flex: 1;
-  text-align: center;
-}
-.section h2 { margin-bottom: 10px; }
-.log-list {
-  list-style: none;
-  padding: 0;
-}
-.log-list li {
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  margin-bottom: 10px;
-  padding: 10px 15px;
-}
-.badge {
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 0.8em;
-  color: #fff;
-}
-.badge.warning { background: #ffc107; }
-.badge.success { background: #28a745; }
-</style>
