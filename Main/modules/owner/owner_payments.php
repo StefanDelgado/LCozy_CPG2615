@@ -344,7 +344,7 @@ function renderPayments() {
             <span class="info-label">📎 Receipt</span>
             <span class="info-value">
               ${p.receipt_image 
-                ? `<a href="../uploads/receipts/${p.receipt_image}" target="_blank" class="receipt-link">View Receipt</a>` 
+                ? `<a href="../../uploads/receipts/${p.receipt_image}" target="_blank" class="receipt-link">View Receipt</a>` 
                 : '<span style="color: #999;">No receipt</span>'}
             </span>
           </div>
