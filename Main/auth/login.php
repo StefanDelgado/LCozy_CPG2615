@@ -12,19 +12,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email = trim($_POST['email'] ?? '');
   $password = $_POST['password'] ?? '';
 
-  $stmt = $pdo->prepare("SELECT user_id, name, email, password, role FROM users WHERE email = ?");
+  $stmt = $pdo->prepare("SELECT user_id, name, email, password, role, verified FROM users WHERE email = ?");
   $stmt->execute([$email]);
   $user = $stmt->fetch();
 
   if ($user && password_verify($password, $user['password'])) {
-    $_SESSION['user'] = [
-      'user_id' => $user['user_id'],
-      'name'    => $user['name'],
-      'email'   => $user['email'],
-      'role'    => $user['role'],
-    ];
+    // Check verification status: 1 = verified, 0 = pending, -1 = rejected
+    if ((int)$user['verified'] !== 1) {
+      if ((int)$user['verified'] === -1) {
+        $error = 'Your account was rejected. Contact support.';
+      } else {
+        $error = 'Please activate your account. Check your email for the activation link.';
+      }
+    } else {
+      $_SESSION['user'] = [
+        'user_id' => $user['user_id'],
+        'name'    => $user['name'],
+        'email'   => $user['email'],
+        'role'    => $user['role'],
+      ];
 
-    redirect_to_dashboard($user['role']);
+      redirect_to_dashboard($user['role']);
+    }
   } else {
     $error = 'Invalid email or password';
   }

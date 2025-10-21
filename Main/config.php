@@ -58,3 +58,14 @@ try {
 }
 
 define('ADMIN_SECRET_KEY', 'cozydorms123');
+
+// Site and mail settings (update to match your hosting)
+if (!defined('SITE_URL')) define('SITE_URL', 'http://cozydorms.life');
+if (!defined('MAIL_FROM')) define('MAIL_FROM', 'no-reply@cozydorms.life');
+
+// SMTP settings (from cPanel / GoDaddy secure settings)
+if (!defined('SMTP_HOST')) define('SMTP_HOST', 'p3plzcpnl509585.prod.phx3.secureserver.net');
+if (!defined('SMTP_PORT')) define('SMTP_PORT', 465); // secure SSL port
+if (!defined('SMTP_USER')) define('SMTP_USER', 'no-reply@cozydorms.life');
+if (!defined('SMTP_PASS')) define('SMTP_PASS', ''); // set this in server or env
+if (!defined('SMTP_SECURE')) define('SMTP_SECURE', 'ssl'); // 'ssl' for 465

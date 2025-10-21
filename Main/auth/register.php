@@ -21,16 +21,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!preg_match('/^[0-9+\-\s]{7,15}$/', $phone)) {
         $error = "Invalid phone number format.";
     } else {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email=?");
-        $stmt->execute([$email]);
-        if ($stmt->fetchColumn() > 0) {
-            $error = "Email already registered.";
-        } else {
-            $hash = password_hash($pass, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$name, $email, $phone, $hash, $role]);
-            $success = "Account created successfully! You can now login.";
-        }
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email=?");
+    $stmt->execute([$email]);
+    if ($stmt->fetchColumn() > 0) {
+      $error = "Email already registered.";
+    } else {
+      $hash = password_hash($pass, PASSWORD_DEFAULT);
+
+      // Insert user with verified = 0 (pending)
+      $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, verified) VALUES (?, ?, ?, ?, ?, 0)");
+      $stmt->execute([$name, $email, $phone, $hash, $role]);
+      $user_id = $pdo->lastInsertId();
+
+      // Ensure verification table exists
+      $pdo->exec("CREATE TABLE IF NOT EXISTS user_verifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        token VARCHAR(64) NOT NULL,
+        expires_at DATETIME NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+      // create verification token
+      $token = bin2hex(random_bytes(16));
+      $expires_at = date('Y-m-d H:i:s', time() + 60*60*24); // 24 hours
+      $stmt = $pdo->prepare("INSERT INTO user_verifications (user_id, token, expires_at) VALUES (?, ?, ?)");
+      $stmt->execute([$user_id, $token, $expires_at]);
+
+            // send activation email (using shared/mail.php helper)
+            require_once __DIR__ . '/../shared/mail.php';
+            $activation_link = SITE_URL . "/auth/activate.php?token=" . $token;
+            $subject = "Activate your CozyDorms account";
+            $message = "Hi $name,\n\nPlease activate your account by clicking the link below:\n$activation_link\n\nThis link expires in 24 hours.";
+            send_mail($email, $subject, $message, null, MAIL_FROM);
+
+      $success = "Account created successfully! Check your email to activate your account.";
+    }
     }
 }
 ?>
