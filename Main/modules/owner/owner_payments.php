@@ -42,6 +42,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         WHERE p.payment_id = ? AND d.owner_id = ?
     ");
     $stmt->execute([$status, $payment_id, $owner_id]);
+    
+    // If payment is marked as paid, set booking status to completed
+    if ($status === 'paid') {
+      // Get booking_id for this payment
+      $getBooking = $pdo->prepare("SELECT booking_id FROM payments WHERE payment_id = ? LIMIT 1");
+      $getBooking->execute([$payment_id]);
+      $booking_id = $getBooking->fetchColumn();
+      if ($booking_id) {
+        $updateBooking = $pdo->prepare("UPDATE bookings SET status = 'completed' WHERE booking_id = ?");
+        $updateBooking->execute([$booking_id]);
+      }
+    }
     $flash = ['type' => 'success', 'msg' => 'Payment status updated successfully.'];
 }
  
