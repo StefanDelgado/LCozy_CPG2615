@@ -98,7 +98,8 @@ require_once __DIR__ . '/../../partials/header.php';
     <h2>All Users</h2>
     <button class="btn-primary" onclick="openCreate()">➕ Add User</button>
   </div>
-  <table>
+  <div style="overflow-x:auto; width:100%;">
+    <table style="min-width:1100px;">
     <thead>
       <tr>
         <th>ID</th>
@@ -290,6 +291,12 @@ function closeEdit() {
   border: 1px solid #ccc;
   border-radius: 8px;
   margin-bottom: 1rem;
+}
+
+/* Responsive table container */
+.card > div[style*="overflow-x:auto"] {
+  margin-bottom: 1rem;
+}
 }
 .btn-secondary {
   background: #ddd;
