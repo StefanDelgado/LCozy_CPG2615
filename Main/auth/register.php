@@ -14,13 +14,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pass  = $_POST['password'] ?? '';
     $role  = $_POST['role'] ?? 'student';
 
-    if (!$name || !$email || !$pass || !$phone) {
-        $error = "All fields are required, including phone number.";
-    } elseif (!in_array($role, ['student', 'owner'])) {
-        $error = "Invalid role selected.";
-    } elseif (!preg_match('/^[0-9+\-\s]{7,15}$/', $phone)) {
-        $error = "Invalid phone number format.";
-    } else {
+  if (!$name || !$email || !$pass || !$phone) {
+    $error = "All fields are required, including phone number.";
+  } elseif (!in_array($role, ['student', 'owner'])) {
+    $error = "Invalid role selected.";
+  } elseif (!preg_match('/^[0-9+\-\s]{7,15}$/', $phone)) {
+    $error = "Invalid phone number format.";
+  } else {
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email=?");
     $stmt->execute([$email]);
     if ($stmt->fetchColumn() > 0) {
@@ -28,9 +28,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
       $hash = password_hash($pass, PASSWORD_DEFAULT);
 
-      // Insert user with verified = 0 (pending)
-      $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, verified) VALUES (?, ?, ?, ?, ?, 0)");
-      $stmt->execute([$name, $email, $phone, $hash, $role]);
+      // Email domain logic
+      $trusted_domains = ['gmail.com','yahoo.com','outlook.com','hotmail.com','icloud.com','protonmail.com','zoho.com','aol.com','ymail.com'];
+      $fake_domains = ['example.com','email.com','test.com','mailinator.com','fake.com'];
+      $email_domain = strtolower(substr(strrchr($email, '@'), 1));
+
+      // Email cleanliness checks
+      $is_clean = true;
+      // No multiple consecutive special chars
+      if (preg_match('/[._%+-]{2,}/', $email)) $is_clean = false;
+      // No repeating dots
+      if (preg_match('/\.\./', $email)) $is_clean = false;
+      // No special chars at start/end
+      if (preg_match('/^[._%+-]|[._%+-]$/', $email)) $is_clean = false;
+
+      if (in_array($email_domain, $fake_domains)) {
+        $verified_status = -1; // auto reject
+      } elseif (in_array($email_domain, $trusted_domains) && $is_clean) {
+        $verified_status = 1; // auto accept
+      } else {
+        $verified_status = 0; // pending
+      }
+
+      $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, verified) VALUES (?, ?, ?, ?, ?, ?)");
+      $stmt->execute([$name, $email, $phone, $hash, $role, $verified_status]);
       $user_id = $pdo->lastInsertId();
 
       // Ensure verification table exists
