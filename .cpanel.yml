@@ -1,6 +1,66 @@
 ---
 deployment:
   tasks:
+    # Deploy Main/ contents into the site's public_html
+    - export DEPLOYPATH=/home/yyju4g9j6ey3/public_html/
+
+    # Copy core files
+    - /bin/cp -f Main/config.php $DEPLOYPATH
+    - /bin/cp -f Main/index.php $DEPLOYPATH
+
+    # Ensure target directories exist and sync important folders
+    - /bin/mkdir -p $DEPLOYPATH/auth
+    - /usr/bin/rsync -a --delete Main/auth/ $DEPLOYPATH/auth/
+
+    - /bin/mkdir -p $DEPLOYPATH/dashboards
+    - /usr/bin/rsync -a --delete Main/dashboards/ $DEPLOYPATH/dashboards/
+
+    - /bin/mkdir -p $DEPLOYPATH/admin
+    - /usr/bin/rsync -a --delete Main/admin/ $DEPLOYPATH/admin/
+
+    - /bin/mkdir -p $DEPLOYPATH/modules
+    - /usr/bin/rsync -a --delete Main/modules/ $DEPLOYPATH/modules/
+
+    - /bin/mkdir -p $DEPLOYPATH/partials
+    - /usr/bin/rsync -a --delete Main/partials/ $DEPLOYPATH/partials/
+
+    - /bin/mkdir -p $DEPLOYPATH/public
+    - /usr/bin/rsync -a --delete Main/public/ $DEPLOYPATH/public/
+
+    # Shared helpers and vendor (critical for mail helper)
+    - /bin/mkdir -p $DEPLOYPATH/shared
+    - /usr/bin/rsync -a --delete Main/shared/ $DEPLOYPATH/shared/
+
+    - /bin/mkdir -p $DEPLOYPATH/vendor
+    - /usr/bin/rsync -a --delete Main/vendor/ $DEPLOYPATH/vendor/
+
+    # Assets - sync without deleting uploads in target
+    - /usr/bin/rsync -a --exclude='uploads/*' Main/assets/ $DEPLOYPATH/assets/
+
+    # Uploads - ensure directories exist and only add new files
+    - /bin/mkdir -p $DEPLOYPATH/uploads/receipts
+    - /bin/mkdir -p $DEPLOYPATH/uploads/rooms
+    - /usr/bin/rsync -a --ignore-existing Main/uploads/ $DEPLOYPATH/uploads/
+
+    # Cron scripts
+    - /bin/mkdir -p $DEPLOYPATH/cron
+    - /usr/bin/rsync -a Main/cron/ $DEPLOYPATH/cron/
+
+    # Set permissions for deployed files/folders
+    - /bin/find $DEPLOYPATH/auth -type f -exec chmod 644 {} \;
+    - /bin/find $DEPLOYPATH/auth -type d -exec chmod 755 {} \;
+    - /bin/find $DEPLOYPATH/dashboards -type f -exec chmod 644 {} \;
+    - /bin/find $DEPLOYPATH/dashboards -type d -exec chmod 755 {} \;
+    - /bin/find $DEPLOYPATH/modules -type f -exec chmod 644 {} \;
+    - /bin/find $DEPLOYPATH/modules -type d -exec chmod 755 {} \;
+    - /bin/find $DEPLOYPATH/shared -type f -exec chmod 644 {} \;
+    - /bin/find $DEPLOYPATH/shared -type d -exec chmod 755 {} \;
+    - /bin/find $DEPLOYPATH/vendor -type f -exec chmod 644 {} \; || true
+    - /bin/find $DEPLOYPATH/vendor -type d -exec chmod 755 {} \; || true
+    - /bin/chmod -R 775 $DEPLOYPATH/uploads
+---
+deployment:
+  tasks:
     # ===================================
     # FAST DEPLOYMENT - Rsync only changed files from Main/
     # ===================================
