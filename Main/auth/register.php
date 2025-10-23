@@ -76,7 +76,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "Hi $name,\n\nPlease activate your account by clicking the link below:\n$activation_link\n\nThis link expires in 24 hours.";
             send_mail($email, $subject, $message, null, MAIL_FROM);
 
-      $success = "Account created successfully! Check your email to activate your account.";
+      // Show notification based on verification status
+      if (isset($verified_status)) {
+        if ($verified_status === 1) {
+          $success = "Account created successfully! Check your email to activate your account.";
+          $notify = "Your email was automatically verified. Please activate your account via the link sent to your email.";
+        } elseif ($verified_status === 0) {
+          $success = "Account created successfully!";
+          $notify = "Your email requires admin approval or further verification. You will be notified once your account is reviewed.";
+        } else {
+          $success = "Account creation failed: Email domain is not allowed.";
+          $notify = "Your email was rejected. Please use a valid email provider.";
+        }
+      }
     }
     }
 }
@@ -172,6 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
   <div class="auth-card">
     <h1>Create Account</h1>
+    <?php if (!empty($notify)): ?><div class="alert" style="background:#e3e7fd;color:#2c2c2c; margin-bottom:1rem;"><?= $notify ?></div><?php endif; ?>
     <?php if ($error): ?><div class="alert"><?= $error ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert success"><?= $success ?></div><?php endif; ?>
     <form method="post" autocomplete="off">
