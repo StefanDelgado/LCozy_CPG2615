@@ -277,10 +277,11 @@ function toggleUserCard(id) {
   display: flex;
   gap: 0.5rem;
   position: relative;
-  z-index: 10;
+  z-index: 100;
+  margin-top: 12px;
 }
   position: relative;
-  z-index: 11;
+  z-index: 101;
 .user-card-details {
   margin-top: 1rem;
   background: #f8f8ff;
