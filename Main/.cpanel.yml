@@ -17,6 +17,9 @@ deployment:
     - /usr/bin/rsync -a --delete modules/ $DEPLOYPATH/modules/
     - /usr/bin/rsync -a --delete partials/ $DEPLOYPATH/partials/
     - /usr/bin/rsync -a --delete public/ $DEPLOYPATH/public/
+  # Shared helpers (mail.php) and vendor libs (PHPMailer)
+    - /usr/bin/rsync -a --delete shared/ $DEPLOYPATH/shared/
+    - /usr/bin/rsync -a --delete vendor/ $DEPLOYPATH/vendor/
     
     # Assets - sync without delete (preserve uploaded files)
     - /usr/bin/rsync -a --exclude='uploads/*' assets/ $DEPLOYPATH/assets/
@@ -36,4 +39,8 @@ deployment:
     - /bin/find $DEPLOYPATH/dashboards -type d -exec chmod 755 {} \;
     - /bin/find $DEPLOYPATH/modules -type f -exec chmod 644 {} \;
     - /bin/find $DEPLOYPATH/modules -type d -exec chmod 755 {} \;
+    - /bin/find $DEPLOYPATH/shared -type f -exec chmod 644 {} \;
+    - /bin/find $DEPLOYPATH/shared -type d -exec chmod 755 {} \;
+    - /bin/find $DEPLOYPATH/vendor -type f -exec chmod 644 {} \; || true
+    - /bin/find $DEPLOYPATH/vendor -type d -exec chmod 755 {} \; || true
     - /bin/chmod -R 775 $DEPLOYPATH/uploads
