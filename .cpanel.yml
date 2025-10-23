@@ -31,8 +31,8 @@ deployment:
     - /bin/mkdir -p $DEPLOYPATH/shared
     - /usr/bin/rsync -a --delete Main/shared/ $DEPLOYPATH/shared/
 
-    - /bin/mkdir -p $DEPLOYPATH/vendor
-    - /usr/bin/rsync -a --delete Main/vendor/ $DEPLOYPATH/vendor/
+    #- /bin/mkdir -p $DEPLOYPATH/vendor
+    #- /usr/bin/rsync -a --delete Main/vendor/ $DEPLOYPATH/vendor/
 
     # Assets - sync without deleting uploads in target
     - /usr/bin/rsync -a --exclude='uploads/*' Main/assets/ $DEPLOYPATH/assets/
