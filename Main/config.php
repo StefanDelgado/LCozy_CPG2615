@@ -67,5 +67,5 @@ if (!defined('MAIL_FROM')) define('MAIL_FROM', 'no-reply@cozydorms.life');
 if (!defined('SMTP_HOST')) define('SMTP_HOST', 'p3plzcpnl509585.prod.phx3.secureserver.net');
 if (!defined('SMTP_PORT')) define('SMTP_PORT', 465); // secure SSL port
 if (!defined('SMTP_USER')) define('SMTP_USER', 'no-reply@cozydorms.life');
-if (!defined('SMTP_PASS')) define('SMTP_PASS', ''); // set this in server or env
+if (!defined('SMTP_PASS')) define('SMTP_PASS', getenv('SMTP_PASS') ?: 'PsBn9c4PZ2BMRMq'); // set this in server environment or define on server only
 if (!defined('SMTP_SECURE')) define('SMTP_SECURE', 'ssl'); // 'ssl' for 465
