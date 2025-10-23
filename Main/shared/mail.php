@@ -9,9 +9,11 @@ function send_mail($to, $subject, $body, $altBody = null, $from = null) {
     // prefer PHPMailer if present
     if (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
         require_once __DIR__ . '/../../vendor/autoload.php';
-        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+        // attempt using configured SMTP settings first
+        $attempts = [];
         try {
-            file_put_contents($logFile, "[$time] PHPMailer autoload found, attempting SMTP\n", FILE_APPEND);
+            file_put_contents($logFile, "[$time] PHPMailer autoload found, attempting SMTP (configured settings)\n", FILE_APPEND);
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
             $mail->isSMTP();
             $mail->Host = SMTP_HOST;
             $mail->SMTPAuth = true;
@@ -28,14 +30,47 @@ function send_mail($to, $subject, $body, $altBody = null, $from = null) {
             if ($altBody) $mail->AltBody = $altBody;
 
             $mail->send();
-            file_put_contents($logFile, "[$time] PHPMailer send() succeeded\n", FILE_APPEND);
+            file_put_contents($logFile, "[$time] PHPMailer send() succeeded (port " . SMTP_PORT . ")\n", FILE_APPEND);
             return true;
         } catch (Exception $e) {
             $err = $e->getMessage();
-            error_log('PHPMailer error: ' . $err);
-            file_put_contents($logFile, "[$time] PHPMailer error: " . $err . "\n", FILE_APPEND);
-            // fallback to mail()
+            error_log('PHPMailer error (primary): ' . $err);
+            file_put_contents($logFile, "[$time] PHPMailer primary error: " . $err . "\n", FILE_APPEND);
+            $attempts[] = ['port' => SMTP_PORT, 'secure' => SMTP_SECURE, 'error' => $err];
+            // try fallback to TLS on 587 if primary was SSL/465
+            $fallback_port = 587;
+            $fallback_secure = 'tls';
+            try {
+                file_put_contents($logFile, "[$time] Attempting fallback SMTP on port $fallback_port with $fallback_secure\n", FILE_APPEND);
+                $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                $mail->isSMTP();
+                $mail->Host = SMTP_HOST;
+                $mail->SMTPAuth = true;
+                $mail->Username = SMTP_USER;
+                $mail->Password = SMTP_PASS;
+                $mail->SMTPSecure = $fallback_secure;
+                $mail->Port = $fallback_port;
+
+                $mail->setFrom($from ?? MAIL_FROM, 'CozyDorms');
+                $mail->addAddress($to);
+                $mail->isHTML(false);
+                $mail->Subject = $subject;
+                $mail->Body = $body;
+                if ($altBody) $mail->AltBody = $altBody;
+
+                $mail->send();
+                file_put_contents($logFile, "[$time] PHPMailer send() succeeded (port $fallback_port)\n", FILE_APPEND);
+                return true;
+            } catch (Exception $e2) {
+                $err2 = $e2->getMessage();
+                error_log('PHPMailer error (fallback): ' . $err2);
+                file_put_contents($logFile, "[$time] PHPMailer fallback error: " . $err2 . "\n", FILE_APPEND);
+                $attempts[] = ['port' => $fallback_port, 'secure' => $fallback_secure, 'error' => $err2];
+                // if both PHPMailer attempts failed, continue to mail() fallback
+            }
         }
+        // record attempts summary
+        file_put_contents($logFile, "[$time] PHPMailer attempts: " . json_encode($attempts) . "\n", FILE_APPEND);
     }
 
     // fallback to PHP mail()
