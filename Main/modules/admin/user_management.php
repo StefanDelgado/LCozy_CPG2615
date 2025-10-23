@@ -118,7 +118,7 @@ require_once __DIR__ . '/../../partials/header.php';
             <?php
               if ($u['verified'] == 1) echo '<span class="badge" style="background:#28a745">Verified</span>';
               elseif ($u['verified'] == -1) echo '<span class="badge" style="background:#dc3545">Rejected</span>';
-              else echo '<span class="badge" style="background:#ffc107;color:#333">Pending</span>';
+              else echo '<span class="badge" style="background:#ffc107;color:#333">Pending Verification</span>';
             ?>
           </div>
           <div class="user-card-actions">
