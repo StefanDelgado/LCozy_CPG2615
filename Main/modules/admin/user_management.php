@@ -98,72 +98,55 @@ require_once __DIR__ . '/../../partials/header.php';
     <h2>All Users</h2>
     <button class="btn-primary" onclick="openCreate()">➕ Add User</button>
   </div>
-  <div style="overflow-x:auto; width:100%;">
-    <table style="min-width:1100px;">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Profile</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Role</th>
-        <th>Address</th>
-        <th>License #</th>
-        <th>Created</th>
-        <th>Verification</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php foreach ($users as $u): ?>
-        <tr>
-          <td><?=$u['user_id']?></td>
-          <td>
+  <div class="user-card-list">
+    <?php foreach ($users as $u): ?>
+      <div class="user-card">
+        <div class="user-card-header" onclick="toggleUserCard(<?=$u['user_id']?>)">
+          <div class="user-card-profile">
             <?php if ($u['profile_pic']): ?>
               <img src="<?=$u['profile_pic']?>" alt="profile" style="width:40px;height:40px;border-radius:50%;">
             <?php else: ?>
               <img src="../assets/default_profile.jpg" alt="default" style="width:40px;height:40px;border-radius:50%;">
             <?php endif; ?>
-          </td>
-          <td><?=$u['name']?></td>
-          <td><?=$u['email']?></td>
-          <td><?=$u['phone']?></td>
-          <td><span class="badge"><?=$u['role']?></span></td>
-          <td><?=htmlspecialchars($u['address'])?></td>
-          <td><?=!empty($u['license_no']) ? htmlspecialchars($u['license_no']) : 'N/A'?></td>
-          <td><?=$u['created_at']?></td>
-          <td>
+          </div>
+          <div class="user-card-main">
+            <div><b><?=$u['name']?></b> <span class="badge" style="margin-left:8px;"><?=$u['role']?></span></div>
+            <div><?=$u['email']?></div>
+            <div><?=$u['phone']?></div>
+          </div>
+          <div class="user-card-status">
             <?php
               if ($u['verified'] == 1) echo '<span class="badge" style="background:#28a745">Verified</span>';
               elseif ($u['verified'] == -1) echo '<span class="badge" style="background:#dc3545">Rejected</span>';
               else echo '<span class="badge" style="background:#ffc107;color:#333">Pending</span>';
             ?>
-          </td>
-          <td class="actions">
-            <button class="btn-secondary" 
-              onclick="openEdit(<?=$u['user_id']?>,'<?=htmlspecialchars($u['name'],ENT_QUOTES)?>','<?=htmlspecialchars($u['email'],ENT_QUOTES)?>','<?=$u['role']?>','<?=htmlspecialchars($u['address'],ENT_QUOTES)?>','<?=htmlspecialchars($u['license_no'],ENT_QUOTES)?>','<?=htmlspecialchars($u['phone'],ENT_QUOTES)?>')">
-              Edit
-            </button>
-            <a class="btn" style="background:#dc3545" href="?delete=<?=$u['user_id']?>" onclick="return confirm('Delete this user?')">Delete</a>
+          </div>
+          <div class="user-card-actions">
+            <button class="btn-secondary" onclick="event.stopPropagation();openEdit(<?=$u['user_id']?>,'<?=htmlspecialchars($u['name'],ENT_QUOTES)?>','<?=htmlspecialchars($u['email'],ENT_QUOTES)?>','<?=$u['role']?>','<?=htmlspecialchars($u['address'],ENT_QUOTES)?>','<?=htmlspecialchars($u['license_no'],ENT_QUOTES)?>','<?=htmlspecialchars($u['phone'],ENT_QUOTES)?>')">Edit</button>
+            <a class="btn" style="background:#dc3545" href="?delete=<?=$u['user_id']?>" onclick="event.stopPropagation();return confirm('Delete this user?')">Delete</a>
             <?php if ($u['verified'] == 0): ?>
-              <form method="post" style="display:inline;">
+              <form method="post" style="display:inline;" onClick="event.stopPropagation();">
                 <input type="hidden" name="user_id" value="<?=$u['user_id']?>">
                 <input type="hidden" name="verify_action" value="accept">
                 <button type="submit" name="verify_user" value="1" class="btn" style="background:#28a745;margin-left:4px;">Accept</button>
               </form>
-              <form method="post" style="display:inline;">
+              <form method="post" style="display:inline;" onClick="event.stopPropagation();">
                 <input type="hidden" name="user_id" value="<?=$u['user_id']?>">
                 <input type="hidden" name="verify_action" value="reject">
                 <button type="submit" name="verify_user" value="-1" class="btn" style="background:#dc3545;margin-left:2px;">Reject</button>
               </form>
             <?php endif; ?>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-    </tbody>
-  </table>
-</div>
+          </div>
+        </div>
+        <div class="user-card-details" id="user-details-<?=$u['user_id']?>" style="display:none;">
+          <div><b>Address:</b> <?=htmlspecialchars($u['address'])?></div>
+          <div><b>License #:</b> <?=!empty($u['license_no']) ? htmlspecialchars($u['license_no']) : 'N/A'?></div>
+          <div><b>Created:</b> <?=$u['created_at']?></div>
+          <div><b>ID Document:</b> <?=!empty($u['id_document']) ? htmlspecialchars($u['id_document']) : 'N/A'?></div>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
 
 <!-- CREATE USER MODAL -->
 <div id="createModal" class="modal" style="display:none;">
@@ -247,6 +230,14 @@ function openEdit(id, name, email, role, address, license, phone) {
 function closeEdit() {
   document.getElementById('editModal').style.display = 'none';
 }
+function toggleUserCard(id) {
+  var details = document.getElementById('user-details-' + id);
+  if (details.style.display === 'none') {
+    details.style.display = 'block';
+  } else {
+    details.style.display = 'none';
+  }
+}
 </script>
 
 <style>
@@ -255,6 +246,52 @@ function closeEdit() {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+}
+
+.user-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.user-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 1rem;
+  transition: box-shadow 0.2s;
+  cursor: pointer;
+}
+.user-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+.user-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.user-card-profile img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+.user-card-main {
+  flex: 1;
+}
+.user-card-status {
+  min-width: 90px;
+  text-align: center;
+}
+.user-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.user-card-details {
+  margin-top: 1rem;
+  background: #f8f8ff;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.98em;
+}
 }
 .btn-primary {
   background: #6A5ACD;
