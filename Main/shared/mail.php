@@ -21,6 +21,11 @@ function send_mail($to, $subject, $body, $altBody = null, $from = null) {
             $mail->Password = SMTP_PASS;
             $mail->SMTPSecure = SMTP_SECURE;
             $mail->Port = SMTP_PORT;
+            $mail->AuthType = 'LOGIN'; // Explicitly set auth type
+            $mail->SMTPDebug = 2; // Enable verbose debug output
+            $mail->Debugoutput = function($str, $level) use ($logFile, $time) {
+                file_put_contents($logFile, "[$time] SMTPDebug: $str\n", FILE_APPEND);
+            };
 
             $mail->setFrom($from ?? MAIL_FROM, 'CozyDorms');
             $mail->addAddress($to);
@@ -50,6 +55,11 @@ function send_mail($to, $subject, $body, $altBody = null, $from = null) {
                 $mail->Password = SMTP_PASS;
                 $mail->SMTPSecure = $fallback_secure;
                 $mail->Port = $fallback_port;
+                $mail->AuthType = 'LOGIN'; // Explicitly set auth type
+                $mail->SMTPDebug = 2; // Enable verbose debug output
+                $mail->Debugoutput = function($str, $level) use ($logFile, $time) {
+                    file_put_contents($logFile, "[$time] SMTPDebug: $str\n", FILE_APPEND);
+                };
 
                 $mail->setFrom($from ?? MAIL_FROM, 'CozyDorms');
                 $mail->addAddress($to);
