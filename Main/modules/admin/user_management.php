@@ -276,7 +276,11 @@ function toggleUserCard(id) {
 .user-card-actions {
   display: flex;
   gap: 0.5rem;
+  position: relative;
+  z-index: 10;
 }
+  position: relative;
+  z-index: 11;
 .user-card-details {
   margin-top: 1rem;
   background: #f8f8ff;
