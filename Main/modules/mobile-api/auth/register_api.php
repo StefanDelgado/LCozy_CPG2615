@@ -30,22 +30,44 @@ try {
     $stmt->execute([$email]);
     if ($stmt->fetchColumn() > 0) {
         http_response_code(409); // Conflict
-        echo json_encode(['error' => 'Email already registered']);
+        echo json_encode(['success' => false, 'error' => 'Email already registered']);
         exit;
+    }
+
+    // Email domain logic
+    $trusted_domains = ['gmail.com','yahoo.com','outlook.com','hotmail.com','icloud.com','protonmail.com','zoho.com','aol.com','ymail.com'];
+    $fake_domains = ['example.com','email.com','test.com','mailinator.com','fake.com'];
+    $email_domain = strtolower(substr(strrchr($email, '@'), 1));
+
+    // Email cleanliness checks
+    $is_clean = true;
+    if (preg_match('/[._%+-]{2,}/', $email)) $is_clean = false;
+    if (preg_match('/\.\./', $email)) $is_clean = false;
+    if (preg_match('/^[._%+-]|[._%+-]$/', $email)) $is_clean = false;
+
+    if (in_array($email_domain, $fake_domains)) {
+        $verified_status = -1; // auto reject
+        $message = 'Your email was rejected. Please use a valid email provider.';
+    } elseif (in_array($email_domain, $trusted_domains) && $is_clean) {
+        $verified_status = 1; // auto accept
+        $message = 'Your email was automatically verified. Please check your email for activation.';
+    } else {
+        $verified_status = 0; // pending
+        $message = 'Your email requires admin approval or further verification.';
     }
 
     // Insert new user
     $hash = password_hash($password, PASSWORD_DEFAULT);
     $stmt = $pdo->prepare("
-        INSERT INTO users (name, email, password, role, created_at) 
-        VALUES (?, ?, ?, ?, NOW())
+        INSERT INTO users (name, email, password, role, created_at, verified) 
+        VALUES (?, ?, ?, ?, NOW(), ?)
     ");
-    
-    $stmt->execute([$name, $email, $hash, $role]);
+    $stmt->execute([$name, $email, $hash, $role, $verified_status]);
 
     echo json_encode([
-        'ok' => true,
-        'message' => 'Registration successful'
+        'success' => true,
+        'verified' => $verified_status,
+        'message' => $message
     ]);
 
 } catch (Exception $e) {

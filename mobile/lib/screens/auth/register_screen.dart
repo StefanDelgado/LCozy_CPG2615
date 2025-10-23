@@ -138,23 +138,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (result['success'] == true) {
-      // Show success message
+      String notify = result['message'] ?? '';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration Successful!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(notify),
+          backgroundColor: result['verified'] == 1
+              ? Colors.green
+              : (result['verified'] == 0 ? Colors.orange : Colors.red),
+          duration: Duration(seconds: 3),
         ),
       );
-
-      // Navigate to login
-      await Future.delayed(const Duration(seconds: 2));
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
+      if (result['verified'] == 1) {
+        // Navigate to login after short delay
+        await Future.delayed(Duration(seconds: 2));
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
     } else {
       setState(() {
         _errorMessage = result['error'] ?? 'Registration failed. Please try again.';

@@ -98,11 +98,11 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } else {
-      // Login failed - show error
-      print('📱 [LoginScreen] Login failed: ${authProvider.error}');
+      // Show error from backend (pending/rejected/invalid)
+      String errorMsg = authProvider.error ?? 'Login failed';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Login failed'),
+          content: Text(errorMsg),
           backgroundColor: Colors.red,
         ),
       );

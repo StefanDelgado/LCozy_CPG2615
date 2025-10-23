@@ -26,7 +26,7 @@ $password = $data['password'];
 try {
     // Query user
     $stmt = $pdo->prepare("
-        SELECT user_id, name, email, password, role 
+        SELECT user_id, name, email, password, role, verified 
         FROM users 
         WHERE email = ?
     ");
@@ -34,17 +34,36 @@ try {
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user['password'])) {
-        // Success - return user data without password
-        unset($user['password']);
-        http_response_code(200);
-        echo json_encode([
-            'success' => true,
-            'ok' => true,
-            'user_id' => $user['user_id'],
-            'name' => $user['name'], 
-            'email' => $user['email'],
-            'role' => $user['role']
-        ]);
+        // Check verification status: 1 = verified, 0 = pending, -1 = rejected
+        if ((int)$user['verified'] !== 1) {
+            if ((int)$user['verified'] === -1) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'ok' => false,
+                    'error' => 'Your account was rejected. Contact support.'
+                ]);
+            } else {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'ok' => false,
+                    'error' => 'Your account is pending. Please activate your account or wait for admin approval.'
+                ]);
+            }
+        } else {
+            // Success - return user data without password
+            unset($user['password']);
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'ok' => true,
+                'user_id' => $user['user_id'],
+                'name' => $user['name'], 
+                'email' => $user['email'],
+                'role' => $user['role']
+            ]);
+        }
     } else {
         // Invalid credentials
         http_response_code(401);
