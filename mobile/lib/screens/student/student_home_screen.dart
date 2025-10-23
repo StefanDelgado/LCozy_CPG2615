@@ -7,6 +7,7 @@ import '../../widgets/owner/dashboard/owner_stat_card.dart';
 import '../../widgets/student/home/booking_card.dart';
 import '../../widgets/student/home/quick_action_button.dart';
 import '../../widgets/student/home/empty_bookings_widget.dart';
+import 'view_details_screen.dart';
 // Temporary imports from legacy structure
 import 'browse_dorms_screen.dart';
 import 'student_payments_screen.dart';
@@ -310,7 +311,26 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         if (activeBookings.isEmpty)
           EmptyBookingsWidget(onBrowseDorms: _navigateToBrowseDorms)
         else
-          ...activeBookings.map((booking) => BookingCard(booking: booking)),
+          ...activeBookings.map((booking) => GestureDetector(
+            onTap: () {
+              final dorm = booking['dorm'] ?? {};
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ViewDetailsScreen(
+                    property: {
+                      'dorm_id': dorm['dorm_id']?.toString() ?? '',
+                      'name': dorm['name']?.toString() ?? '',
+                      'address': dorm['address']?.toString() ?? '',
+                      // Add more dorm fields if needed
+                    },
+                    userEmail: widget.userEmail,
+                  ),
+                ),
+              );
+            },
+            child: BookingCard(booking: booking),
+          )),
       ],
     );
   }

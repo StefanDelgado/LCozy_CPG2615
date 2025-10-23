@@ -5,17 +5,24 @@ header('Content-Type: application/json');
 
 try {
     $json = file_get_contents('php://input');
+    error_log('SubmitReviewAPI RAW: ' . $json);
     $data = json_decode($json, true);
+    error_log('SubmitReviewAPI DECODED: ' . print_r($data, true));
 
     // Validate required fields
     if (!isset($data['booking_id'], $data['rating'], $data['comment'], $data['student_id'])) {
-        echo json_encode(['success' => false, 'error' => 'Missing required fields']);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Missing required fields',
+            'received' => $data
+        ]);
         exit;
     }
     $booking_id = intval($data['booking_id']);
     $rating = intval($data['rating']);
     $comment = trim($data['comment']);
     $student_id = intval($data['student_id']);
+    error_log("SubmitReviewAPI booking_id=$booking_id rating=$rating comment=$comment student_id=$student_id");
 
     // Check if booking is completed and belongs to student
     $stmt = $pdo->prepare("SELECT b.booking_id, r.dorm_id FROM bookings b JOIN rooms r ON b.room_id = r.room_id WHERE b.booking_id = ? AND b.student_id = ? AND b.status = 'completed'");
