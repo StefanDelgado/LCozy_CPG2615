@@ -130,9 +130,11 @@ class AuthService {
       if (response.statusCode == 200) {
         try {
           final data = jsonDecode(response.body);
-          if (data['ok'] == true) {
+          if (data['success'] == true) {
             return {
               'success': true,
+              'verified': data['verified'],
+              'message': data['message'],
             };
           } else {
             return {
@@ -141,7 +143,6 @@ class AuthService {
             };
           }
         } catch (e) {
-          // print('JSON decode error: $e');
           return {
             'success': false,
             'error': 'Invalid server response.',
@@ -159,7 +160,6 @@ class AuthService {
         };
       }
     } catch (e) {
-      // print('Registration error: $e');
       return {
         'success': false,
         'error': 'Network error. Please try again.',
