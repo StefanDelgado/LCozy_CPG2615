@@ -125,16 +125,8 @@ require_once __DIR__ . '/../../partials/header.php';
             <button class="btn-secondary" onclick="event.stopPropagation();openEdit(<?=$u['user_id']?>,'<?=htmlspecialchars($u['name'],ENT_QUOTES)?>','<?=htmlspecialchars($u['email'],ENT_QUOTES)?>','<?=$u['role']?>','<?=htmlspecialchars($u['address'],ENT_QUOTES)?>','<?=htmlspecialchars($u['license_no'],ENT_QUOTES)?>','<?=htmlspecialchars($u['phone'],ENT_QUOTES)?>')">Edit</button>
             <a class="btn" style="background:#dc3545" href="?delete=<?=$u['user_id']?>" onclick="event.stopPropagation();return confirm('Delete this user?')">Delete</a>
             <?php if ($u['verified'] == 0): ?>
-              <form method="post" style="display:inline;" onClick="event.stopPropagation();">
-                <input type="hidden" name="user_id" value="<?=$u['user_id']?>">
-                <input type="hidden" name="verify_action" value="accept">
-                <button type="submit" name="verify_user" value="1" class="btn" style="background:#28a745;margin-left:4px;">Accept</button>
-              </form>
-              <form method="post" style="display:inline;" onClick="event.stopPropagation();">
-                <input type="hidden" name="user_id" value="<?=$u['user_id']?>">
-                <input type="hidden" name="verify_action" value="reject">
-                <button type="submit" name="verify_user" value="-1" class="btn" style="background:#dc3545;margin-left:2px;">Reject</button>
-              </form>
+              <button class="btn" style="background:#28a745;margin-left:4px;" onclick="verifyUser(<?=$u['user_id']?>, 'accept', event)">Accept</button>
+              <button class="btn" style="background:#dc3545;margin-left:2px;" onclick="verifyUser(<?=$u['user_id']?>, 'reject', event)">Reject</button>
             <?php endif; ?>
           </div>
         </div>
