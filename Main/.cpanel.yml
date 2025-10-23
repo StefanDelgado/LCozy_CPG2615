@@ -17,7 +17,9 @@ deployment:
     - /usr/bin/rsync -a --delete modules/ $DEPLOYPATH/modules/
     - /usr/bin/rsync -a --delete partials/ $DEPLOYPATH/partials/
     - /usr/bin/rsync -a --delete public/ $DEPLOYPATH/public/
-  # Shared helpers (mail.php) and vendor libs (PHPMailer)
+    # Shared helpers (mail.php) and vendor libs (PHPMailer)
+    - /bin/mkdir -p $DEPLOYPATH/shared
+    - /bin/mkdir -p $DEPLOYPATH/vendor
     - /usr/bin/rsync -a --delete shared/ $DEPLOYPATH/shared/
     - /usr/bin/rsync -a --delete vendor/ $DEPLOYPATH/vendor/
     
@@ -44,3 +46,9 @@ deployment:
     - /bin/find $DEPLOYPATH/vendor -type f -exec chmod 644 {} \; || true
     - /bin/find $DEPLOYPATH/vendor -type d -exec chmod 755 {} \; || true
     - /bin/chmod -R 775 $DEPLOYPATH/uploads
+
+    # make sure target dirs exist
+    - /bin/mkdir -p $DEPLOYPATH/shared
+    - /bin/mkdir -p $DEPLOYPATH/vendor
+    - /bin/mkdir -p $DEPLOYPATH/uploads/receipts
+    - /bin/mkdir -p $DEPLOYPATH/uploads/rooms
