@@ -6,6 +6,7 @@ import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/owner/dorms/room_card.dart';
 import '../../widgets/owner/dorms/add_room_dialog.dart';
+import 'owner_reviews_screen.dart';
 
 /// Screen for managing rooms within a dormitory
 class RoomManagementScreen extends StatefulWidget {
@@ -275,18 +276,62 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
       );
     }
 
-    return ListView.builder(
+    // Show a prominent "View Reviews" button followed by the rooms list
+    return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
-      itemCount: rooms.length,
-      itemBuilder: (context, index) {
-        final room = rooms[index];
-        return RoomCard(
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => OwnerReviewsScreen(
+                    dormId: int.tryParse(widget.dorm['dorm_id'].toString()) ?? 0,
+                    dormName: widget.dorm['name'] ?? '',
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.rate_review, size: 20),
+            label: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 14),
+              child: Text('View Reviews', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shadowColor: Colors.transparent,
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Rooms
+        ...rooms.map((room) => RoomCard(
           room: room,
           onEdit: () => _showEditRoomDialog(room),
           onDelete: () => _deleteRoom(room),
-        );
-      },
+        )).toList(),
+      ],
     );
   }
 }
