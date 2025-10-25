@@ -113,7 +113,7 @@ $stmt = $pdo->prepare("
     JOIN users u ON t.student_id = u.user_id
     JOIN dormitories d ON t.dorm_id = d.dorm_id AND d.owner_id = ?
     JOIN rooms r ON t.room_id = r.room_id
-    WHERE t.status IN ('active', 'pending')
+    WHERE t.status IN ('active', 'pending', 'completed')
     ORDER BY t.check_in_date DESC
 ");
 $stmt->execute([$owner_id]);
