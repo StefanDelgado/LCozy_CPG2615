@@ -25,11 +25,17 @@ try {
     error_log("SubmitReviewAPI booking_id=$booking_id rating=$rating comment=$comment student_id=$student_id");
 
     // Check if booking is completed and belongs to student
-    $stmt = $pdo->prepare("SELECT b.booking_id, r.dorm_id FROM bookings b JOIN rooms r ON b.room_id = r.room_id WHERE b.booking_id = ? AND b.student_id = ? AND b.status = 'completed'");
+    $stmt = $pdo->prepare("SELECT b.booking_id, r.dorm_id, b.status FROM bookings b JOIN rooms r ON b.room_id = r.room_id WHERE b.booking_id = ? AND b.student_id = ?");
     $stmt->execute([$booking_id, $student_id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$row) {
-        echo json_encode(['success' => false, 'error' => 'Booking not eligible for review']);
+        error_log('Review API: No booking found for booking_id=' . $booking_id . ', student_id=' . $student_id);
+        echo json_encode(['success' => false, 'error' => 'Booking not found for review']);
+        exit;
+    }
+    if ($row['status'] !== 'completed') {
+        error_log('Review API: Booking status is not completed. booking_id=' . $booking_id . ', status=' . $row['status']);
+        echo json_encode(['success' => false, 'error' => 'Booking not eligible for review', 'booking_status' => $row['status']]);
         exit;
     }
     $dorm_id = $row['dorm_id'];
