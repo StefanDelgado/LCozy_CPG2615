@@ -201,7 +201,21 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <h4>Description</h4>
         <p><?= nl2br(htmlspecialchars($dorm['description'])) ?></p>
       </div>
-      
+
+      <!-- Review & Rating Section -->
+      <div class="detail-section">
+        <h4>Reviews & Ratings</h4>
+        <div class="review-rating-row">
+          <span style="color: #FFC107; font-size: 1.2em;">★</span>
+          <span style="font-weight: bold; font-size: 1.1em;">
+            <?= $dorm['avg_rating'] !== null ? $dorm['avg_rating'] : '-' ?>
+          </span>
+          <span style="color: #888; margin-left: 8px;">
+            (<?= $dorm['total_reviews'] ?> reviews)
+          </span>
+        </div>
+      </div>
+
       <?php if ($dorm['features']): ?>
       <div class="detail-section">
         <h4>Features & Amenities</h4>

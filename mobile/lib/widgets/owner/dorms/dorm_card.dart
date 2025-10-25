@@ -233,9 +233,36 @@ class DormCard extends StatelessWidget {
                 children: _buildFeatureChips(dorm['features'].toString()),
               ),
             ],
-            
+
+            // Review & Rating Section
+            if (dorm['avg_rating'] != null && dorm['total_reviews'] != null) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.star, color: Colors.amber, size: 18),
+                  const SizedBox(width: 4),
+                  Text(
+                    dorm['avg_rating'] != null ? dorm['avg_rating'].toString() : '-',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '(${dorm['total_reviews']} reviews)',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
             const SizedBox(height: 16),
-            
+
             // Manage Rooms Button with Gradient
             Container(
               width: double.infinity,
