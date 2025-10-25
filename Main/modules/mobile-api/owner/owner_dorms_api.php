@@ -36,7 +36,9 @@ try {
             (SELECT COUNT(*) 
              FROM bookings b 
              JOIN rooms r2 ON b.room_id = r2.room_id 
-             WHERE r2.dorm_id = d.dorm_id AND b.status = 'approved') as active_bookings
+             WHERE r2.dorm_id = d.dorm_id AND b.status = 'approved') as active_bookings,
+            (SELECT ROUND(AVG(r.rating),1) FROM reviews r WHERE r.dorm_id = d.dorm_id AND r.status = 'approved') as avg_rating,
+            (SELECT COUNT(*) FROM reviews r WHERE r.dorm_id = d.dorm_id AND r.status = 'approved') as total_reviews
         FROM dormitories d
         LEFT JOIN rooms r ON d.dorm_id = r.dorm_id
         WHERE d.owner_id = ?
