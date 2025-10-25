@@ -65,13 +65,17 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
   display: flex;
   flex-direction: column;
   gap: 16px;
+  position: relative;
+  z-index: 1;
 }
 .review-card {
   border: 1px solid #e9e6ef;
   border-radius: 10px;
   padding: 16px;
   background: #fff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  position: relative;
+  z-index: 2;
 }
 .review-card h3 {
   margin: 0 0 8px 0;
