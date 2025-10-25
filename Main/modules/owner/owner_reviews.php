@@ -12,8 +12,7 @@ $owner_id = $_SESSION['user']['user_id'];
 $ownerDormsStmt = $pdo->prepare("SELECT dorm_id, name FROM dormitories WHERE owner_id = ?");
 $ownerDormsStmt->execute([$owner_id]);
 $ownerDorms = $ownerDormsStmt->fetchAll(PDO::FETCH_ASSOC);
-$ownerDormsDebug = var_export($ownerDorms, true);
-echo "<pre style='background:#eef6ff;border:1px solid #b6d4ff;padding:12px;color:#033;'>DEBUG: Current owner_id = $owner_id\nDorms owned by this owner:\n$ownerDormsDebug</pre>";
+// (debug output removed)
 
 // Support dorm_id filter
 $dorm_id = isset($_GET['dorm_id']) ? (int)$_GET['dorm_id'] : null;
@@ -50,11 +49,7 @@ if (empty($ownedDormIds)) {
         $stmt->execute($params);
         $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Debugging: show executed SQL and params (useful temporarily)
-        $dbgSql = htmlspecialchars($sql);
-        $dbgParams = var_export($params, true);
-        $dbgReviews = var_export($reviews, true);
-        echo "<pre style='background:#fffbe6;border:1px solid #ffe58f;padding:12px;color:#333;'>DEBUG: Executed SQL:\n$dbgSql\n\nParams:\n$dbgParams\n\nReviews fetched:\n$dbgReviews</pre>";
+  // (debug output removed)
     }
 }
 
