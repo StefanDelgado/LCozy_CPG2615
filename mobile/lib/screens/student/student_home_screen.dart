@@ -7,7 +7,9 @@ import '../../widgets/owner/dashboard/owner_stat_card.dart';
 import '../../widgets/student/home/booking_card.dart';
 import '../../widgets/student/home/quick_action_button.dart';
 import '../../widgets/student/home/empty_bookings_widget.dart';
+import 'submit_review_screen.dart';
 import 'view_details_screen.dart';
+import 'student_reservations.dart';
 // Temporary imports from legacy structure
 import 'browse_dorms_screen.dart';
 import 'student_payments_screen.dart';
@@ -265,26 +267,41 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   }
 
   Widget _buildDashboardContent() {
-    final activeBookings = (dashboardData['active_bookings'] as List?) ?? [];
-    
-    return RefreshIndicator(
-      onRefresh: fetchDashboardData,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildActiveBookingsSection(activeBookings),
-            const SizedBox(height: 24),
-            _buildQuickActionsSection(),
-          ],
-        ),
-      ),
-    );
-  }
+  final activeBookings = (dashboardData['active_bookings'] as List?) ?? [];
+  final completedBookings = (dashboardData['completed_bookings'] as List?) ?? [];
+  final cancelledBookings = (dashboardData['cancelled_bookings'] as List?) ?? [];
+  final rejectedBookings = (dashboardData['rejected_bookings'] as List?) ?? [];
+  final pendingBookings = (dashboardData['pending_bookings'] as List?) ?? [];
+  final approvedBookings = (dashboardData['approved_bookings'] as List?) ?? [];
+  final ongoingBookings = (dashboardData['ongoing_bookings'] as List?) ?? [];
+  final allBookings = [
+    ...activeBookings,
+    ...completedBookings,
+    ...cancelledBookings,
+    ...rejectedBookings,
+    ...pendingBookings,
+    ...approvedBookings,
+    ...ongoingBookings,
+  ];
 
-  Widget _buildActiveBookingsSection(List activeBookings) {
+  return RefreshIndicator(
+    onRefresh: fetchDashboardData,
+    child: SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildActiveBookingsSection(activeBookings, completedBookings, allBookings),
+          const SizedBox(height: 24),
+          _buildQuickActionsSection(),
+        ],
+      ),
+    ),
+  );
+}
+
+  Widget _buildActiveBookingsSection(List activeBookings, List completedBookings, List allBookings) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -298,10 +315,24 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            if (activeBookings.isNotEmpty)
+            if (activeBookings.isNotEmpty || completedBookings.isNotEmpty)
               TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/student_reservations');
+                  // Debug: print number of unique dorms connected to user
+                  final dormIds = allBookings
+                      .map((booking) => booking['dorm']?['dorm_id']?.toString())
+                      .where((id) => id != null && id.isNotEmpty)
+                      .toSet();
+                  print('DEBUG: Number of unique dorms connected to user: \'${dormIds.length}\'');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StudentReservationsScreen(
+                        bookings: allBookings,
+                        userEmail: widget.userEmail,
+                      ),
+                    ),
+                  );
                 },
                 child: const Text('View All'),
               ),
@@ -311,26 +342,58 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         if (activeBookings.isEmpty)
           EmptyBookingsWidget(onBrowseDorms: _navigateToBrowseDorms)
         else
-          ...activeBookings.map((booking) => GestureDetector(
-            onTap: () {
-              final dorm = booking['dorm'] ?? {};
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ViewDetailsScreen(
-                    property: {
-                      'dorm_id': dorm['dorm_id']?.toString() ?? '',
-                      'name': dorm['name']?.toString() ?? '',
-                      'address': dorm['address']?.toString() ?? '',
-                      // Add more dorm fields if needed
-                    },
-                    userEmail: widget.userEmail,
-                  ),
+          ...activeBookings.map((booking) {
+            final status = booking['status'].toString().toLowerCase();
+            final dorm = booking['dorm'] ?? {};
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ViewDetailsScreen(
+                          property: {
+                            'dorm_id': dorm['dorm_id']?.toString() ?? '',
+                            'name': dorm['name']?.toString() ?? '',
+                            'address': dorm['address']?.toString() ?? '',
+                          },
+                          userEmail: widget.userEmail,
+                        ),
+                      ),
+                    );
+                  },
+                  child: BookingCard(booking: booking),
                 ),
-              );
-            },
-            child: BookingCard(booking: booking),
-          )),
+                if (status == 'completed')
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 4, bottom: 12),
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.rate_review, size: 18),
+                      label: const Text('Write Review'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.black,
+                        minimumSize: const Size(120, 36),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SubmitReviewScreen(
+                              dormId: dorm['dorm_id']?.toString() ?? '',
+                              studentEmail: widget.userEmail,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            );
+          }),
       ],
     );
   }

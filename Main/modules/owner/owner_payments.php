@@ -53,6 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         $updateBooking = $pdo->prepare("UPDATE bookings SET status = 'completed' WHERE booking_id = ?");
         $updateBooking->execute([$booking_id]);
       }
+      // Prevent payment from being set to expired if already paid
+      $preventExpire = $pdo->prepare("UPDATE payments SET status = 'paid' WHERE payment_id = ? AND status != 'paid'");
+      $preventExpire->execute([$payment_id]);
     }
     $flash = ['type' => 'success', 'msg' => 'Payment status updated successfully.'];
 }

@@ -49,7 +49,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 WHERE payment_id = ?
             ");
             $stmt->execute([$payment_id]);
-            
+
+            // Also set related booking to completed
+            $getBooking = $pdo->prepare("SELECT booking_id FROM payments WHERE payment_id = ? LIMIT 1");
+            $getBooking->execute([$payment_id]);
+            $booking_id = $getBooking->fetchColumn();
+            if ($booking_id) {
+                $updateBooking = $pdo->prepare("UPDATE bookings SET status = 'completed' WHERE booking_id = ?");
+                $updateBooking->execute([$booking_id]);
+            }
+
+            // Prevent payment from being set to expired if already paid
+            $preventExpire = $pdo->prepare("UPDATE payments SET status = 'paid' WHERE payment_id = ? AND status != 'paid'");
+            $preventExpire->execute([$payment_id]);
+
             error_log("Payment $payment_id marked as paid by owner");
             echo json_encode(['ok' => true, 'message' => 'Payment marked as completed']);
             

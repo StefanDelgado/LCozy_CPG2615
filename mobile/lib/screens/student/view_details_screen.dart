@@ -457,33 +457,6 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SubmitReviewScreen(
-                        dormId: widget.property['dorm_id'] ?? '',
-                        studentEmail: widget.userEmail,
-                      ),
-                    ),
-                  );
-                  if (result == true) {
-                    fetchDormDetails(); // Refresh reviews after submission
-                  }
-                },
-                icon: const Icon(Icons.rate_review),
-                label: const Text('Write Review'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  backgroundColor: Colors.amber,
-                  foregroundColor: Colors.black,
-                ),
-              ),
-            ),
           ],
         ),
       ),
