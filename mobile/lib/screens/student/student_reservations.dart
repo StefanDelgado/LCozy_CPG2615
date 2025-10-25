@@ -39,12 +39,22 @@ class StudentReservationsScreen extends StatelessWidget {
                               foregroundColor: Colors.black,
                             ),
                             onPressed: () {
+                              final bookingId = (booking['booking_id'] != null && booking['booking_id'] != 0)
+                                  ? (booking['booking_id'] is int ? booking['booking_id'] : int.tryParse(booking['booking_id']?.toString() ?? '0') ?? 0)
+                                  : (booking['id'] is int ? booking['id'] : int.tryParse(booking['id']?.toString() ?? '0') ?? 0);
+                              final studentId = booking['student_id'] is int
+                                  ? booking['student_id']
+                                  : int.tryParse(booking['student_id']?.toString() ?? '') ?? 0;
+                              final dormId = dorm['dorm_id']?.toString() ?? '';
+                              print('[DEBUG] Review Navigation: dormId=$dormId, studentEmail=$userEmail, bookingId=$bookingId, studentId=$studentId');
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => SubmitReviewScreen(
-                                    dormId: dorm['dorm_id']?.toString() ?? '',
+                                    dormId: dormId,
                                     studentEmail: userEmail,
+                                    bookingId: bookingId,
+                                    studentId: studentId,
                                   ),
                                 ),
                               );

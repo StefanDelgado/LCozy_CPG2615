@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import '../../services/review_service.dart';
 
 class SubmitReviewScreen extends StatefulWidget {
   final String dormId;
   final String studentEmail;
+  final int bookingId;
+  final int studentId;
 
   const SubmitReviewScreen({
     super.key,
     required this.dormId,
     required this.studentEmail,
+    required this.bookingId,
+    required this.studentId,
   });
 
   @override
@@ -21,15 +26,32 @@ class _SubmitReviewScreenState extends State<SubmitReviewScreen> {
   bool _isSubmitting = false;
   String? _error;
 
+  final ReviewService _reviewService = ReviewService();
+
   void _submitReview() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _isSubmitting = true; _error = null; });
     _formKey.currentState!.save();
-    // TODO: Call API to submit review
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() { _isSubmitting = false; });
-    if (mounted) {
-      Navigator.pop(context, true);
+    try {
+      final result = await _reviewService.submitReview(
+        dormId: widget.dormId,
+        studentEmail: widget.studentEmail,
+        bookingId: widget.bookingId,
+        studentId: widget.studentId,
+        stars: _stars,
+        review: _review,
+      );
+      if (result['success'] == true) {
+        if (mounted) {
+          Navigator.pop(context, true);
+        }
+      } else {
+        setState(() { _error = result['error'] ?? 'Failed to submit review.'; });
+      }
+    } catch (e) {
+      setState(() { _error = 'Error: ${e.toString()}'; });
+    } finally {
+      setState(() { _isSubmitting = false; });
     }
   }
 

@@ -383,12 +383,20 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                       onPressed: () {
+                        final studentId = booking['student_id'] is int
+                            ? booking['student_id']
+                            : int.tryParse(booking['student_id']?.toString() ?? '') ?? (dashboardData['student']?['id'] ?? 0);
+                        final dormId = dorm['dorm_id']?.toString() ?? '';
+                        final bookingId = booking['booking_id'] is int ? booking['booking_id'] : int.tryParse(booking['booking_id']?.toString() ?? '0') ?? 0;
+                        print('[DEBUG] Review Navigation: dormId=$dormId, studentEmail=${widget.userEmail}, bookingId=$bookingId, studentId=$studentId');
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => SubmitReviewScreen(
-                              dormId: dorm['dorm_id']?.toString() ?? '',
+                              dormId: dormId,
                               studentEmail: widget.userEmail,
+                              bookingId: bookingId,
+                              studentId: studentId,
                             ),
                           ),
                         );

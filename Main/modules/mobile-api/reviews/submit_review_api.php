@@ -33,8 +33,8 @@ try {
         echo json_encode(['success' => false, 'error' => 'Booking not found for review']);
         exit;
     }
-    if ($row['status'] !== 'completed') {
-        error_log('Review API: Booking status is not completed. booking_id=' . $booking_id . ', status=' . $row['status']);
+    if ($row['status'] !== 'completed' && $row['status'] !== 'active') {
+        error_log('Review API: Booking status is not eligible. booking_id=' . $booking_id . ', status=' . $row['status']);
         echo json_encode(['success' => false, 'error' => 'Booking not eligible for review', 'booking_status' => $row['status']]);
         exit;
     }
