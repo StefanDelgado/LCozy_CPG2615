@@ -1,3 +1,5 @@
+$debug = var_export($reviews, true);
+echo "<pre style='background:#fffbe6;border:1px solid #ffe58f;padding:12px;color:#333;'>DEBUG: Reviews fetched:\n$debug</pre>";
 <?php
 require_once __DIR__ . '/../../auth/auth.php';
 require_role('owner');
