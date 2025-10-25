@@ -127,10 +127,12 @@ if (isset($_SESSION['flash'])) {
 
 // ─── Fetch Dorms ───
 $stmt = $pdo->prepare("
-    SELECT dorm_id, name, address, description, verified, cover_image, features, deposit_required, deposit_months
-    FROM dormitories
-    WHERE owner_id = ?
-    ORDER BY created_at DESC
+    SELECT d.dorm_id, d.name, d.address, d.description, d.verified, d.cover_image, d.features, d.deposit_required, d.deposit_months,
+      (SELECT ROUND(AVG(r.rating),1) FROM reviews r WHERE r.dorm_id = d.dorm_id AND r.status = 'approved') as avg_rating,
+      (SELECT COUNT(*) FROM reviews r WHERE r.dorm_id = d.dorm_id AND r.status = 'approved') as total_reviews
+    FROM dormitories d
+    WHERE d.owner_id = ?
+    ORDER BY d.created_at DESC
 ");
 $stmt->execute([$owner_id]);
 $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
