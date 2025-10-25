@@ -14,8 +14,8 @@ if ($dorm_id) {
   $stmt = $pdo->prepare("
     SELECT r.*, u.name AS student_name, d.name AS dorm_name, rm.room_type
     FROM reviews r
-    JOIN users u ON r.student_id = u.user_id
-    JOIN dormitories d ON r.dorm_id = d.dorm_id
+    LEFT JOIN users u ON r.student_id = u.user_id
+    LEFT JOIN dormitories d ON r.dorm_id = d.dorm_id
     LEFT JOIN rooms rm ON r.room_id = rm.room_id
     WHERE d.owner_id = ? AND r.dorm_id = ? AND r.status = 'approved'
     ORDER BY r.created_at DESC
@@ -25,8 +25,8 @@ if ($dorm_id) {
   $stmt = $pdo->prepare("
     SELECT r.*, u.name AS student_name, d.name AS dorm_name, rm.room_type
     FROM reviews r
-    JOIN users u ON r.student_id = u.user_id
-    JOIN dormitories d ON r.dorm_id = d.dorm_id
+    LEFT JOIN users u ON r.student_id = u.user_id
+    LEFT JOIN dormitories d ON r.dorm_id = d.dorm_id
     LEFT JOIN rooms rm ON r.room_id = rm.room_id
     WHERE d.owner_id = ? AND r.status = 'approved'
     ORDER BY r.created_at DESC
