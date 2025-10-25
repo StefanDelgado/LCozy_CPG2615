@@ -17,33 +17,46 @@ echo "<pre style='background:#eef6ff;border:1px solid #b6d4ff;padding:12px;color
 
 // Support dorm_id filter
 $dorm_id = isset($_GET['dorm_id']) ? (int)$_GET['dorm_id'] : null;
-if ($dorm_id) {
-  $stmt = $pdo->prepare("
-    SELECT r.*, u.name AS student_name, d.name AS dorm_name, rm.room_type
-    FROM reviews r
-    LEFT JOIN users u ON r.student_id = u.user_id
-    LEFT JOIN dormitories d ON r.dorm_id = d.dorm_id
-    LEFT JOIN rooms rm ON r.room_id = rm.room_id
-    WHERE d.owner_id = ? AND r.dorm_id = ? AND r.status = 'approved'
-    ORDER BY r.created_at DESC
-  ");
-  $stmt->execute([$owner_id, $dorm_id]);
+
+// Build list of dorm IDs owned by this owner
+$ownedDormIds = array_map(function($d){ return (int)$d['dorm_id']; }, $ownerDorms);
+
+if (empty($ownedDormIds)) {
+    $reviews = [];
+    echo "<div class='alert alert-warning'>You don't have any dorms yet.</div>";
 } else {
-  $stmt = $pdo->prepare("
-    SELECT r.*, u.name AS student_name, d.name AS dorm_name, rm.room_type
-    FROM reviews r
-    LEFT JOIN users u ON r.student_id = u.user_id
-    LEFT JOIN dormitories d ON r.dorm_id = d.dorm_id
-    LEFT JOIN rooms rm ON r.room_id = rm.room_id
-    WHERE d.owner_id = ? AND r.status = 'approved'
-    ORDER BY r.created_at DESC
-  ");
-  $stmt->execute([$owner_id]);
+    // If a dorm_id filter was provided, ensure it belongs to the owner
+    if ($dorm_id && !in_array($dorm_id, $ownedDormIds)) {
+        // invalid dorm_id for this owner -> return empty
+        $reviews = [];
+    } else {
+        // Determine which dorm ids to query: either single dorm or all owned dorms
+        $targetDormIds = $dorm_id ? [$dorm_id] : $ownedDormIds;
+
+        // Build placeholders and params
+        $placeholders = implode(',', array_fill(0, count($targetDormIds), '?'));
+        $params = $targetDormIds; // for dorm ids
+
+        $sql = "SELECT r.*, u.name AS student_name, d.name AS dorm_name, rm.room_type
+                FROM reviews r
+                LEFT JOIN users u ON r.student_id = u.user_id
+                LEFT JOIN dormitories d ON r.dorm_id = d.dorm_id
+                LEFT JOIN rooms rm ON r.room_id = rm.room_id
+                WHERE r.dorm_id IN ($placeholders) AND r.status = 'approved'
+                ORDER BY r.created_at DESC";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Debugging: show executed SQL and params (useful temporarily)
+        $dbgSql = htmlspecialchars($sql);
+        $dbgParams = var_export($params, true);
+        $dbgReviews = var_export($reviews, true);
+        echo "<pre style='background:#fffbe6;border:1px solid #ffe58f;padding:12px;color:#333;'>DEBUG: Executed SQL:\n$dbgSql\n\nParams:\n$dbgParams\n\nReviews fetched:\n$dbgReviews</pre>";
+    }
 }
 
-$reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
-$debug = var_export($reviews, true);
-echo "<pre style='background:#fffbe6;border:1px solid #ffe58f;padding:12px;color:#333;'>DEBUG: Reviews fetched:\n$debug</pre>";
 ?>
 
 <div class="page-header">
