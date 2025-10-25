@@ -302,6 +302,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 }
 
   Widget _buildActiveBookingsSection(List activeBookings, List completedBookings, List allBookings) {
+    final visibleBookings = [
+      ...activeBookings,
+      ...completedBookings,
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -339,10 +343,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        if (activeBookings.isEmpty)
+        if (visibleBookings.isEmpty)
           EmptyBookingsWidget(onBrowseDorms: _navigateToBrowseDorms)
         else
-          ...activeBookings.map((booking) {
+          ...visibleBookings.map((booking) {
             final status = booking['status'].toString().toLowerCase();
             final dorm = booking['dorm'] ?? {};
             return Column(

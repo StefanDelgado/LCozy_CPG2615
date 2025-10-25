@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
       $getBooking->execute([$payment_id]);
       $booking_id = $getBooking->fetchColumn();
       if ($booking_id) {
-        $updateBooking = $pdo->prepare("UPDATE bookings SET status = 'completed' WHERE booking_id = ?");
+        $updateBooking = $pdo->prepare("UPDATE bookings SET status = 'active' WHERE booking_id = ?");
         $updateBooking->execute([$booking_id]);
       }
       // Prevent payment from being set to expired if already paid

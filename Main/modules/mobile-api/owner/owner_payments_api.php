@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $getBooking->execute([$payment_id]);
             $booking_id = $getBooking->fetchColumn();
             if ($booking_id) {
-                $updateBooking = $pdo->prepare("UPDATE bookings SET status = 'completed' WHERE booking_id = ?");
+                $updateBooking = $pdo->prepare("UPDATE bookings SET status = 'active' WHERE booking_id = ?");
                 $updateBooking->execute([$booking_id]);
             }
 
