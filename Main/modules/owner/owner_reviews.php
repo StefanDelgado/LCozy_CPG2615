@@ -8,6 +8,13 @@ include __DIR__ . '/../../partials/header.php';
 
 $owner_id = $_SESSION['user']['user_id'];
 
+// Debug: show current owner and their dorms (helpful to verify ownership)
+$ownerDormsStmt = $pdo->prepare("SELECT dorm_id, name FROM dormitories WHERE owner_id = ?");
+$ownerDormsStmt->execute([$owner_id]);
+$ownerDorms = $ownerDormsStmt->fetchAll(PDO::FETCH_ASSOC);
+$ownerDormsDebug = var_export($ownerDorms, true);
+echo "<pre style='background:#eef6ff;border:1px solid #b6d4ff;padding:12px;color:#033;'>DEBUG: Current owner_id = $owner_id\nDorms owned by this owner:\n$ownerDormsDebug</pre>";
+
 // Support dorm_id filter
 $dorm_id = isset($_GET['dorm_id']) ? (int)$_GET['dorm_id'] : null;
 if ($dorm_id) {
