@@ -473,6 +473,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                         onPressed: isSubmitting ? null : _submitBooking,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: purple,
+                          foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -481,7 +482,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                             ? const CircularProgressIndicator(color: Colors.white)
                             : const Text(
                                 'Submit Booking Request',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                               ),
                       ),
                     ),

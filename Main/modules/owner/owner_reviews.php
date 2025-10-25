@@ -14,6 +14,46 @@ $ownerDormsStmt->execute([$owner_id]);
 $ownerDorms = $ownerDormsStmt->fetchAll(PDO::FETCH_ASSOC);
 // (debug output removed)
 
+// Flash message for actions (persist across redirect)
+$flash = null;
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
+if (isset($_SESSION['flash'])) {
+  $flash = $_SESSION['flash'];
+  unset($_SESSION['flash']);
+}
+
+// Handle moderation POST (approve/reject) from owner UI
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['review_id'], $_POST['action'])) {
+  $postReviewId = intval($_POST['review_id']);
+  $postAction = strtolower(trim($_POST['action']));
+  if (!in_array($postAction, ['approve', 'reject'])) {
+    $_SESSION['flash'] = ['type' => 'danger', 'text' => 'Invalid action'];
+  } else {
+    // Verify that the review belongs to one of the owner's dorms
+    $checkStmt = $pdo->prepare('SELECT dorm_id FROM reviews WHERE review_id = ?');
+    $checkStmt->execute([$postReviewId]);
+    $row = $checkStmt->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+      $_SESSION['flash'] = ['type' => 'danger', 'text' => 'Review not found'];
+    } else {
+      $reviewDormId = (int)$row['dorm_id'];
+      $ownedDormIds = array_map(function($d){ return (int)$d['dorm_id']; }, $ownerDorms);
+      if (!in_array($reviewDormId, $ownedDormIds)) {
+        $_SESSION['flash'] = ['type' => 'danger', 'text' => 'You are not authorized to moderate this review'];
+      } else {
+        $newStatus = $postAction === 'approve' ? 'approved' : 'rejected';
+        $up = $pdo->prepare('UPDATE reviews SET status = ? WHERE review_id = ?');
+        $up->execute([$newStatus, $postReviewId]);
+        $_SESSION['flash'] = ['type' => 'success', 'text' => 'Review ' . $newStatus];
+      }
+    }
+  }
+  // Redirect to avoid form resubmission and preserve dorm_id filter
+  $redirectUrl = $_SERVER['REQUEST_URI'];
+  header('Location: ' . $redirectUrl);
+  exit;
+}
+
 // Support dorm_id filter
 $dorm_id = isset($_GET['dorm_id']) ? (int)$_GET['dorm_id'] : null;
 
@@ -61,6 +101,9 @@ if (empty($ownedDormIds)) {
 </div>
 
 <?php if ($reviews): ?>
+  <?php if (!empty($flash)): ?>
+    <div class="alert alert-<?= htmlspecialchars($flash['type']) ?>"><?= htmlspecialchars($flash['text']) ?></div>
+  <?php endif; ?>
   <div class="reviews-list">
     <?php foreach ($reviews as $r): ?>
       <div class="review-card">
@@ -70,6 +113,18 @@ if (empty($ownedDormIds)) {
         <p>⭐ <?= $r['rating'] ?>/5</p>
         <p><?= nl2br(htmlspecialchars($r['comment'])) ?></p>
         <small><?= date("M d, Y H:i", strtotime($r['created_at'])) ?></small>
+        <div class="review-actions">
+          <form method="post" style="display:inline-block; margin-right:8px;">
+            <input type="hidden" name="review_id" value="<?= (int)$r['review_id'] ?>" />
+            <input type="hidden" name="action" value="reject" />
+            <button type="submit" class="btn btn-outline-danger">Report</button>
+          </form>
+          <form method="post" style="display:inline-block;">
+            <input type="hidden" name="review_id" value="<?= (int)$r['review_id'] ?>" />
+            <input type="hidden" name="action" value="approve" />
+            <button type="submit" class="btn btn-primary">Keep</button>
+          </form>
+        </div>
       </div>
     <?php endforeach; ?>
   </div>
