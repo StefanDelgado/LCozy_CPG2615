@@ -32,7 +32,17 @@ class ReviewService {
     final url = Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/reviews/fetch_reviews_api.php?dorm_id=$dormId');
     final response = await http.get(url);
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final body = jsonDecode(response.body);
+      // Normalize API response to { success: bool, data: [...] }
+      if (body is Map<String, dynamic> && body['success'] == true) {
+        return {
+          'success': true,
+          'data': body['reviews'] ?? [],
+          'avg_rating': body['avg_rating'] ?? 0,
+          'total_reviews': body['total_reviews'] ?? 0,
+        };
+      }
+      return {'success': false, 'error': body['error'] ?? 'Unknown response'};
     } else {
       return {'success': false, 'error': 'Server error'};
     }

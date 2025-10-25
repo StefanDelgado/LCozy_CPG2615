@@ -9,8 +9,16 @@ if ($dorm_id <= 0) {
     exit;
 }
 
-// Fetch approved reviews
-$stmt = $pdo->prepare("SELECT r.review_id, r.rating, r.comment, r.created_at, u.name FROM reviews r JOIN users u ON r.student_id = u.user_id WHERE r.dorm_id = ? AND r.status = 'approved' ORDER BY r.created_at DESC");
+// Fetch approved reviews and include student name and room info (via bookings)
+$stmt = $pdo->prepare(
+    "SELECT r.review_id, r.rating, r.comment, r.created_at, u.name AS student_name, rm.room_type
+     FROM reviews r
+     LEFT JOIN users u ON r.student_id = u.user_id
+     LEFT JOIN bookings b ON r.booking_id = b.booking_id
+     LEFT JOIN rooms rm ON b.room_id = rm.room_id
+     WHERE r.dorm_id = ? AND r.status = 'approved'
+     ORDER BY r.created_at DESC"
+);
 $stmt->execute([$dorm_id]);
 $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
