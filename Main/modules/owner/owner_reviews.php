@@ -41,7 +41,8 @@ if (empty($ownedDormIds)) {
                 FROM reviews r
                 LEFT JOIN users u ON r.student_id = u.user_id
                 LEFT JOIN dormitories d ON r.dorm_id = d.dorm_id
-                LEFT JOIN rooms rm ON r.room_id = rm.room_id
+                LEFT JOIN bookings b ON r.booking_id = b.booking_id
+                LEFT JOIN rooms rm ON b.room_id = rm.room_id
                 WHERE r.dorm_id IN ($placeholders) AND r.status = 'approved'
                 ORDER BY r.created_at DESC";
 
