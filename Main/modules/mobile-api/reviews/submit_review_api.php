@@ -35,10 +35,10 @@ try {
     $dorm_id = $row['dorm_id'];
 
     // Insert review (status = pending)
-    $stmt = $pdo->prepare("INSERT INTO reviews (booking_id, student_id, dorm_id, rating, comment, status) VALUES (?, ?, ?, ?, ?, 'pending')");
+    $stmt = $pdo->prepare("INSERT INTO reviews (booking_id, student_id, dorm_id, rating, comment, status) VALUES (?, ?, ?, ?, ?, 'approved')");
     $stmt->execute([$booking_id, $student_id, $dorm_id, $rating, $comment]);
 
-    echo json_encode(['success' => true, 'message' => 'Review submitted and pending approval']);
+    echo json_encode(['success' => true, 'message' => 'Review submitted and approved']);
 } catch (Exception $e) {
     error_log('Submit review API error: ' . $e->getMessage());
     echo json_encode(['success' => false, 'error' => 'Server error']);
