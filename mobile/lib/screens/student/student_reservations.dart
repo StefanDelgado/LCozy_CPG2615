@@ -6,11 +6,13 @@ import 'submit_review_screen.dart';
 class StudentReservationsScreen extends StatelessWidget {
   final List<dynamic> bookings;
   final String userEmail;
+  final int studentId;
 
   const StudentReservationsScreen({
     super.key,
     required this.bookings,
     required this.userEmail,
+    required this.studentId,
   });
 
   @override
@@ -42,9 +44,8 @@ class StudentReservationsScreen extends StatelessWidget {
                               final bookingId = (booking['booking_id'] != null && booking['booking_id'] != 0)
                                   ? (booking['booking_id'] is int ? booking['booking_id'] : int.tryParse(booking['booking_id']?.toString() ?? '0') ?? 0)
                                   : (booking['id'] is int ? booking['id'] : int.tryParse(booking['id']?.toString() ?? '0') ?? 0);
-                              final studentId = booking['student_id'] is int
-                                  ? booking['student_id']
-                                  : int.tryParse(booking['student_id']?.toString() ?? '') ?? 0;
+                // Always use the passed-in studentId
+                final studentId = this.studentId;
                               final dormId = dorm['dorm_id']?.toString() ?? '';
                               print('[DEBUG] Review Navigation: dormId=$dormId, studentEmail=$userEmail, bookingId=$bookingId, studentId=$studentId');
                               Navigator.push(

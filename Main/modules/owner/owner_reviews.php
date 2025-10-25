@@ -8,15 +8,31 @@ include __DIR__ . '/../../partials/header.php';
 
 $owner_id = $_SESSION['user']['user_id'];
 
-$stmt = $pdo->prepare("
-    SELECT r.*, u.name AS student_name, d.name AS dorm_name
+// Support dorm_id filter
+$dorm_id = isset($_GET['dorm_id']) ? (int)$_GET['dorm_id'] : null;
+if ($dorm_id) {
+  $stmt = $pdo->prepare("
+    SELECT r.*, u.name AS student_name, d.name AS dorm_name, rm.room_type
     FROM reviews r
     JOIN users u ON r.student_id = u.user_id
     JOIN dormitories d ON r.dorm_id = d.dorm_id
+    LEFT JOIN rooms rm ON r.room_id = rm.room_id
+    WHERE d.owner_id = ? AND r.dorm_id = ? AND r.status = 'approved'
+    ORDER BY r.created_at DESC
+  ");
+  $stmt->execute([$owner_id, $dorm_id]);
+} else {
+  $stmt = $pdo->prepare("
+    SELECT r.*, u.name AS student_name, d.name AS dorm_name, rm.room_type
+    FROM reviews r
+    JOIN users u ON r.student_id = u.user_id
+    JOIN dormitories d ON r.dorm_id = d.dorm_id
+    LEFT JOIN rooms rm ON r.room_id = rm.room_id
     WHERE d.owner_id = ? AND r.status = 'approved'
     ORDER BY r.created_at DESC
-");
-$stmt->execute([$owner_id]);
+  ");
+  $stmt->execute([$owner_id]);
+}
 $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -31,6 +47,7 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <div class="review-card">
         <h3><?= htmlspecialchars($r['dorm_name']) ?></h3>
         <p><strong>By:</strong> <?= htmlspecialchars($r['student_name']) ?></p>
+        <p><strong>Room:</strong> <?= htmlspecialchars($r['room_type'] ?? 'N/A') ?></p>
         <p>⭐ <?= $r['rating'] ?>/5</p>
         <p><?= nl2br(htmlspecialchars($r['comment'])) ?></p>
         <small><?= date("M d, Y H:i", strtotime($r['created_at'])) ?></small>

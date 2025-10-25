@@ -213,6 +213,7 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <span style="color: #888; margin-left: 8px;">
             (<?= $dorm['total_reviews'] ?> reviews)
           </span>
+          <a href="owner_reviews.php?dorm_id=<?= $dorm['dorm_id'] ?>" class="btn btn-sm btn-primary" style="margin-left:16px;">View All Reviews</a>
         </div>
       </div>
 

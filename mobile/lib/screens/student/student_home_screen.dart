@@ -54,9 +54,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
       if (result['success']) {
         final data = result['data'];
-        if (data['stats'] != null) {
+        if (data['stats'] != null && data['student'] != null) {
           setState(() {
-            dashboardData = data['stats'];
+            dashboardData = {
+              ...data['stats'],
+              'student': data['student'],
+            };
             isLoading = false;
           });
         } else {
@@ -328,12 +331,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       .where((id) => id != null && id.isNotEmpty)
                       .toSet();
                   print('DEBUG: Number of unique dorms connected to user: \'${dormIds.length}\'');
+                  final studentId = dashboardData['student']?['id'] ?? 0;
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => StudentReservationsScreen(
                         bookings: allBookings,
                         userEmail: widget.userEmail,
+                        studentId: studentId,
                       ),
                     ),
                   );
@@ -383,12 +388,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                       onPressed: () {
-                        final studentId = booking['student_id'] is int
-                            ? booking['student_id']
-                            : int.tryParse(booking['student_id']?.toString() ?? '') ?? (dashboardData['student']?['id'] ?? 0);
-                        final dormId = dorm['dorm_id']?.toString() ?? '';
-                        final bookingId = booking['booking_id'] is int ? booking['booking_id'] : int.tryParse(booking['booking_id']?.toString() ?? '0') ?? 0;
-                        print('[DEBUG] Review Navigation: dormId=$dormId, studentEmail=${widget.userEmail}, bookingId=$bookingId, studentId=$studentId');
+            final studentId = dashboardData['student']?['id'] ?? 0;
+            final dormId = dorm['dorm_id']?.toString() ?? '';
+            final bookingId = booking['booking_id'] is int ? booking['booking_id'] : int.tryParse(booking['booking_id']?.toString() ?? '0') ?? 0;
+            print('[DEBUG] booking object: ' + booking.toString());
+            print('[DEBUG] Review Navigation: dormId=$dormId, studentEmail=${widget.userEmail}, bookingId=$bookingId, studentId=$studentId');
                         Navigator.push(
                           context,
                           MaterialPageRoute(
