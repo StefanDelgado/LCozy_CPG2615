@@ -94,7 +94,7 @@ try {
         JOIN dormitories d ON r.dorm_id = d.dorm_id
         JOIN users u ON d.owner_id = u.user_id
         WHERE b.student_id = ? 
-        AND b.status IN ('pending', 'approved')
+    AND b.status IN ('pending', 'approved', 'active', 'completed', 'cancelled', 'rejected', 'ongoing')
         ORDER BY b.created_at DESC
         LIMIT 10
     ");
