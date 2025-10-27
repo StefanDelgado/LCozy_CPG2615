@@ -292,7 +292,6 @@ function toggleUserCard(id) {
   padding: 0.75rem;
   font-size: 0.98em;
 }
-}
 .btn-primary {
   background: #6A5ACD;
   color: #fff;
@@ -333,7 +332,6 @@ function toggleUserCard(id) {
 /* Responsive table container */
 .card > div[style*="overflow-x:auto"] {
   margin-bottom: 1rem;
-}
 }
 .btn-secondary {
   background: #ddd;
