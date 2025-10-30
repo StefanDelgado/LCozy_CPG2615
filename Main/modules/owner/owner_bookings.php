@@ -14,7 +14,6 @@ if (APP_DEBUG) {
     error_reporting(E_ALL);
 }
 
-$page_title = "Bookings";
 include __DIR__ . '/../../partials/header.php';
 
 $owner_id = $_SESSION['user']['user_id'] ?? 0;

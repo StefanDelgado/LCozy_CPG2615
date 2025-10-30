@@ -54,7 +54,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'payment_history' && isset($_GET['
 // ═══════════════════════════════════════════════════════
 // NORMAL PAGE RENDERING STARTS HERE
 // ═══════════════════════════════════════════════════════
-$page_title = "Tenant Management";
+
 include __DIR__ . '/../../partials/header.php';
 
 $active_tab = $_GET['tab'] ?? 'current';
