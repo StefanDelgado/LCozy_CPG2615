@@ -96,6 +96,7 @@ setTimeout(closeFlash,3000);
 <?php endif; ?>
 
 <div class="page-header">
+  <h1>Bookings & Reservation</h1>
   <p>Monitor and manage all bookings</p>
 </div>
 
