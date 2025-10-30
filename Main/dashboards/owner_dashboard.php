@@ -89,6 +89,7 @@ $recent_bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <h2>Quick Actions</h2>
   <div class="actions">
     <a href="../modules/owner/owner_dorms.php" class="btn-primary">Manage Dorms</a>
+    <a href="../modules/owner/owner_reports.php" class="btn-primary">Reports and Analytics</a>
     <a href="../modules/owner/owner_tenants.php" class="btn-primary">View Tenants</a>
     <a href="../modules/owner/owner_bookings.php" class="btn-secondary">Bookings</a>
     <a href="../modules/owner/owner_payments.php" class="btn-secondary">Payments</a>
