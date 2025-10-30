@@ -3,7 +3,6 @@ require_once __DIR__ . '/../../auth/auth.php';
 require_role('owner');
 require_once __DIR__ . '/../../config.php';
 
-$page_title = "My Dormitories";
 include __DIR__ . '/../../partials/header.php';
 
 $owner_id = $_SESSION['user']['user_id'];
