@@ -38,7 +38,7 @@ $trends = $pdo->query("
     ORDER BY month DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// Top performing dorms (NO aliases)
+// Top performing dorms
 $top_dorms = $pdo->query("
     SELECT 
         dormitories.name,
@@ -54,15 +54,16 @@ $top_dorms = $pdo->query("
     LIMIT 5
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// Revenue by payment type
+// ✅ Fixed: Revenue by payment method
 $payment_stats = $pdo->query("
     SELECT 
-        status,
+        COALESCE(payment_method, 'Unknown') AS payment_method,
         COUNT(*) AS count,
         SUM(amount) AS total,
         AVG(amount) AS average
     FROM payments
-    GROUP BY status
+    WHERE status = 'paid'
+    GROUP BY payment_method
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 require_once __DIR__ . '/../../partials/header.php';
@@ -87,7 +88,7 @@ require_once __DIR__ . '/../../partials/header.php';
         <small><?= number_format($stats['completed_bookings']) ?> completed</small>
     </div>
     <div class="stat-card">
-        <h3>₱<?= number_format($stats['total_revenue']) ?></h3>
+        <h3>₱<?= number_format($stats['total_revenue'], 2) ?></h3>
         <p>Total Revenue</p>
     </div>
     <div class="stat-card">
@@ -145,6 +146,7 @@ require_once __DIR__ . '/../../partials/header.php';
 const trends = <?= json_encode($trends) ?>;
 const payments = <?= json_encode($payment_stats) ?>;
 
+// Booking Trends Chart
 new Chart(document.getElementById('bookingTrends').getContext('2d'), {
     type: 'line',
     data: {
@@ -172,6 +174,7 @@ new Chart(document.getElementById('bookingTrends').getContext('2d'), {
     }
 });
 
+// ✅ Fixed Payment Chart (now uses payment_method)
 new Chart(document.getElementById('paymentStats').getContext('2d'), {
     type: 'doughnut',
     data: {
