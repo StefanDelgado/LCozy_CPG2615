@@ -7,9 +7,9 @@ require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../auth/auth.php';
 require_role('admin');
 
-// Date range filter (currently not used to restrict queries, but kept for UI)
-$start_date = $_GET['start_date'] ?? date('Y-m-01');
-$end_date   = $_GET['end_date']   ?? date('Y-m-d');
+// Date range filter
+$start_date = $_GET['start_date'] ?? date('Y-m-01'); // First day of current month
+$end_date = $_GET['end_date'] ?? date('Y-m-d'); // Today
 
 // Summary statistics
 $stats = $pdo->query("
@@ -54,88 +54,20 @@ $top_dorms = $pdo->query("
     LIMIT 5
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-/**
- * Build payments-by-status aggregated data.
- * We will enforce a fixed order & labels so the chart colors do not mix up.
- * Desired order: Paid, Pending, Expired
- */
-$fixed_statuses = [
-    'Paid'    => '#28a745', // green
-    'Pending' => '#ffc107', // yellow
-    'Expired' => '#dc3545', // red
-];
-
-// fetch counts & totals grouped by raw status value
-$raw = $pdo->query("
-    SELECT status, COUNT(*) AS cnt, COALESCE(SUM(amount),0) AS total
+// ✅ Payments grouped by STATUS (with fixed categories)
+$payment_status = $pdo->query("
+    SELECT 
+        CASE 
+            WHEN status = 'paid' THEN 'Paid'
+            WHEN status = 'pending' THEN 'Pending'
+            WHEN status = 'expired' THEN 'Expired'
+            ELSE 'Other'
+        END AS status_label,
+        COUNT(*) AS count,
+        COALESCE(SUM(amount), 0) AS total
     FROM payments
-    GROUP BY status
+    GROUP BY status_label
 ")->fetchAll(PDO::FETCH_ASSOC);
-
-// Normalize DB status -> label mapping
-// Accept common DB values: 'paid','pending','expired' (case-insensitive)
-$map = [
-    'paid'    => 'Paid',
-    'pending' => 'Pending',
-    'expired' => 'Expired'
-];
-
-$payment_by_label = [];
-foreach ($raw as $r) {
-    $s = strtolower(trim($r['status'] ?? ''));
-    $label = $map[$s] ?? 'Other';
-    if (!isset($payment_by_label[$label])) {
-        $payment_by_label[$label] = ['count' => 0, 'total' => 0.0];
-    }
-    $payment_by_label[$label]['count'] += (int)$r['cnt'];
-    $payment_by_label[$label]['total'] += (float)$r['total'];
-}
-
-// Ensure all fixed statuses exist in the array (zero if missing)
-foreach (array_keys($fixed_statuses) as $st) {
-    if (!isset($payment_by_label[$st])) {
-        $payment_by_label[$st] = ['count' => 0, 'total' => 0.0];
-    }
-}
-
-// OPTIONAL: If you want to include "Other" statuses beyond the three, you can aggregate them
-$other_total = 0.0;
-$other_count = 0;
-foreach ($payment_by_label as $label => $vals) {
-    if (!array_key_exists($label, $fixed_statuses) && $label !== 'Other') {
-        // treat as Other
-        $other_total += $vals['total'];
-        $other_count += $vals['count'];
-        unset($payment_by_label[$label]);
-    }
-}
-if ($other_count > 0) {
-    // merge into 'Other' bucket
-    if (!isset($payment_by_label['Other'])) {
-        $payment_by_label['Other'] = ['count'=>0,'total'=>0.0];
-    }
-    $payment_by_label['Other']['count'] += $other_count;
-    $payment_by_label['Other']['total'] += $other_total;
-}
-
-// Prepare arrays in fixed order for Chart.js
-$chart_labels = [];
-$chart_data   = [];
-$chart_colors = [];
-
-// Use fixed order for the three main statuses
-foreach (array_keys($fixed_statuses) as $st) {
-    $chart_labels[] = $st;
-    $chart_data[]   = (float)($payment_by_label[$st]['total'] ?? 0.0);
-    $chart_colors[] = $fixed_statuses[$st];
-}
-
-// If "Other" has a value, append it at the end with a neutral color
-if (isset($payment_by_label['Other']) && $payment_by_label['Other']['total'] > 0) {
-    $chart_labels[] = 'Other';
-    $chart_data[]   = (float)$payment_by_label['Other']['total'];
-    $chart_colors[] = '#6c757d'; // gray for Other
-}
 
 require_once __DIR__ . '/../../partials/header.php';
 ?>
@@ -215,9 +147,7 @@ require_once __DIR__ . '/../../partials/header.php';
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const trends = <?= json_encode($trends) ?>;
-const paymentLabels = <?= json_encode($chart_labels) ?>;
-const paymentData   = <?= json_encode($chart_data) ?>;
-const paymentColors = <?= json_encode($chart_colors) ?>;
+const paymentStatus = <?= json_encode($payment_status) ?>;
 
 // Booking Trends Chart
 new Chart(document.getElementById('bookingTrends').getContext('2d'), {
@@ -247,14 +177,14 @@ new Chart(document.getElementById('bookingTrends').getContext('2d'), {
     }
 });
 
-// Payments by Status (fixed color mapping)
+// ✅ Payments by Status Chart (with fixed 3 colors)
 new Chart(document.getElementById('paymentStatus').getContext('2d'), {
     type: 'doughnut',
     data: {
-        labels: paymentLabels,
+        labels: paymentStatus.map(p => p.status_label),
         datasets: [{
-            data: paymentData,
-            backgroundColor: paymentColors
+            data: paymentStatus.map(p => p.total),
+            backgroundColor: ['#28a745', '#ffc107', '#dc3545']
         }]
     },
     options: {
@@ -266,12 +196,38 @@ new Chart(document.getElementById('paymentStatus').getContext('2d'), {
 </script>
 
 <style>
-/* styles unchanged (kept minimal here) */
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 1rem; margin-bottom: 2rem; }
-.stat-card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.reports-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px,1fr)); gap: 2rem; margin: 2rem 0; }
-.chart-card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.table { width: 100%; border-collapse: collapse; } .table th, .table td { padding: 0.75rem; border-bottom: 1px solid #eee; }
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.stat-card h3 { margin: 0; font-size: 1.8rem; color: #4A3AFF; }
+.stat-card p { margin: 0.5rem 0; color: #666; }
+.stat-card small { color: #999; font-size: 0.9rem; }
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+.chart-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.date-filter { display: flex; gap: 1rem; align-items: center; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 0.75rem; border-bottom: 1px solid #eee; }
+.table th { background: #f8f9fa; font-weight: 600; }
+.table-responsive { overflow-x: auto; }
 </style>
 
 <?php require_once __DIR__ . '/../../partials/footer.php'; ?>
