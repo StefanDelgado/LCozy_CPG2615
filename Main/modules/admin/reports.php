@@ -184,7 +184,7 @@ new Chart(document.getElementById('paymentStatus').getContext('2d'), {
         labels: paymentStatus.map(p => p.status_label),
         datasets: [{
             data: paymentStatus.map(p => p.total),
-            backgroundColor: ['#ffc107', '#dc3545', '#28a745']
+            backgroundColor: ['#dc3545', '#ffc107', '#28a745']
         }]
     },
     options: {
