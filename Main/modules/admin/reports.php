@@ -54,16 +54,14 @@ $top_dorms = $pdo->query("
     LIMIT 5
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// ✅ Fixed: Revenue by payment method
-$payment_stats = $pdo->query("
+// ✅ Updated: Payments by STATUS (for doughnut chart)
+$payment_status = $pdo->query("
     SELECT 
-        COALESCE(payment_method, 'Unknown') AS payment_method,
+        COALESCE(status, 'unknown') AS status,
         COUNT(*) AS count,
-        SUM(amount) AS total,
-        AVG(amount) AS average
+        SUM(amount) AS total
     FROM payments
-    WHERE status = 'paid'
-    GROUP BY payment_method
+    GROUP BY status
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 require_once __DIR__ . '/../../partials/header.php';
@@ -109,8 +107,8 @@ require_once __DIR__ . '/../../partials/header.php';
         <canvas id="bookingTrends"></canvas>
     </div>
     <div class="chart-card">
-        <h2>Revenue by Payment Method</h2>
-        <canvas id="paymentStats"></canvas>
+        <h2>Payments by Status</h2>
+        <canvas id="paymentStatus"></canvas>
     </div>
 </div>
 
@@ -144,7 +142,7 @@ require_once __DIR__ . '/../../partials/header.php';
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const trends = <?= json_encode($trends) ?>;
-const payments = <?= json_encode($payment_stats) ?>;
+const paymentStatus = <?= json_encode($payment_status) ?>;
 
 // Booking Trends Chart
 new Chart(document.getElementById('bookingTrends').getContext('2d'), {
@@ -174,19 +172,19 @@ new Chart(document.getElementById('bookingTrends').getContext('2d'), {
     }
 });
 
-// ✅ Fixed Payment Chart (now uses payment_method)
-new Chart(document.getElementById('paymentStats').getContext('2d'), {
+// ✅ Payments by Status Chart
+new Chart(document.getElementById('paymentStatus').getContext('2d'), {
     type: 'doughnut',
     data: {
-        labels: payments.map(p => p.payment_method),
+        labels: paymentStatus.map(p => p.status),
         datasets: [{
-            data: payments.map(p => p.total),
-            backgroundColor: ['#4A3AFF', '#28a745', '#ffc107', '#dc3545']
+            data: paymentStatus.map(p => p.total),
+            backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d']
         }]
     },
     options: {
         responsive: true,
-        plugins: { title: { display: true, text: 'Revenue by Payment Method' } }
+        plugins: { title: { display: true, text: 'Payments by Status' } }
     }
 });
 </script>
