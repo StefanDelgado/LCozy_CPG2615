@@ -54,14 +54,19 @@ $top_dorms = $pdo->query("
     LIMIT 5
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// ✅ Updated: Payments by STATUS (for doughnut chart)
+// ✅ Payments grouped by STATUS (with fixed categories)
 $payment_status = $pdo->query("
     SELECT 
-        COALESCE(status, 'unknown') AS status,
+        CASE 
+            WHEN status = 'paid' THEN 'Paid'
+            WHEN status = 'pending' THEN 'Pending'
+            WHEN status = 'expired' THEN 'Expired'
+            ELSE 'Other'
+        END AS status_label,
         COUNT(*) AS count,
-        SUM(amount) AS total
+        COALESCE(SUM(amount), 0) AS total
     FROM payments
-    GROUP BY status
+    GROUP BY status_label
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 require_once __DIR__ . '/../../partials/header.php';
@@ -172,19 +177,20 @@ new Chart(document.getElementById('bookingTrends').getContext('2d'), {
     }
 });
 
-// ✅ Payments by Status Chart
+// ✅ Payments by Status Chart (with fixed 3 colors)
 new Chart(document.getElementById('paymentStatus').getContext('2d'), {
     type: 'doughnut',
     data: {
-        labels: paymentStatus.map(p => p.status),
+        labels: paymentStatus.map(p => p.status_label),
         datasets: [{
             data: paymentStatus.map(p => p.total),
-            backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d']
+            backgroundColor: ['#28a745', '#ffc107', '#dc3545']
         }]
     },
     options: {
         responsive: true,
-        plugins: { title: { display: true, text: 'Payments by Status' } }
+        plugins: { title: { display: true, text: 'Payments by Status' } },
+        cutout: '70%'
     }
 });
 </script>
