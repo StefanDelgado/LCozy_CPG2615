@@ -69,6 +69,17 @@ try {
     $income_stmt->execute([$owner_id]);
     $income_trends = $income_stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // --- PAYMENT STATUS DISTRIBUTION (NEW) ---
+    $payment_status_stmt = $pdo->prepare("
+        SELECT p.status, COUNT(*) AS count
+        FROM payments p
+        JOIN dormitories d ON p.dorm_id = d.dorm_id
+        WHERE d.owner_id = ?
+        GROUP BY p.status
+    ");
+    $payment_status_stmt->execute([$owner_id]);
+    $payment_status_data = $payment_status_stmt->fetchAll(PDO::FETCH_ASSOC);
+
     // --- TENANT REPORTS ---
     $stmt = $pdo->prepare("
         SELECT COUNT(DISTINCT t.tenant_id)
@@ -107,7 +118,7 @@ try {
     $rating_stmt->execute([$owner_id]);
     $rating_data = $rating_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // --- RECENT ACTIVITY (Bookings, Payments, Reviews) ---
+    // --- RECENT ACTIVITY ---
     $recent_bookings = $pdo->prepare("
         SELECT b.booking_id, u.name AS student_name, d.name AS dorm_name, b.status, b.created_at
         FROM bookings b
@@ -180,6 +191,9 @@ try {
 
   <h2>Booking Status</h2>
   <canvas id="bookingChart"></canvas>
+
+  <h2>Payments by Status</h2>
+  <canvas id="paymentStatusChart"></canvas>
 
   <h2>Ratings Distribution</h2>
   <canvas id="ratingChart"></canvas>
@@ -260,6 +274,23 @@ new Chart(document.getElementById('bookingChart'), {
       data: <?= json_encode(array_column($booking_status_data ?? [], 'count')) ?>,
       backgroundColor: ['#36a2eb','#ff6384','#ffcd56']
     }]
+  }
+});
+
+new Chart(document.getElementById('paymentStatusChart'), {
+  type: 'doughnut',
+  data: {
+    labels: <?= json_encode(array_column($payment_status_data ?? [], 'status')) ?>,
+    datasets: [{
+      data: <?= json_encode(array_column($payment_status_data ?? [], 'count')) ?>,
+      backgroundColor: ['#28a745', '#ffc107', '#dc3545'], // green, yellow, red
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  },
+  options: {
+    plugins: { legend: { position: 'top' } },
+    cutout: '70%'
   }
 });
 
