@@ -161,7 +161,7 @@ try {
 
 <div class="page-header">
   <h1>Reports & Analytics</h1>
-  <p>Track performance and insights across your dorms</p>
+  <p>Track performance across your dorms</p>
 </div>
 
 <!-- Summary Cards -->
