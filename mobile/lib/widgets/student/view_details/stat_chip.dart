@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 class StatChip extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
   final String text;
   final Color color;
 
   const StatChip({
     super.key,
-    required this.icon,
+    this.icon,
     required this.text,
     required this.color,
   });
@@ -23,8 +23,10 @@ class StatChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 4),
+          if (icon != null) ...[
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 4),
+          ],
           Text(
             text,
             style: TextStyle(

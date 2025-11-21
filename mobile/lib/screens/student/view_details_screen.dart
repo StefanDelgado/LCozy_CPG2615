@@ -340,7 +340,6 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
                         color: Colors.blue,
                       ),
                       StatChip(
-                        icon: Icons.attach_money,
                         text: priceDisplay,
                         color: Colors.green,
                       ),

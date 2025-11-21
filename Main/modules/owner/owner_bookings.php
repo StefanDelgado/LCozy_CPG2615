@@ -257,6 +257,12 @@ unset($_SESSION['flash']);
       $status = strtolower(trim($b['status'] ?? 'pending'));
       if ($status === '' || $status === null) $status = 'pending';
       $booking_type = strtolower($b['booking_type'] ?? 'shared');
+      
+      // Calculate display price based on booking type
+      $display_price = $b['price'];
+      if ($booking_type === 'shared' && $b['capacity'] > 0) {
+        $display_price = $b['price'] / $b['capacity'];
+      }
     ?>
     
     <div class="booking-card <?= $status ?>">
@@ -305,7 +311,7 @@ unset($_SESSION['flash']);
           </div>
           <div class="info-row">
             <span class="info-label">💰 Price:</span>
-            <span class="info-value price">₱<?= number_format($b['price'], 2) ?>/month</span>
+            <span class="info-value price">₱<?= number_format($display_price, 2) ?>/month</span>
           </div>
         </div>
         
