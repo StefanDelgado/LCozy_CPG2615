@@ -31,12 +31,15 @@ switch ($role) {
                 p.status,
                 p.due_date,
                 p.payment_date,
-                p.receipt_image,            -- added
-                p.created_at,              -- added (used for elapsed time)
-                u.user_id AS student_id,   -- added
-                u.name AS student_name,    -- added
+                p.receipt_image,
+                p.created_at,
+                u.user_id AS student_id,
+                u.name AS student_name,
                 d.name AS dorm_name,
-                r.room_type
+                r.room_type,
+                r.capacity,
+                r.price as room_base_price,
+                b.booking_type
             FROM payments p
             JOIN bookings b ON p.booking_id = b.booking_id
             JOIN rooms r ON b.room_id = r.room_id
@@ -96,5 +99,22 @@ switch ($role) {
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Calculate display price for owner role based on booking type
+if ($role === 'owner') {
+    foreach ($payments as &$payment) {
+        $booking_type = strtolower($payment['booking_type'] ?? 'shared');
+        $display_amount = $payment['amount'];
+        
+        // If shared room, divide by capacity
+        if ($booking_type === 'shared' && isset($payment['capacity']) && $payment['capacity'] > 0) {
+            $display_amount = $payment['room_base_price'] / $payment['capacity'];
+        }
+        
+        // Round to 2 decimal places and update amount
+        $payment['amount'] = round($display_amount, 2);
+        $payment['display_amount'] = round($display_amount, 2);
+    }
+}
 
 echo json_encode($payments);
