@@ -494,10 +494,19 @@ function openEditModal(button) {
 
 function loadRoomImages(roomId) {
   // Fetch room images via AJAX
-  fetch(`get_room_images.php?room_id=${roomId}`)
-    .then(response => response.json())
+  const container = document.getElementById('current_room_images');
+  container.innerHTML = '<p style="color: #999;">Loading images...</p>';
+  
+  fetch(`/modules/admin/get_room_images.php?room_id=${roomId}`)
+    .then(response => {
+      console.log('Response status:', response.status);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
-      const container = document.getElementById('current_room_images');
+      console.log('Images data:', data);
       if (data.images && data.images.length > 0) {
         container.innerHTML = data.images.map(img => `
           <div class="image-item">
@@ -513,7 +522,7 @@ function loadRoomImages(roomId) {
     })
     .catch(err => {
       console.error('Error loading images:', err);
-      document.getElementById('current_room_images').innerHTML = '<p style="color: #999;">Could not load images</p>';
+      container.innerHTML = '<p style="color: #dc3545;">Could not load images: ' + err.message + '</p>';
     });
 }
 
