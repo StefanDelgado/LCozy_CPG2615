@@ -53,16 +53,15 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
   }
 
   Future<void> fetchDormDetails() async {
-    print('📱 [ViewDetails] Fetching dorm details...');
+    final requestedDormId = widget.property['dorm_id']?.toString() ?? '';
+    print('📱 [ViewDetails] Fetching dorm details for dorm_id: $requestedDormId');
     setState(() {
       isLoading = true;
       error = '';
     });
 
     try {
-      final result = await _dormService.getDormDetails(
-        widget.property['dorm_id']?.toString() ?? '',
-      );
+      final result = await _dormService.getDormDetails(requestedDormId);
 
       print('📱 [ViewDetails] Service result success: ${result['success']}');
       

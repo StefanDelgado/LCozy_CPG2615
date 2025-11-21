@@ -70,6 +70,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $price = (float)$_POST['price'];
         $status = $_POST['status'];
 
+        // Handle room image uploads
+        if (!empty($_FILES['room_images']['name'][0])) {
+            $upload_dir = __DIR__ . '/../../uploads/rooms/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+            
+            foreach ($_FILES['room_images']['tmp_name'] as $key => $tmp_name) {
+                if (!empty($tmp_name)) {
+                    $file_name = uniqid('room_') . '_' . basename($_FILES['room_images']['name'][$key]);
+                    $target_path = $upload_dir . $file_name;
+                    if (move_uploaded_file($tmp_name, $target_path)) {
+                        // Insert new room image
+                        $img_stmt = $pdo->prepare("INSERT INTO room_images (room_id, image_path) VALUES (?, ?)");
+                        $img_stmt->execute([$id, $file_name]);
+                    }
+                }
+            }
+        }
+
         $stmt = $pdo->prepare("
             UPDATE rooms r
             JOIN dormitories d ON r.dorm_id = d.dorm_id
@@ -326,7 +344,7 @@ $dorms = $dorms->fetchAll(PDO::FETCH_ASSOC);
 <div id="editModal" class="modal">
   <div class="modal-content">
     <h2>Edit Room</h2>
-    <form method="post" class="form-area">
+    <form method="post" enctype="multipart/form-data" class="form-area">
       <input type="hidden" name="room_id" id="edit_room_id">
 
       <div class="form-group">
@@ -363,6 +381,12 @@ $dorms = $dorms->fetchAll(PDO::FETCH_ASSOC);
           <option value="vacant">Vacant</option>
           <option value="occupied">Occupied</option>
         </select>
+      </div>
+
+      <div class="form-group">
+        <label for="edit_room_images">Add Room Images (Multiple)</label>
+        <input type="file" id="edit_room_images" name="room_images[]" accept="image/*" multiple>
+        <small style="color: #666;">Upload new images to add to this room's gallery</small>
       </div>
 
       <div class="modal-actions">

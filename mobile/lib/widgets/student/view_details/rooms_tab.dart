@@ -38,6 +38,19 @@ class RoomsTab extends StatelessWidget {
         final room = rooms[index];
         final isAvailable = room['is_available'] == true;
         
+        print('🏠 [RoomsTab] Building room ${index + 1}:');
+        print('   Room ID: ${room['room_id']}');
+        print('   Room Type: ${room['room_type']}');
+        print('   Images field exists: ${room.containsKey('images')}');
+        print('   Images value: ${room['images']}');
+        print('   Images is List: ${room['images'] is List}');
+        if (room['images'] is List) {
+          print('   Images count: ${(room['images'] as List).length}');
+          if ((room['images'] as List).isNotEmpty) {
+            print('   First image URL: ${(room['images'] as List)[0]}');
+          }
+        }
+        
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: InkWell(
