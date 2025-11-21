@@ -114,7 +114,14 @@ try {
 
     // Get monthly revenue
     $revenueStmt = $pdo->prepare("
-        SELECT COALESCE(SUM(p.amount), 0) as monthly_revenue
+        SELECT 
+            SUM(
+                CASE 
+                    WHEN LOWER(b.booking_type) = 'shared' AND r.capacity > 0 
+                    THEN r.price / r.capacity
+                    ELSE p.amount
+                END
+            ) as monthly_revenue
         FROM payments p
         JOIN bookings b ON p.booking_id = b.booking_id
         JOIN rooms r ON b.room_id = r.room_id
@@ -128,7 +135,14 @@ try {
 
     // Get pending amount
     $pendingStmt = $pdo->prepare("
-        SELECT COALESCE(SUM(p.amount), 0) as pending_amount
+        SELECT 
+            SUM(
+                CASE 
+                    WHEN LOWER(b.booking_type) = 'shared' AND r.capacity > 0 
+                    THEN r.price / r.capacity
+                    ELSE p.amount
+                END
+            ) as pending_amount
         FROM payments p
         JOIN bookings b ON p.booking_id = b.booking_id
         JOIN rooms r ON b.room_id = r.room_id
@@ -146,6 +160,9 @@ try {
             u.name as tenant_name,
             d.name as dorm_name,
             r.room_type,
+            r.capacity,
+            r.price as room_base_price,
+            b.booking_type,
             p.amount,
             p.status,
             DATE_FORMAT(p.due_date, '%Y-%m-%d') as due_date,
@@ -163,11 +180,25 @@ try {
     $paymentsStmt->execute([$owner_id]);
     $payments = $paymentsStmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Calculate display amounts based on booking type
+    foreach ($payments as &$payment) {
+        $booking_type = strtolower($payment['booking_type'] ?? 'shared');
+        $display_amount = $payment['amount'];
+        
+        // If shared room, divide by capacity
+        if ($booking_type === 'shared' && $payment['capacity'] > 0) {
+            $display_amount = $payment['room_base_price'] / $payment['capacity'];
+        }
+        
+        // Round to 2 decimal places and update amount
+        $payment['amount'] = round($display_amount, 2);
+    }
+
     echo json_encode([
         'ok' => true,
         'stats' => [
-            'monthly_revenue' => floatval($monthly_revenue),
-            'pending_amount' => floatval($pending_amount)
+            'monthly_revenue' => round(floatval($monthly_revenue ?? 0), 2),
+            'pending_amount' => round(floatval($pending_amount ?? 0), 2)
         ],
         'payments' => $payments
     ]);
