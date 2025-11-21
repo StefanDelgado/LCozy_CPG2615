@@ -31,7 +31,7 @@ try {
 
     // Test query
     $stmt = $pdo->prepare("
-        SELECT ri.image_id, ri.image_path, ri.uploaded_at
+        SELECT ri.room_id, ri.image_path, ri.uploaded_at
         FROM room_images ri
         JOIN rooms r ON ri.room_id = r.room_id
         JOIN dormitories d ON r.dorm_id = d.dorm_id

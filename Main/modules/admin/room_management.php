@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Delete Room Image
     if (isset($_POST['delete_room_image'])) {
-        $image_id = (int)$_POST['image_id'];
+        $image_path = $_POST['image_path'];
         $room_id = (int)$_POST['room_id'];
         
         // Verify ownership before deleting
@@ -129,9 +129,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             FROM room_images ri
             JOIN rooms r ON ri.room_id = r.room_id
             JOIN dormitories d ON r.dorm_id = d.dorm_id
-            WHERE ri.image_id = ? AND r.room_id = ? AND d.owner_id = ?
+            WHERE ri.image_path = ? AND r.room_id = ? AND d.owner_id = ?
         ");
-        $stmt->execute([$image_id, $room_id, $owner_id]);
+        $stmt->execute([$image_path, $room_id, $owner_id]);
         $image = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($image) {
@@ -142,8 +142,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             // Delete from database
-            $stmt = $pdo->prepare("DELETE FROM room_images WHERE image_id = ?");
-            $stmt->execute([$image_id]);
+            $stmt = $pdo->prepare("DELETE FROM room_images WHERE image_path = ? AND room_id = ?");
+            $stmt->execute([$image_path, $room_id]);
             
             $_SESSION['flash'] = ['type'=>'success','msg'=>'Image deleted successfully!'];
         }
@@ -442,7 +442,7 @@ $dorms = $dorms->fetchAll(PDO::FETCH_ASSOC);
 <!-- Hidden form for deleting images -->
 <form id="deleteImageForm" method="post" style="display:none;">
   <input type="hidden" name="delete_room_image" value="1">
-  <input type="hidden" name="image_id" id="delete_image_id">
+  <input type="hidden" name="image_path" id="delete_image_path">
   <input type="hidden" name="room_id" id="delete_room_id">
 </form>
 
@@ -511,7 +511,7 @@ function loadRoomImages(roomId) {
         container.innerHTML = data.images.map(img => `
           <div class="image-item">
             <img src="../../uploads/rooms/${img.image_path}" alt="Room Image">
-            <button type="button" class="btn-delete-image" onclick="deleteRoomImage(${img.image_id}, ${roomId})" title="Delete Image">
+            <button type="button" class="btn-delete-image" onclick="deleteRoomImage('${img.image_path}', ${roomId})" title="Delete Image">
               ✕
             </button>
           </div>
@@ -526,10 +526,10 @@ function loadRoomImages(roomId) {
     });
 }
 
-function deleteRoomImage(imageId, roomId) {
+function deleteRoomImage(imagePath, roomId) {
   if (!confirm('Are you sure you want to delete this image?')) return;
   
-  document.getElementById('delete_image_id').value = imageId;
+  document.getElementById('delete_image_path').value = imagePath;
   document.getElementById('delete_room_id').value = roomId;
   document.getElementById('deleteImageForm').submit();
 }
