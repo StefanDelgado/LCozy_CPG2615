@@ -41,7 +41,7 @@ try {
     $formatted_dorms = array_map(function($dorm) {
         return [
             'dorm_id' => $dorm['dorm_id'],
-            'image' => $dorm['image'] ? SITE_URL . "/uploads/dorms/{$dorm['image']}" : null,
+            'image' => $dorm['image'] ? SITE_URL . "/uploads/{$dorm['image']}" : null,
             'location' => $dorm['location'],
             'title' => $dorm['title'],
             'desc' => $dorm['desc'],
