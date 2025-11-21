@@ -188,7 +188,7 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
       
       <?php if (!empty($dorm['cover_image'])): ?>
         <div class="dorm-image">
-          <img src="../uploads/<?= htmlspecialchars($dorm['cover_image']) ?>" 
+          <img src="../../uploads/<?= htmlspecialchars($dorm['cover_image']) ?>" 
                alt="<?= htmlspecialchars($dorm['name']) ?>">
         </div>
       <?php endif; ?>
