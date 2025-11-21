@@ -102,39 +102,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Delete Room Image
-    if (isset($_POST['delete_room_image'])) {
-        $image_id = (int)$_POST['image_id'];
-        
-        // Verify ownership through room and dorm relationship
-        $stmt = $pdo->prepare("
-            SELECT ri.image_path 
-            FROM room_images ri
-            JOIN rooms r ON ri.room_id = r.room_id
-            JOIN dormitories d ON r.dorm_id = d.dorm_id
-            WHERE ri.image_id = ? AND d.owner_id = ?
-        ");
-        $stmt->execute([$image_id, $owner_id]);
-        $image = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($image) {
-            // Delete the database record
-            $del_stmt = $pdo->prepare("DELETE FROM room_images WHERE image_id = ?");
-            $del_stmt->execute([$image_id]);
-            
-            // Delete the physical file
-            $file_path = __DIR__ . '/../../uploads/rooms/' . $image['image_path'];
-            if (file_exists($file_path)) {
-                unlink($file_path);
-            }
-            
-            echo json_encode(['success' => true, 'message' => 'Image deleted successfully']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Unauthorized or image not found']);
-        }
-        exit();
-    }
-
     // Delete Room
     if (isset($_POST['delete_room'])) {
         $id = (int)$_POST['room_id'];
@@ -417,14 +384,7 @@ $dorms = $dorms->fetchAll(PDO::FETCH_ASSOC);
       </div>
 
       <div class="form-group">
-        <label>Current Room Images</label>
-        <div id="current_room_images" class="current-images-grid">
-          <!-- Images will be loaded here by JavaScript -->
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="edit_room_images">Add New Room Images (Multiple)</label>
+        <label for="edit_room_images">Add Room Images (Multiple)</label>
         <input type="file" id="edit_room_images" name="room_images[]" accept="image/*" multiple>
         <small style="color: #666;">Upload new images to add to this room's gallery</small>
       </div>
@@ -477,78 +437,7 @@ function openEditModal(button) {
     customRoomTypeInput.value = roomType;
   }
   
-  // Fetch and display current room images
-  fetchRoomImages(roomId);
-  
   document.getElementById('editModal').style.display = 'flex';
-}
-
-async function fetchRoomImages(roomId) {
-  const container = document.getElementById('current_room_images');
-  container.innerHTML = '<p style="color: #666;">Loading images...</p>';
-  
-  try {
-    const response = await fetch(`get_room_images.php?room_id=${roomId}`);
-    const data = await response.json();
-    
-    if (data.success && data.images.length > 0) {
-      container.innerHTML = data.images.map(img => `
-        <div class="image-item">
-          <img src="../../uploads/rooms/${img.image_path}" alt="Room image">
-          <button type="button" class="btn-delete-image" onclick="deleteRoomImage(${img.image_id}, this)" title="Delete image">
-            ×
-          </button>
-        </div>
-      `).join('');
-    } else {
-      container.innerHTML = '<p style="color: #999;">No images uploaded yet</p>';
-    }
-  } catch (error) {
-    console.error('Error fetching images:', error);
-    container.innerHTML = '<p style="color: #ff5252;">Failed to load images</p>';
-  }
-}
-
-async function deleteRoomImage(imageId, button) {
-  if (!confirm('Are you sure you want to delete this image?')) {
-    return;
-  }
-  
-  const imageItem = button.closest('.image-item');
-  imageItem.style.opacity = '0.5';
-  button.disabled = true;
-  
-  try {
-    const formData = new FormData();
-    formData.append('delete_room_image', '1');
-    formData.append('image_id', imageId);
-    
-    const response = await fetch('', {
-      method: 'POST',
-      body: formData
-    });
-    
-    const data = await response.json();
-    
-    if (data.success) {
-      imageItem.remove();
-      // Check if no images left
-      const container = document.getElementById('current_room_images');
-      if (container.querySelectorAll('.image-item').length === 0) {
-        container.innerHTML = '<p style="color: #999;">No images uploaded yet</p>';
-      }
-    } else {
-      alert(data.message || 'Failed to delete image');
-      imageItem.style.opacity = '1';
-      button.disabled = false;
-    }
-  } catch (error) {
-    console.error('Error deleting image:', error);
-    alert('Failed to delete image');
-    imageItem.style.opacity = '1';
-    button.disabled = false;
-  }
-}
 }
 
 function closeEditModal() {
@@ -852,63 +741,6 @@ window.onclick = function(event) {
     align-items: flex-start;
     gap: 10px;
   }
-}
-
-/* Current Images Grid */
-.current-images-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 15px;
-  margin-top: 10px;
-}
-
-.image-item {
-  position: relative;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 2px solid #e9ecef;
-  aspect-ratio: 1;
-}
-
-.image-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.btn-delete-image {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 82, 82, 0.95);
-  color: white;
-  border: 2px solid white;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.btn-delete-image:hover {
-  background: #ff1744;
-  transform: scale(1.1);
-}
-
-.btn-delete-image:active {
-  transform: scale(0.95);
-}
-
-.btn-delete-image:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>
 
