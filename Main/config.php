@@ -58,19 +58,9 @@ try {
 }
 
 define('ADMIN_SECRET_KEY', 'cozydorms123');
-
-// Site and mail settings (auto-detect environment)
-if (!defined('SITE_URL')) {
-    // Detect if running on local server or production
-    $isLocal = (isset($pdo) && $pdo->query("SELECT DATABASE()")->fetchColumn() === 'cozydorms' 
-                && strpos($pdo->getAttribute(PDO::ATTR_CONNECTION_INFO), '127.0.0.1') !== false);
+define('SITE_URL', 'http://cozydorms.life');
     
-    if ($isLocal) {
-        define('SITE_URL', 'http://localhost/WebDesign_BSITA-2/2nd%20sem/Joshan_System/LCozy_CPG2615/Main');
-    } else {
-        define('SITE_URL', 'http://cozydorms.life');
-    }
-}
+
 if (!defined('MAIL_FROM')) define('MAIL_FROM', 'no-reply@cozydorms.life');
 
 // SMTP settings (from cPanel / GoDaddy secure settings)
