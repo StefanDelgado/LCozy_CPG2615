@@ -71,7 +71,11 @@ try {
             (SELECT COUNT(*) 
              FROM bookings b 
              WHERE b.room_id = r.room_id 
-             AND b.status IN ('approved', 'pending')) as booked_count
+             AND b.status IN ('approved', 'pending')) as booked_count,
+            (SELECT GROUP_CONCAT(image_path SEPARATOR ',')
+             FROM room_images ri
+             WHERE ri.room_id = r.room_id
+             LIMIT 3) as room_images
         FROM rooms r
         WHERE r.dorm_id = ?
         ORDER BY r.price ASC
@@ -82,6 +86,16 @@ try {
     // Format rooms with availability
     $formatted_rooms = array_map(function($room) {
         $available_slots = (int)$room['capacity'] - (int)$room['booked_count'];
+        
+        // Process room images
+        $room_images = [];
+        if (!empty($room['room_images'])) {
+            $images = explode(',', $room['room_images']);
+            foreach ($images as $img) {
+                $room_images[] = SITE_URL . '/uploads/rooms/' . trim($img);
+            }
+        }
+        
         return [
             'room_id' => (int)$room['room_id'],
             'room_type' => $room['room_type'],
@@ -92,7 +106,8 @@ try {
             'size' => $room['size'] ? (float)$room['size'] : null,
             'features' => $room['room_features'],
             'available_slots' => $available_slots,
-            'is_available' => $available_slots > 0
+            'is_available' => $available_slots > 0,
+            'images' => $room_images
         ];
     }, $rooms);
 
@@ -132,7 +147,7 @@ try {
         $images[] = SITE_URL . '/uploads/' . $dorm['cover_image'];
     }
     foreach ($roomImages as $img) {
-        $images[] = SITE_URL . '/uploads/' . $img;
+        $images[] = SITE_URL . '/uploads/rooms/' . $img;
     }
 
     // Parse features
