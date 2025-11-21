@@ -125,6 +125,9 @@ try {
             $display_amount = $payment['room_base_price'] / $payment['capacity'];
         }
         
+        // Round to 2 decimal places
+        $display_amount = round($display_amount, 2);
+        
         // Check if overdue
         $is_overdue = ($payment['status'] === 'pending' && $payment['due_date'] < $current_date);
         
@@ -179,8 +182,8 @@ try {
         'statistics' => [
             'pending_count' => $pending_count,
             'overdue_count' => $overdue_count,
-            'total_due' => $total_due,
-            'paid_amount' => $paid_amount,
+            'total_due' => round($total_due, 2),
+            'paid_amount' => round($paid_amount, 2),
             'total_payments' => count($payments)
         ],
         'payments' => $payments
