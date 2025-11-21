@@ -106,7 +106,7 @@ require_once __DIR__ . '/../../partials/header.php';
             <?php if ($u['profile_pic']): ?>
               <img src="<?=$u['profile_pic']?>" alt="profile" style="width:40px;height:40px;border-radius:50%;">
             <?php else: ?>
-              <img src="../assets/default_profile.jpg" alt="default" style="width:40px;height:40px;border-radius:50%;">
+              <img src="../../assets/default_profile.jpg" alt="default" style="width:40px;height:40px;border-radius:50%;">
             <?php endif; ?>
           </div>
           <div class="user-card-main">
