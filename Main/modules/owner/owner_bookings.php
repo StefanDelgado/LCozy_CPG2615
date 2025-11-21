@@ -41,7 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
             b.room_id,
             b.student_id,
             b.start_date,
+            b.booking_type,
             r.price,
+            r.capacity,
             d.owner_id
         FROM bookings b
         JOIN rooms r ON b.room_id = r.room_id
@@ -95,6 +97,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
             $check->execute([$booking_id]);
             
             if ($check->fetchColumn() == 0) {
+                // Calculate payment amount based on booking type
+                $booking_type = strtolower($booking['booking_type'] ?? 'shared');
+                $payment_amount = $booking['price'];
+                
+                // If shared room, divide by capacity
+                if ($booking_type === 'shared' && $booking['capacity'] > 0) {
+                    $payment_amount = $booking['price'] / $booking['capacity'];
+                }
+                
+                // Round to 2 decimal places
+                $payment_amount = round($payment_amount, 2);
+                
                 // Create payment record
                 $insert = $pdo->prepare("
                     INSERT INTO payments (
@@ -109,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
                 $insert->execute([
                     $booking_id,
                     $booking['student_id'],
-                    $booking['price'],
+                    $payment_amount,
                     $booking['start_date'] ?? date('Y-m-d', strtotime('+7 days'))
                 ]);
             }

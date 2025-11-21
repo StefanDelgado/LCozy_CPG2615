@@ -21,7 +21,11 @@ if (date('d') == 25) {
             b.booking_id,
             b.student_id,
             d.owner_id,
-            r.price AS amount,
+            CASE 
+                WHEN LOWER(b.booking_type) = 'shared' AND r.capacity > 0 
+                THEN ROUND(r.price / r.capacity, 2)
+                ELSE r.price
+            END AS amount,
             'pending',
             LAST_DAY(CURDATE()) AS due_date,
             NOW()
