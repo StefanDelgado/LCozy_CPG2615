@@ -75,6 +75,10 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
         print('📱 [ViewDetails] Dorm data keys: ${dormData?.keys.toList()}');
         print('📱 [ViewDetails] Owner data: ${dormData?['owner']}');
         print('📱 [ViewDetails] Rooms count: ${roomsData.length}');
+        if (roomsData.isNotEmpty) {
+          print('📱 [ViewDetails] First room data: ${roomsData[0]}');
+          print('📱 [ViewDetails] First room images: ${roomsData[0]['images']}');
+        }
         print('📱 [ViewDetails] Reviews count: ${reviewsData.length}');
         
         setState(() {

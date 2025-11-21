@@ -19,6 +19,12 @@ class RoomsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('🏠 [RoomsTab] Building with ${rooms.length} rooms');
+    if (rooms.isNotEmpty) {
+      print('🏠 [RoomsTab] First room: ${rooms[0]}');
+      print('🏠 [RoomsTab] First room images: ${rooms[0]['images']}');
+    }
+    
     if (rooms.isEmpty) {
       return const Center(
         child: Text('No rooms available'),
