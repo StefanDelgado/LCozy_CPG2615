@@ -14,7 +14,7 @@ if (isset($_GET['action'], $_GET['id'])) {
         $stmt = $pdo->prepare("UPDATE dormitories SET verified = 1 WHERE dorm_id = ?");
         $stmt->execute([$dorm_id]);
     } elseif ($action === 'reject') {
-        $stmt = $pdo->prepare("UPDATE dormitories SET verified = 0 WHERE dorm_id = ?");
+        $stmt = $pdo->prepare("UPDATE dormitories SET verified = -1 WHERE dorm_id = ?");
         $stmt->execute([$dorm_id]);
     }
 
@@ -47,9 +47,21 @@ $total_dorms = count($dorms);
     <h2><?= htmlspecialchars($dorm['dorm_name']) ?></h2>
 
     <?php if (!empty($dorm['cover_image'])): ?>
-      <img src="../uploads/<?= htmlspecialchars($dorm['cover_image']) ?>" 
+      <?php 
+      // Handle both relative and absolute paths
+      $imagePath = $dorm['cover_image'];
+      if (strpos($imagePath, '/uploads/') === 0 || strpos($imagePath, 'uploads/') === 0) {
+        // Already has uploads path
+        $imageUrl = '../../' . ltrim($imagePath, '/');
+      } else {
+        // Just filename
+        $imageUrl = '../../uploads/' . $imagePath;
+      }
+      ?>
+      <img src="<?= htmlspecialchars($imageUrl) ?>" 
            alt="<?= htmlspecialchars($dorm['dorm_name']) ?>" 
-           style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:10px;">
+           style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:10px;"
+           onerror="this.parentElement.innerHTML='<div style=\'width:100%;height:200px;background:#eee;display:flex;align-items:center;justify-content:center;border-radius:8px;\'><span>Image not found</span></div>';">
     <?php else: ?>
       <div style="width:100%;height:200px;background:#eee;display:flex;align-items:center;justify-content:center;border-radius:8px;">
         <span>No Image Available</span>
@@ -106,15 +118,21 @@ $total_dorms = count($dorms);
 
     <p>
       <strong>Status:</strong>
-      <?php if ($dorm['verified']): ?>
+      <?php if ($dorm['verified'] == 1): ?>
         <span class="badge success">Approved</span>
+      <?php elseif ($dorm['verified'] == -1): ?>
+        <span class="badge error">Rejected</span>
       <?php else: ?>
-        <span class="badge warning">Pending / Rejected</span>
+        <span class="badge warning">Pending Approval</span>
       <?php endif; ?>
     </p>
     <div class="actions">
-      <a href="?action=approve&id=<?= $dorm['dorm_id'] ?>" class="btn success">Approve</a>
-      <a href="?action=reject&id=<?= $dorm['dorm_id'] ?>" class="btn danger">Reject</a>
+      <?php if ($dorm['verified'] != 1): ?>
+        <a href="?action=approve&id=<?= $dorm['dorm_id'] ?>" class="btn success">Approve</a>
+      <?php endif; ?>
+      <?php if ($dorm['verified'] != -1): ?>
+        <a href="?action=reject&id=<?= $dorm['dorm_id'] ?>" class="btn danger">Reject</a>
+      <?php endif; ?>
     </div>
   </div>
 <?php endforeach; ?>
