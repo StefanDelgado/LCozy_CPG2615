@@ -86,10 +86,14 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
         final filter = _selectedFilter.toLowerCase();
         
         // Handle different status names
-        if (filter == 'completed') {
-          return status == 'completed' || status == 'paid';
+        if (filter == 'submitted') {
+          return status == 'submitted';
+        } else if (filter == 'paid') {
+          return status == 'paid' || status == 'completed';
         } else if (filter == 'pending') {
-          return status == 'pending' || status == 'submitted';
+          return status == 'pending';
+        } else if (filter == 'expired') {
+          return status == 'expired';
         } else if (filter == 'failed') {
           return status == 'failed' || status == 'rejected';
         }
@@ -107,6 +111,21 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
         return name.contains(query) || dorm.contains(query);
       }).toList();
     }
+
+    // Sort: Submitted first (needs action), then by due date
+    filtered.sort((a, b) {
+      final statusA = a['status'].toString().toLowerCase();
+      final statusB = b['status'].toString().toLowerCase();
+      
+      // Priority 1: Submitted payments first
+      if (statusA == 'submitted' && statusB != 'submitted') return -1;
+      if (statusA != 'submitted' && statusB == 'submitted') return 1;
+      
+      // Priority 2: Sort by due date (most recent first)
+      final dueDateA = a['due_date']?.toString() ?? '';
+      final dueDateB = b['due_date']?.toString() ?? '';
+      return dueDateB.compareTo(dueDateA);
+    });
 
     return filtered;
   }

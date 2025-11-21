@@ -43,7 +43,15 @@ switch ($role) {
             JOIN dormitories d ON r.dorm_id = d.dorm_id
             JOIN users u ON b.student_id = u.user_id
             WHERE d.owner_id = ?
-            ORDER BY p.due_date ASC
+            ORDER BY 
+                CASE 
+                    WHEN p.status = 'submitted' THEN 1
+                    WHEN p.status = 'pending' THEN 2
+                    WHEN p.status = 'overdue' THEN 3
+                    WHEN p.status = 'paid' THEN 4
+                    ELSE 5
+                END,
+                p.due_date ASC
         ";
         $params = [$user_id];
         break;

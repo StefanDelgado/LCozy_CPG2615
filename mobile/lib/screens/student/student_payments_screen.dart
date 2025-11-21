@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../utils/app_theme.dart';
 import 'dart:convert';
+import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../../services/payment_service.dart';
 import '../../widgets/common/loading_widget.dart';
@@ -89,6 +90,91 @@ class _StudentPaymentsScreenState extends State<StudentPaymentsScreen> {
       );
 
       if (image == null) return;
+
+      // Show preview screen with cancel and submit buttons
+      if (!mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return Dialog(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4),
+                      topRight: Radius.circular(4),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.receipt, color: Colors.white),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Preview Receipt',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Image Preview
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 400),
+                  child: Image.file(
+                    File(image.path),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                
+                // Buttons
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => Navigator.pop(context, false),
+                          icon: const Icon(Icons.cancel),
+                          label: const Text('Cancel'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.grey,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.pop(context, true),
+                          icon: const Icon(Icons.check_circle),
+                          label: const Text('Submit'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+
+      // If user cancelled, don't proceed
+      if (confirmed != true) return;
 
       // Show loading dialog
       if (!mounted) return;
