@@ -340,12 +340,6 @@ function renderPayments() {
             <span class="info-label">📅 Due Date</span>
             <span class="info-value">${p.due_date}</span>
           </div>
-          ${p.status === 'pending' && !expired ? `
-            <div class="info-item">
-              <span class="info-label">⏳ Time Left</span>
-              <span class="info-value">${hoursLeft}h remaining</span>
-            </div>
-          ` : ''}
           <div class="info-item">
             <span class="info-label">📎 Receipt</span>
             <span class="info-value">
