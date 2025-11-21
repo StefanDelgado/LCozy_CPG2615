@@ -74,7 +74,10 @@ try {
             d.address AS dorm_address,
             r.room_type,
             r.room_number,
+            r.capacity,
+            r.price as room_base_price,
             b.booking_id, 
+            b.booking_type,
             b.start_date, 
             b.end_date,
             u.name AS owner_name,
@@ -113,17 +116,26 @@ try {
         $payment['room_type'] = $payment['room_type'] ?? 'Unknown Room';
         $payment['room_number'] = $payment['room_number'] ?? null;
         
+        // Calculate correct price based on booking type
+        $booking_type = strtolower($payment['booking_type'] ?? 'shared');
+        $display_amount = $payment['amount'];
+        
+        // If it's a shared room booking, divide the price by capacity
+        if ($booking_type === 'shared' && isset($payment['capacity']) && $payment['capacity'] > 0) {
+            $display_amount = $payment['room_base_price'] / $payment['capacity'];
+        }
+        
         // Check if overdue
         $is_overdue = ($payment['status'] === 'pending' && $payment['due_date'] < $current_date);
         
         if ($payment['status'] === 'pending') {
-            $total_due += $payment['amount'];
+            $total_due += $display_amount;
             $pending_count++;
             if ($is_overdue) {
                 $overdue_count++;
             }
         } elseif ($payment['status'] === 'paid') {
-            $paid_amount += $payment['amount'];
+            $paid_amount += $display_amount;
         }
 
         // Add computed fields
@@ -132,8 +144,8 @@ try {
             ? SITE_URL . '/uploads/receipts/' . $payment['receipt_image']
             : null;
 
-        // Format amounts
-        $payment['amount'] = (float)$payment['amount'];
+        // Format amounts - use the calculated display amount
+        $payment['amount'] = (float)$display_amount;
         
         // Calculate days until due or days overdue
         $due_timestamp = strtotime($payment['due_date']);
