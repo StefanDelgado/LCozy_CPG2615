@@ -129,10 +129,10 @@ try {
     // Build images array
     $images = [];
     if ($dorm['cover_image']) {
-        $images[] = 'http://cozydorms.life/uploads/' . $dorm['cover_image'];
+        $images[] = SITE_URL . '/uploads/' . $dorm['cover_image'];
     }
     foreach ($roomImages as $img) {
-        $images[] = 'http://cozydorms.life/uploads/' . $img;
+        $images[] = SITE_URL . '/uploads/' . $img;
     }
 
     // Parse features

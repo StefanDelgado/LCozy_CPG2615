@@ -115,7 +115,7 @@ try {
                 'name' => $booking['dorm_name'],
                 'address' => $booking['dorm_address'],
                 'cover_image' => $booking['cover_image'] ? 
-                    'http://cozydorms.life/uploads/dorms/' . $booking['cover_image'] : null,
+                    SITE_URL . '/uploads/dorms/' . $booking['cover_image'] : null,
             ],
             'room' => [
                 'room_id' => (int)$booking['room_id'],

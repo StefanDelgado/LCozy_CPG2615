@@ -129,7 +129,7 @@ try {
         // Add computed fields
         $payment['is_overdue'] = $is_overdue;
         $payment['receipt_url'] = $payment['receipt_image'] 
-            ? 'http://cozydorms.life/uploads/receipts/' . $payment['receipt_image']
+            ? SITE_URL . '/uploads/receipts/' . $payment['receipt_image']
             : null;
 
         // Format amounts

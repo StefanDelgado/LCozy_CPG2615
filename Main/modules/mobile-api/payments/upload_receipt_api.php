@@ -130,7 +130,7 @@ try {
             'ok' => true,
             'message' => 'Receipt uploaded successfully. Awaiting admin confirmation.',
             'payment_id' => $payment_id,
-            'receipt_url' => 'http://cozydorms.life/uploads/receipts/' . $filename
+            'receipt_url' => SITE_URL . '/uploads/receipts/' . $filename
         ]);
     } else {
         http_response_code(400);
