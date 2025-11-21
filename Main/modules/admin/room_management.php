@@ -201,7 +201,7 @@ $dorms = $dorms->fetchAll(PDO::FETCH_ASSOC);
           <div class="room-card">
             <?php if (!empty($r['cover_image'])): ?>
               <div class="room-card-image">
-                <img src="../../uploads/<?= htmlspecialchars($r['cover_image']) ?>" alt="<?= htmlspecialchars($r['room_type']) ?>">
+                <img src="../../uploads/rooms/<?= htmlspecialchars($r['cover_image']) ?>" alt="<?= htmlspecialchars($r['room_type']) ?>">
                 <div class="room-status-overlay status-<?= $r['status'] ?>">
                   <?= ucfirst($r['status']) ?>
                 </div>
