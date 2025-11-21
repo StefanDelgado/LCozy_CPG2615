@@ -74,6 +74,7 @@ try {
         SELECT 
             b.booking_id,
             b.status,
+            b.booking_type,
             b.start_date,
             b.end_date,
             b.created_at,
@@ -103,9 +104,19 @@ try {
 
     // Format the bookings data
     $formatted_bookings = array_map(function($booking) {
+        // Calculate display price based on booking type
+        $booking_type = strtolower($booking['booking_type'] ?? 'shared');
+        $display_price = (float)$booking['price'];
+        
+        // If shared room, divide by capacity
+        if ($booking_type === 'shared' && $booking['capacity'] > 0) {
+            $display_price = $booking['price'] / $booking['capacity'];
+        }
+        
         return [
             'booking_id' => (int)$booking['booking_id'],
             'status' => $booking['status'],
+            'booking_type' => $booking['booking_type'],
             'start_date' => $booking['start_date'],
             'end_date' => $booking['end_date'],
             'created_at' => $booking['created_at'],
@@ -121,7 +132,7 @@ try {
                 'room_id' => (int)$booking['room_id'],
                 'room_type' => $booking['room_type'],
                 'capacity' => (int)$booking['capacity'],
-                'price' => (float)$booking['price'],
+                'price' => $display_price,
             ],
             'owner' => [
                 'owner_id' => (int)$booking['owner_id'],
