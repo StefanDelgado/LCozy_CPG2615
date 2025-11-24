@@ -279,15 +279,11 @@ function renderPayments() {
   let filtered = allPayments;
   if (currentFilter !== 'all') {
     filtered = allPayments.filter(p => {
-      const createdAt = new Date(p.created_at);
-      const now = new Date();
-      const hoursElapsed = Math.floor((now - createdAt) / (1000 * 60 * 60));
-      const expired = hoursElapsed >= 48 && p.status === 'pending';
-      
+      // Check for expired/overdue status
       if (currentFilter === 'expired') {
-        return expired;
+        return p.status === 'overdue' || p.status === 'expired';
       }
-      return p.status === currentFilter && !expired;
+      return p.status === currentFilter;
     });
   }
   
@@ -305,14 +301,10 @@ function renderPayments() {
   grid.innerHTML = '';
   
   filtered.forEach(p => {
-    const createdAt = new Date(p.created_at);
-    const now = new Date();
-    const hoursElapsed = Math.floor((now - createdAt) / (1000 * 60 * 60));
-    const hoursLeft = 48 - hoursElapsed;
-    const expired = hoursElapsed >= 48 && p.status === 'pending';
-    
-    const statusDisplay = expired ? 'expired' : p.status;
-    const statusText = expired ? 'Expired' : p.status.charAt(0).toUpperCase() + p.status.slice(1);
+    // Handle overdue/expired status display
+    const isOverdue = p.status === 'overdue' || p.status === 'expired';
+    const statusDisplay = isOverdue ? 'expired' : p.status;
+    const statusText = isOverdue ? 'Expired' : p.status.charAt(0).toUpperCase() + p.status.slice(1);
     
     // Status badge colors
     const statusColors = {
@@ -348,12 +340,6 @@ function renderPayments() {
             <span class="info-label">📅 Due Date</span>
             <span class="info-value">${p.due_date}</span>
           </div>
-          ${p.status === 'pending' && !expired ? `
-            <div class="info-item">
-              <span class="info-label">⏳ Time Left</span>
-              <span class="info-value">${hoursLeft}h remaining</span>
-            </div>
-          ` : ''}
           <div class="info-item">
             <span class="info-label">📎 Receipt</span>
             <span class="info-value">

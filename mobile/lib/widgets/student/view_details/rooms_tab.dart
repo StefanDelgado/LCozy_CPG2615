@@ -19,6 +19,12 @@ class RoomsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('🏠 [RoomsTab] Building with ${rooms.length} rooms');
+    if (rooms.isNotEmpty) {
+      print('🏠 [RoomsTab] First room: ${rooms[0]}');
+      print('🏠 [RoomsTab] First room images: ${rooms[0]['images']}');
+    }
+    
     if (rooms.isEmpty) {
       return const Center(
         child: Text('No rooms available'),
@@ -31,6 +37,19 @@ class RoomsTab extends StatelessWidget {
       itemBuilder: (context, index) {
         final room = rooms[index];
         final isAvailable = room['is_available'] == true;
+        
+        print('🏠 [RoomsTab] Building room ${index + 1}:');
+        print('   Room ID: ${room['room_id']}');
+        print('   Room Type: ${room['room_type']}');
+        print('   Images field exists: ${room.containsKey('images')}');
+        print('   Images value: ${room['images']}');
+        print('   Images is List: ${room['images'] is List}');
+        if (room['images'] is List) {
+          print('   Images count: ${(room['images'] as List).length}');
+          if ((room['images'] as List).isNotEmpty) {
+            print('   First image URL: ${(room['images'] as List)[0]}');
+          }
+        }
         
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -56,6 +75,54 @@ class RoomsTab extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Room Images
+                if (room['images'] != null && (room['images'] as List).isNotEmpty)
+                  Container(
+                    height: 150,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: (room['images'] as List).length,
+                      itemBuilder: (context, imgIndex) {
+                        final imageUrl = (room['images'] as List)[imgIndex];
+                        return Container(
+                          width: 200,
+                          margin: const EdgeInsets.only(right: 8),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey[300],
+                                  child: const Icon(
+                                    Icons.image_not_supported,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  ),
+                                );
+                              },
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

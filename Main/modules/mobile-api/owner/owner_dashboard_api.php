@@ -45,7 +45,7 @@ try {
     $tenantsStmt->execute([$owner_id]);
     $total_tenants = $tenantsStmt->fetchColumn();
 
-    // Get monthly revenue
+    // Get total revenue (all paid payments, matching web)
     $revenueStmt = $pdo->prepare("
         SELECT COALESCE(SUM(p.amount), 0)
         FROM payments p
@@ -54,7 +54,6 @@ try {
         JOIN dormitories d ON r.dorm_id = d.dorm_id
         WHERE d.owner_id = ? 
         AND p.status = 'paid'
-        AND p.payment_date >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
     ");
     $revenueStmt->execute([$owner_id]);
     $monthly_revenue = $revenueStmt->fetchColumn();

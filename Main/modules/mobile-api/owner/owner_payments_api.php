@@ -112,21 +112,20 @@ try {
 
     $owner_id = $owner['user_id'];
 
-    // Get monthly revenue
+    // Get total revenue (all paid payments, matching web)
     $revenueStmt = $pdo->prepare("
-        SELECT COALESCE(SUM(p.amount), 0) as monthly_revenue
+        SELECT COALESCE(SUM(p.amount), 0) as total_revenue
         FROM payments p
         JOIN bookings b ON p.booking_id = b.booking_id
         JOIN rooms r ON b.room_id = r.room_id
         JOIN dormitories d ON r.dorm_id = d.dorm_id
         WHERE d.owner_id = ? 
         AND p.status = 'paid'
-        AND p.payment_date >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
     ");
     $revenueStmt->execute([$owner_id]);
-    $monthly_revenue = $revenueStmt->fetchColumn();
+    $total_revenue = $revenueStmt->fetchColumn();
 
-    // Get pending amount
+    // Get pending amount - use the stored amount in payments table
     $pendingStmt = $pdo->prepare("
         SELECT COALESCE(SUM(p.amount), 0) as pending_amount
         FROM payments p
@@ -163,11 +162,16 @@ try {
     $paymentsStmt->execute([$owner_id]);
     $payments = $paymentsStmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Format amounts to float with 2 decimals
+    foreach ($payments as &$payment) {
+        $payment['amount'] = round(floatval($payment['amount']), 2);
+    }
+
     echo json_encode([
         'ok' => true,
         'stats' => [
-            'monthly_revenue' => floatval($monthly_revenue),
-            'pending_amount' => floatval($pending_amount)
+            'monthly_revenue' => round(floatval($total_revenue ?? 0), 2),
+            'pending_amount' => round(floatval($pending_amount ?? 0), 2)
         ],
         'payments' => $payments
     ]);

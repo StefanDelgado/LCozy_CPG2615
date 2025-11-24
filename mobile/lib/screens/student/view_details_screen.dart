@@ -53,16 +53,15 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
   }
 
   Future<void> fetchDormDetails() async {
-    print('📱 [ViewDetails] Fetching dorm details...');
+    final requestedDormId = widget.property['dorm_id']?.toString() ?? '';
+    print('📱 [ViewDetails] Fetching dorm details for dorm_id: $requestedDormId');
     setState(() {
       isLoading = true;
       error = '';
     });
 
     try {
-      final result = await _dormService.getDormDetails(
-        widget.property['dorm_id']?.toString() ?? '',
-      );
+      final result = await _dormService.getDormDetails(requestedDormId);
 
       print('📱 [ViewDetails] Service result success: ${result['success']}');
       
@@ -75,6 +74,10 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
         print('📱 [ViewDetails] Dorm data keys: ${dormData?.keys.toList()}');
         print('📱 [ViewDetails] Owner data: ${dormData?['owner']}');
         print('📱 [ViewDetails] Rooms count: ${roomsData.length}');
+        if (roomsData.isNotEmpty) {
+          print('📱 [ViewDetails] First room data: ${roomsData[0]}');
+          print('📱 [ViewDetails] First room images: ${roomsData[0]['images']}');
+        }
         print('📱 [ViewDetails] Reviews count: ${reviewsData.length}');
         
         setState(() {
@@ -337,7 +340,6 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
                         color: Colors.blue,
                       ),
                       StatChip(
-                        icon: Icons.attach_money,
                         text: priceDisplay,
                         color: Colors.green,
                       ),

@@ -13,14 +13,18 @@ class PaymentFilterChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _FilterChip(label: 'All', selected: selectedFilter == 'All', onTap: () => onFilterChanged('All')),
-        _FilterChip(label: 'Completed', selected: selectedFilter == 'Completed', onTap: () => onFilterChanged('Completed')),
-        _FilterChip(label: 'Pending', selected: selectedFilter == 'Pending', onTap: () => onFilterChanged('Pending')),
-        _FilterChip(label: 'Failed', selected: selectedFilter == 'Failed', onTap: () => onFilterChanged('Failed')),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _FilterChip(label: 'All', selected: selectedFilter == 'All', onTap: () => onFilterChanged('All')),
+          _FilterChip(label: 'Submitted', selected: selectedFilter == 'Submitted', onTap: () => onFilterChanged('Submitted')),
+          _FilterChip(label: 'Paid', selected: selectedFilter == 'Paid', onTap: () => onFilterChanged('Paid')),
+          _FilterChip(label: 'Pending', selected: selectedFilter == 'Pending', onTap: () => onFilterChanged('Pending')),
+          _FilterChip(label: 'Expired', selected: selectedFilter == 'Expired', onTap: () => onFilterChanged('Expired')),
+          _FilterChip(label: 'Failed', selected: selectedFilter == 'Failed', onTap: () => onFilterChanged('Failed')),
+        ],
+      ),
     );
   }
 }

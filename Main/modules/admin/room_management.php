@@ -70,6 +70,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $price = (float)$_POST['price'];
         $status = $_POST['status'];
 
+        // Handle room image uploads
+        if (!empty($_FILES['room_images']['name'][0])) {
+            $upload_dir = __DIR__ . '/../../uploads/rooms/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+            
+            foreach ($_FILES['room_images']['tmp_name'] as $key => $tmp_name) {
+                if (!empty($tmp_name)) {
+                    $file_name = uniqid('room_') . '_' . basename($_FILES['room_images']['name'][$key]);
+                    $target_path = $upload_dir . $file_name;
+                    if (move_uploaded_file($tmp_name, $target_path)) {
+                        // Insert new room image
+                        $img_stmt = $pdo->prepare("INSERT INTO room_images (room_id, image_path) VALUES (?, ?)");
+                        $img_stmt->execute([$id, $file_name]);
+                    }
+                }
+            }
+        }
+
         $stmt = $pdo->prepare("
             UPDATE rooms r
             JOIN dormitories d ON r.dorm_id = d.dorm_id
@@ -95,6 +113,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$id, $owner_id]);
         $_SESSION['flash'] = ['type'=>'error','msg'=>'Room deleted successfully!'];
         // Redirect to prevent form resubmission
+        $redirect_url = $filter_dorm_id ? "?dorm_id=$filter_dorm_id" : "";
+        header("Location: " . $_SERVER['PHP_SELF'] . $redirect_url);
+        exit();
+    }
+
+    // Delete Room Image
+    if (isset($_POST['delete_room_image'])) {
+        $image_path = $_POST['image_path'];
+        $room_id = (int)$_POST['room_id'];
+        
+        // Verify ownership before deleting
+        $stmt = $pdo->prepare("
+            SELECT ri.image_path 
+            FROM room_images ri
+            JOIN rooms r ON ri.room_id = r.room_id
+            JOIN dormitories d ON r.dorm_id = d.dorm_id
+            WHERE ri.image_path = ? AND r.room_id = ? AND d.owner_id = ?
+        ");
+        $stmt->execute([$image_path, $room_id, $owner_id]);
+        $image = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($image) {
+            // Delete file from server
+            $file_path = __DIR__ . '/../../uploads/rooms/' . $image['image_path'];
+            if (file_exists($file_path)) {
+                unlink($file_path);
+            }
+            
+            // Delete from database
+            $stmt = $pdo->prepare("DELETE FROM room_images WHERE image_path = ? AND room_id = ?");
+            $stmt->execute([$image_path, $room_id]);
+            
+            $_SESSION['flash'] = ['type'=>'success','msg'=>'Image deleted successfully!'];
+        }
+        
         $redirect_url = $filter_dorm_id ? "?dorm_id=$filter_dorm_id" : "";
         header("Location: " . $_SERVER['PHP_SELF'] . $redirect_url);
         exit();
@@ -183,7 +236,7 @@ $dorms = $dorms->fetchAll(PDO::FETCH_ASSOC);
           <div class="room-card">
             <?php if (!empty($r['cover_image'])): ?>
               <div class="room-card-image">
-                <img src="../../uploads/<?= htmlspecialchars($r['cover_image']) ?>" alt="<?= htmlspecialchars($r['room_type']) ?>">
+                <img src="../../uploads/rooms/<?= htmlspecialchars($r['cover_image']) ?>" alt="<?= htmlspecialchars($r['room_type']) ?>">
                 <div class="room-status-overlay status-<?= $r['status'] ?>">
                   <?= ucfirst($r['status']) ?>
                 </div>
@@ -326,7 +379,7 @@ $dorms = $dorms->fetchAll(PDO::FETCH_ASSOC);
 <div id="editModal" class="modal">
   <div class="modal-content">
     <h2>Edit Room</h2>
-    <form method="post" class="form-area">
+    <form method="post" enctype="multipart/form-data" class="form-area">
       <input type="hidden" name="room_id" id="edit_room_id">
 
       <div class="form-group">
@@ -365,6 +418,19 @@ $dorms = $dorms->fetchAll(PDO::FETCH_ASSOC);
         </select>
       </div>
 
+      <div class="form-group">
+        <label>Current Room Images</label>
+        <div id="current_room_images" class="current-images-grid">
+          <!-- Images will be loaded dynamically -->
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="edit_room_images">Add New Room Images (Multiple)</label>
+        <input type="file" id="edit_room_images" name="room_images[]" accept="image/*" multiple>
+        <small style="color: #666;">Upload new images to add to this room's gallery</small>
+      </div>
+
       <div class="modal-actions">
         <button type="submit" name="edit_room" class="btn">Save Changes</button>
         <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
@@ -372,6 +438,13 @@ $dorms = $dorms->fetchAll(PDO::FETCH_ASSOC);
     </form>
   </div>
 </div>
+
+<!-- Hidden form for deleting images -->
+<form id="deleteImageForm" method="post" style="display:none;">
+  <input type="hidden" name="delete_room_image" value="1">
+  <input type="hidden" name="image_path" id="delete_image_path">
+  <input type="hidden" name="room_id" id="delete_room_id">
+</form>
 
 <script>
 function openAddModal() {
@@ -413,7 +486,52 @@ function openEditModal(button) {
     customRoomTypeInput.value = roomType;
   }
   
+  // Load room images
+  loadRoomImages(roomId);
+  
   document.getElementById('editModal').style.display = 'flex';
+}
+
+function loadRoomImages(roomId) {
+  // Fetch room images via AJAX
+  const container = document.getElementById('current_room_images');
+  container.innerHTML = '<p style="color: #999;">Loading images...</p>';
+  
+  fetch(`/modules/admin/get_room_images.php?room_id=${roomId}`)
+    .then(response => {
+      console.log('Response status:', response.status);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Images data:', data);
+      if (data.images && data.images.length > 0) {
+        container.innerHTML = data.images.map(img => `
+          <div class="image-item">
+            <img src="../../uploads/rooms/${img.image_path}" alt="Room Image">
+            <button type="button" class="btn-delete-image" onclick="deleteRoomImage('${img.image_path}', ${roomId})" title="Delete Image">
+              ✕
+            </button>
+          </div>
+        `).join('');
+      } else {
+        container.innerHTML = '<p style="color: #999; font-style: italic;">No images uploaded yet</p>';
+      }
+    })
+    .catch(err => {
+      console.error('Error loading images:', err);
+      container.innerHTML = '<p style="color: #dc3545;">Could not load images: ' + err.message + '</p>';
+    });
+}
+
+function deleteRoomImage(imagePath, roomId) {
+  if (!confirm('Are you sure you want to delete this image?')) return;
+  
+  document.getElementById('delete_image_path').value = imagePath;
+  document.getElementById('delete_room_id').value = roomId;
+  document.getElementById('deleteImageForm').submit();
 }
 
 function closeEditModal() {
@@ -700,6 +818,54 @@ window.onclick = function(event) {
   font-size: 16px;
 }
 
+/* Room Images Grid */
+.current-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.image-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #e9ecef;
+  aspect-ratio: 1;
+}
+
+.image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-delete-image {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-delete-image:hover {
+  background: #dc3545;
+  transform: scale(1.1);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .page-header {
@@ -716,6 +882,10 @@ window.onclick = function(event) {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+  
+  .current-images-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
 }
 </style>

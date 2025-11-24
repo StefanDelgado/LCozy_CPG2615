@@ -42,13 +42,34 @@ try {
     // Get pending payments amount
     try {
         $paymentsStmt = $pdo->prepare("
-            SELECT COALESCE(SUM(amount), 0) 
-            FROM payments 
-            WHERE student_id = ? 
-            AND status IN ('pending', 'overdue')
+            SELECT 
+                p.amount,
+                b.booking_type,
+                r.capacity,
+                r.price as room_base_price
+            FROM payments p
+            LEFT JOIN bookings b ON p.booking_id = b.booking_id
+            LEFT JOIN rooms r ON b.room_id = r.room_id
+            WHERE p.student_id = ? 
+            AND p.status IN ('pending', 'overdue')
         ");
         $paymentsStmt->execute([$student_id]);
-        $payments_due = (float)$paymentsStmt->fetchColumn();
+        $pending_payments = $paymentsStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Calculate total with proper shared room pricing
+        $payments_due = 0;
+        foreach ($pending_payments as $payment) {
+            $booking_type = strtolower($payment['booking_type'] ?? 'shared');
+            $amount = (float)$payment['amount'];
+            
+            if ($booking_type === 'shared' && $payment['capacity'] > 0 && $payment['room_base_price'] > 0) {
+                $amount = $payment['room_base_price'] / $payment['capacity'];
+            }
+            
+            $payments_due += $amount;
+        }
+        
+        $payments_due = round($payments_due, 2);
     } catch (PDOException $e) {
         error_log('Payment query error: ' . $e->getMessage());
         $payments_due = 0;
@@ -74,6 +95,7 @@ try {
         SELECT 
             b.booking_id,
             b.status,
+            b.booking_type,
             b.start_date,
             b.end_date,
             b.created_at,
@@ -103,9 +125,22 @@ try {
 
     // Format the bookings data
     $formatted_bookings = array_map(function($booking) {
+        // Calculate display price based on booking type
+        $booking_type = strtolower($booking['booking_type'] ?? 'shared');
+        $display_price = (float)$booking['price'];
+        
+        // If shared room, divide by capacity
+        if ($booking_type === 'shared' && $booking['capacity'] > 0) {
+            $display_price = $booking['price'] / $booking['capacity'];
+        }
+        
+        // Round to 2 decimal places
+        $display_price = round($display_price, 2);
+        
         return [
             'booking_id' => (int)$booking['booking_id'],
             'status' => $booking['status'],
+            'booking_type' => $booking['booking_type'],
             'start_date' => $booking['start_date'],
             'end_date' => $booking['end_date'],
             'created_at' => $booking['created_at'],
@@ -115,13 +150,13 @@ try {
                 'name' => $booking['dorm_name'],
                 'address' => $booking['dorm_address'],
                 'cover_image' => $booking['cover_image'] ? 
-                    'http://cozydorms.life/uploads/dorms/' . $booking['cover_image'] : null,
+                    SITE_URL . '/uploads/' . $booking['cover_image'] : null,
             ],
             'room' => [
                 'room_id' => (int)$booking['room_id'],
                 'room_type' => $booking['room_type'],
                 'capacity' => (int)$booking['capacity'],
-                'price' => (float)$booking['price'],
+                'price' => $display_price,
             ],
             'owner' => [
                 'owner_id' => (int)$booking['owner_id'],

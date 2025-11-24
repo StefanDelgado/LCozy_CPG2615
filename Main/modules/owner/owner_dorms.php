@@ -188,7 +188,7 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
       
       <?php if (!empty($dorm['cover_image'])): ?>
         <div class="dorm-image">
-          <img src="../uploads/<?= htmlspecialchars($dorm['cover_image']) ?>" 
+          <img src="../../uploads/<?= htmlspecialchars($dorm['cover_image']) ?>" 
                alt="<?= htmlspecialchars($dorm['name']) ?>">
         </div>
       <?php endif; ?>
@@ -286,7 +286,7 @@ $dorms = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="room-card <?= $is_full ? 'room-full' : '' ?>">
               <div class="room-image">
                 <?php if ($room_img): ?>
-                  <img src="../uploads/<?= htmlspecialchars($room_img) ?>" alt="Room">
+                  <img src="../../uploads/rooms/<?= htmlspecialchars($room_img) ?>" alt="Room">
                 <?php else: ?>
                   <div class="no-image">No Image</div>
                 <?php endif; ?>
