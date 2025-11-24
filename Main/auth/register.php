@@ -19,17 +19,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role  = $_POST['role'] ?? 'student';
 
     // VALIDATION ----------------------------
-    if (!$name || !$email || !$pass || !$confirm_pass || !$phone) {
-        $error = "All fields are required, including phone number.";
-    } elseif ($pass !== $confirm_pass) {
-        $error = "Passwords do not match.";
-    } elseif (strlen($pass) < 4 || strlen($pass) > 8) {
-        $error = "Password must be 4 to 8 characters long.";
-    } elseif (!in_array($role, ['student', 'owner'])) {
-        $error = "Invalid role selected.";
-    } elseif (!preg_match('/^[0-9+\-\s]{7,15}$/', $phone)) {
-        $error = "Invalid phone number format.";
-    }
+if (!$name || !$email || !$pass || !$confirm_pass || !$phone) {
+    $error = "All fields are required, including phone number.";
+
+} elseif ($pass !== $confirm_pass) {
+    $error = "Passwords do not match.";
+
+} elseif (!preg_match('/^(?=.*[!@#$%^&*()\-_=+\[\]{};:,.<>\/?]).{4,8}$/', $pass)) {
+    // 4–8 characters AND must include a special character
+    $error = "Password must be 4–8 characters long and must include at least one special character.";
+
+} elseif (!in_array($role, ['student', 'owner'])) {
+    $error = "Invalid role selected.";
+
+} elseif (!preg_match('/^[0-9+\-\s]{7,15}$/', $phone)) {
+    $error = "Invalid phone number format.";
+}
 
     if (!$error) {
 
