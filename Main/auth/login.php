@@ -12,9 +12,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email = trim($_POST['email'] ?? '');
   $password = $_POST['password'] ?? '';
 
-  $stmt = $pdo->prepare("SELECT user_id, name, email, password, role, verified FROM users WHERE email = ?");
-  $stmt->execute([$email]);
-  $user = $stmt->fetch();
+  // ENFORCE PASSWORD COMPLEXITY
+  $password_pattern = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,16}$/';
+
+  if (!preg_match($password_pattern, $password)) {
+      $error = "Password must be 8–16 characters with uppercase, lowercase, number, and special character.";
+  } else {
+
+      // PROCEED WITH LOGIN
+      $stmt = $pdo->prepare("SELECT user_id, name, email, password, role, verified FROM users WHERE email = ?");
+      $stmt->execute([$email]);
+      $user = $stmt->fetch();
 
   if ($user && password_verify($password, $user['password'])) {
     // Check verification status: 1 = verified, 0 = pending, -1 = rejected
@@ -32,10 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'role'    => $user['role'],
       ];
 
-      redirect_to_dashboard($user['role']);
-    }
-  } else {
-    $error = 'Invalid email or password';
+          redirect_to_dashboard($user['role']);
+        }
+
+      } else {
+        $error = 'Invalid email or password.';
+      }
   }
 }
 ?>
@@ -45,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="utf-8">
   <title>CozyDorms — Login</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-
   <link rel="stylesheet" href="../assets/style.css">
 
   <style>
@@ -138,6 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button type="submit">Log In</button>
     </form>
     <p>Don't have an account? <a href="register.php">Sign Up</a></p>
+    <p><a href="forgot_password.php">Forgot Password?</a></p>
   </div>
 </body>
 </html>

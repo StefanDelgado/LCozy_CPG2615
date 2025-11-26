@@ -4,76 +4,102 @@ require_once __DIR__ . '/../config.php';
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
 $error = '';
 $success = '';
+$notify = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     $name  = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $pass  = $_POST['password'] ?? '';
+    $confirm_pass = $_POST['confirm_password'] ?? '';
     $role  = $_POST['role'] ?? 'student';
 
-  if (!$name || !$email || !$pass || !$phone) {
-    $error = "All fields are required, including phone number.";
-  } elseif (!in_array($role, ['student', 'owner'])) {
-    $error = "Invalid role selected.";
-  } elseif (!preg_match('/^[0-9+\-\s]{7,15}$/', $phone)) {
-    $error = "Invalid phone number format.";
-  } else {
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email=?");
-    $stmt->execute([$email]);
-    if ($stmt->fetchColumn() > 0) {
-      $error = "Email already registered.";
-    } else {
-      $hash = password_hash($pass, PASSWORD_DEFAULT);
+    // VALIDATION ----------------------------
+    if (!$name || !$email || !$pass || !$confirm_pass || !$phone) {
+        $error = "All fields are required, including phone number.";
 
-      // Email domain logic
-      $trusted_domains = ['gmail.com','yahoo.com','outlook.com','hotmail.com','icloud.com','protonmail.com','zoho.com','aol.com','ymail.com'];
-      $fake_domains = ['example.com','email.com','test.com','mailinator.com','fake.com'];
-      $email_domain = strtolower(substr(strrchr($email, '@'), 1));
+    } elseif ($pass !== $confirm_pass) {
+        $error = "Passwords do not match.";
 
-      // Email cleanliness checks
-      $is_clean = true;
-      // No multiple consecutive special chars
-      if (preg_match('/[._%+-]{2,}/', $email)) $is_clean = false;
-      // No repeating dots
-      if (preg_match('/\.\./', $email)) $is_clean = false;
-      // No special chars at start/end
-      if (preg_match('/^[._%+-]|[._%+-]$/', $email)) $is_clean = false;
+    // NEW PASSWORD RULES (8–16 chars, uppercase, lowercase, special char)
+    } elseif (!preg_match('/^(?=.*[A-Z])(?=.*[a-z])(?=.*[\W_]).{8,16}$/', $pass)) {
+        $error = "Password must be 8–16 characters long and include uppercase, lowercase, and a special character.";
 
-      if (in_array($email_domain, $fake_domains)) {
-        $verified_status = -1; // auto reject
-      } elseif (in_array($email_domain, $trusted_domains) && $is_clean) {
-        $verified_status = 1; // auto accept
-      } else {
-        $verified_status = 0; // pending
-      }
+    } elseif (!in_array($role, ['student', 'owner'])) {
+        $error = "Invalid role selected.";
 
-      $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, verified) VALUES (?, ?, ?, ?, ?, ?)");
-      $stmt->execute([$name, $email, $phone, $hash, $role, $verified_status]);
-      $user_id = $pdo->lastInsertId();
+    } elseif (!preg_match('/^[0-9+\-\s]{7,15}$/', $phone)) {
+        $error = "Invalid phone number format.";
+    }
 
-      // Ensure verification table exists
-      $pdo->exec("CREATE TABLE IF NOT EXISTS user_verifications (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        token VARCHAR(64) NOT NULL,
-        expires_at DATETIME NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+    if (!$error) {
 
-      // create verification token
-      $token = bin2hex(random_bytes(16));
-      $expires_at = date('Y-m-d H:i:s', time() + 60*60*24); // 24 hours
-      $stmt = $pdo->prepare("INSERT INTO user_verifications (user_id, token, expires_at) VALUES (?, ?, ?)");
-      $stmt->execute([$user_id, $token, $expires_at]);
+        // Check if email already exists
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email=?");
+        $stmt->execute([$email]);
 
-            // send activation email (using shared/mail.php helper)
+        if ($stmt->fetchColumn() > 0) {
+            $error = "Email already registered.";
+        } else {
+
+            // Hash password
+            $hash = password_hash($pass, PASSWORD_DEFAULT);
+
+            // Domain verification logic
+            $trusted_domains = ['gmail.com','yahoo.com','outlook.com','hotmail.com','icloud.com','protonmail.com','zoho.com','aol.com','ymail.com'];
+            $fake_domains    = ['example.com','email.com','test.com','mailinator.com','fake.com'];
+
+            $email_domain = strtolower(substr(strrchr($email, '@'), 1));
+
+            // Email cleanliness check
+            $is_clean = true;
+            if (preg_match('/[._%+-]{2,}/', $email)) $is_clean = false;
+            if (preg_match('/\.\./', $email)) $is_clean = false;
+            if (preg_match('/^[._%+-]|[._%+-]$/', $email)) $is_clean = false;
+
+            if (in_array($email_domain, $fake_domains)) {
+                $verified_status = -1; // auto reject
+            } elseif (in_array($email_domain, $trusted_domains) && $is_clean) {
+                $verified_status = 1;  // auto accept
+            } else {
+                $verified_status = 0;  // pending
+            }
+
+            // Insert user
+            $stmt = $pdo->prepare("
+                INSERT INTO users (name, email, phone, password, role, verified)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->execute([$name, $email, $phone, $hash, $role, $verified_status]);
+
+            $user_id = $pdo->lastInsertId();
+
+            // Ensure verification table exists
+            $pdo->exec("CREATE TABLE IF NOT EXISTS user_verifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                token VARCHAR(64) NOT NULL,
+                expires_at DATETIME NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+            // Create verification token
+            $token = bin2hex(random_bytes(16));
+            $expires_at = date('Y-m-d H:i:s', time() + 86400);
+
+            $stmt = $pdo->prepare("INSERT INTO user_verifications (user_id, token, expires_at)
+                                   VALUES (?, ?, ?)");
+            $stmt->execute([$user_id, $token, $expires_at]);
+
+            // Send activation email
             require_once __DIR__ . '/../shared/mail.php';
             $activation_link = SITE_URL . "/auth/activate.php?token=" . $token;
             $subject = "Activate your CozyDorms account";
-            $message = "Hi $name,\n\nPlease activate your account by clicking the link below:\n$activation_link\n\nThis link expires in 24 hours.";
+            $message = "Hi $name,\n\nPlease activate your account:\n$activation_link\n\nThis link expires in 24 hours.";
             send_mail($email, $subject, $message, null, MAIL_FROM);
 
       // Show notification based on verification status
@@ -176,38 +202,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       text-decoration: none;
       font-weight: 500;
     }
-    p a:hover {
-      text-decoration: underline;
-    }
   </style>
 </head>
 <body>
   <div class="auth-card">
     <h1>Create Account</h1>
-    <?php if (!empty($notify)): ?><div class="alert" style="background:#e3e7fd;color:#2c2c2c; margin-bottom:1rem;"><?= $notify ?></div><?php endif; ?>
-    <?php if ($error): ?><div class="alert"><?= $error ?></div><?php endif; ?>
-    <?php if ($success): ?><div class="alert success"><?= $success ?></div><?php endif; ?>
+
+    <?php if (!empty($notify)): ?>
+      <div class="alert" style="background:#e3e7fd;color:#2c2c2c;"><?= $notify ?></div>
+    <?php endif; ?>
+
+    <?php if ($error): ?>
+      <div class="alert"><?= $error ?></div>
+    <?php endif; ?>
+
+    <?php if ($success): ?>
+      <div class="alert success"><?= $success ?></div>
+    <?php endif; ?>
+
     <form method="post" autocomplete="off">
       <label>Full Name
         <input type="text" name="name" required>
       </label>
+
       <label>Email
         <input type="email" name="email" required>
       </label>
+
       <label>Phone Number
         <input type="text" name="phone" required placeholder="e.g. 09171234567">
       </label>
+
       <label>Password
-        <input type="password" name="password" required>
+        <input type="password" name="password" minlength="8" maxlength="16" required>
       </label>
+
+      <label>Confirm Password
+        <input type="password" name="confirm_password" minlength="8" maxlength="16" required>
+      </label>
+
       <label>Role
         <select name="role" required>
           <option value="student">Student</option>
           <option value="owner">Owner</option>
         </select>
       </label>
+
       <button type="submit">Register</button>
     </form>
+
     <p>Already have an account? <a href="login.php">Login</a></p>
     <p><a href="register_admin.php" style="font-size:0.85rem;color:#999;">Register as Admin</a></p>
   </div>
