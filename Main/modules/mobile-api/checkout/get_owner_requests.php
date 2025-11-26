@@ -93,7 +93,7 @@ try {
 
     // Group by status for easier UI handling
     $grouped = [
-        'pending' => array_filter($formatted_requests, fn($r) => $r['status'] === 'requested'),
+        'checkout_pending' => array_filter($formatted_requests, fn($r) => $r['status'] === 'requested'),
         'approved' => array_filter($formatted_requests, fn($r) => $r['status'] === 'approved'),
         'completed' => array_filter($formatted_requests, fn($r) => $r['status'] === 'completed'),
         'disapproved' => array_filter($formatted_requests, fn($r) => $r['status'] === 'disapproved')
@@ -104,7 +104,7 @@ try {
         'data' => [
             'all' => array_values($formatted_requests),
             'grouped' => [
-                'pending' => array_values($grouped['pending']),
+                'checkout_pending' => array_values($grouped['checkout_pending']),
                 'approved' => array_values($grouped['approved']),
                 'completed' => array_values($grouped['completed']),
                 'disapproved' => array_values($grouped['disapproved'])
@@ -112,7 +112,7 @@ try {
         ],
         'count' => [
             'total' => count($formatted_requests),
-            'pending' => count($grouped['pending']),
+            'checkout_pending' => count($grouped['checkout_pending']),
             'approved' => count($grouped['approved']),
             'completed' => count($grouped['completed']),
             'disapproved' => count($grouped['disapproved'])

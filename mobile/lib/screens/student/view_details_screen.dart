@@ -9,7 +9,6 @@ import '../../widgets/student/view_details/reviews_tab.dart';
 import '../../widgets/student/view_details/contact_tab.dart';
 import '../../widgets/student/tabs/location_tab.dart';
 import '../../widgets/student/view_details/stat_chip.dart';
-import 'submit_review_screen.dart';
 import '../shared/chat_conversation_screen.dart';
 import 'booking_form_screen.dart';
 

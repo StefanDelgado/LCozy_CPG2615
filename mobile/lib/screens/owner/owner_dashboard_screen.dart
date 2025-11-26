@@ -62,18 +62,29 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     
     try {
       final result = await _dashboardService.getOwnerDashboard(widget.ownerEmail);
+      
+      print('[DEBUG] Dashboard API result: $result');
 
       if (result['success'] == true) {
         setState(() {
           dashboardData = result['data'];
+          print('[DEBUG] Dashboard data: $dashboardData');
+          
           // Extract owner name and ID from API response if available
           if (dashboardData['owner_info'] != null) {
+            print('[DEBUG] owner_info found: ${dashboardData['owner_info']}');
+            
             if (dashboardData['owner_info']['name'] != null) {
               ownerName = dashboardData['owner_info']['name'];
             }
             if (dashboardData['owner_info']['owner_id'] != null) {
               ownerId = dashboardData['owner_info']['owner_id'];
+              print('[DEBUG] Owner ID set to: $ownerId');
+            } else {
+              print('[DEBUG] owner_id is null in owner_info');
             }
+          } else {
+            print('[DEBUG] owner_info is null');
           }
           isLoading = false;
         });
@@ -81,6 +92,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         throw Exception(result['error'] ?? 'Failed to load dashboard data');
       }
     } catch (e) {
+      print('[ERROR] Dashboard fetch error: $e');
       setState(() {
         dashboardData = {
           'stats': {
@@ -134,6 +146,9 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Ensure index is always valid (0-4 for IndexedStack which has 6 children but we only use 0-4)
+    final safeIndex = _selectedIndex > 4 ? 0 : _selectedIndex;
+    
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
       bottomNavigationBar: _buildBottomNavBar(),
@@ -141,7 +156,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         child: isLoading
             ? const LoadingWidget(message: 'Loading dashboard...')
             : IndexedStack(
-                index: _selectedIndex,
+                index: safeIndex,
                 children: [
                   _buildDashboardHome(),
                   OwnerBookingScreen(ownerEmail: widget.ownerEmail),
@@ -151,7 +166,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                     ownerEmail: widget.ownerEmail,
                     ownerId: ownerId ?? 0,
                   ),
-                  Container(), // Placeholder for settings
+                  Container(), // Placeholder for settings (never shown, index 5 navigates instead)
                 ],
               ),
       ),
@@ -160,7 +175,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
   Widget _buildBottomNavBar() {
     return BottomNavigationBar(
-      currentIndex: _selectedIndex,
+      currentIndex: _selectedIndex > 4 ? 0 : _selectedIndex,
       selectedItemColor: AppTheme.primary,
       unselectedItemColor: AppTheme.muted,
       type: BottomNavigationBarType.fixed,

@@ -239,6 +239,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         return Colors.red;
       case 'completed':
         return Colors.blue;
+      case 'checkout_requested':
+      case 'checkout_approved':
+        return Colors.orange[700]!;
       default:
         return Colors.grey;
     }

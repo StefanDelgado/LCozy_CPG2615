@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../../../utils/app_theme.dart';
+import '../../utils/api_constants.dart';
 import '../../services/tenant_service.dart';
 import '../../services/checkout_service.dart';
 import '../../widgets/common/loading_widget.dart';
@@ -17,12 +20,12 @@ import '../../widgets/owner/tenants/tenant_card.dart';
 /// - Checkout request management (Approve/Disapprove)
 class OwnerTenantsScreen extends StatefulWidget {
   final String ownerEmail;
-  final int ownerId;
+  final int? ownerId; // Make it optional
   
   const OwnerTenantsScreen({
     super.key,
     required this.ownerEmail,
-    required this.ownerId,
+    this.ownerId,
   });
   
   @override
@@ -41,6 +44,7 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
   List<Map<String, dynamic>> _currentTenants = [];
   List<Map<String, dynamic>> _checkoutRequests = [];
   List<Map<String, dynamic>> _pastTenants = [];
+  int? _ownerId; // Store fetched owner ID
 
   // Theme
   static const Color _orange = AppTheme.primary;
@@ -49,8 +53,45 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
   @override
   void initState() {
     super.initState();
+    print('[DEBUG TENANTS] OwnerTenantsScreen initialized');
+    print('[DEBUG TENANTS] ownerEmail: ${widget.ownerEmail}');
+    print('[DEBUG TENANTS] ownerId from widget: ${widget.ownerId}');
+    _initializeData();
+  }
+
+  /// Initialize by fetching owner ID first, then other data
+  Future<void> _initializeData() async {
+    await _fetchOwnerId();
     _fetchTenants();
     _fetchCheckoutRequests();
+  }
+
+  /// Fetch owner ID from email
+  Future<void> _fetchOwnerId() async {
+    if (widget.ownerId != null && widget.ownerId! > 0) {
+      _ownerId = widget.ownerId;
+      print('[DEBUG TENANTS] Using provided ownerId: $_ownerId');
+      return;
+    }
+
+    try {
+      // Fetch owner ID from database using email
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner/get_owner_id.php?email=${widget.ownerEmail}'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          setState(() {
+            _ownerId = data['owner_id'];
+          });
+          print('[DEBUG TENANTS] Fetched ownerId: $_ownerId');
+        }
+      }
+    } catch (e) {
+      print('[ERROR TENANTS] Failed to fetch owner ID: $e');
+    }
   }
 
   /// Fetches current and past tenants from the API
@@ -87,27 +128,41 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
 
   /// Fetches checkout requests from the API
   Future<void> _fetchCheckoutRequests() async {
+    if (_ownerId == null || _ownerId! <= 0) {
+      print('[DEBUG] Cannot fetch checkout requests - invalid owner ID: $_ownerId');
+      return;
+    }
+
     try {
+      print('[DEBUG] Fetching checkout requests for owner_id: $_ownerId');
       final result = await CheckoutService.getOwnerRequests(
-        ownerId: widget.ownerId,
+        ownerId: _ownerId!,
       );
+
+      print('[DEBUG] Checkout requests response: $result');
 
       if (result['success'] == true) {
         final data = result['data'];
-        // Get only pending requests for the checkout tab
-        final allRequests = List<Map<String, dynamic>>.from(
-          data['requests'] ?? []
-        );
+        print('[DEBUG] Data: $data');
+        
+        // Get only pending (requested status) requests for the checkout tab
+        final grouped = data['grouped'] ?? {};
+        print('[DEBUG] Grouped: $grouped');
+        
+        final checkoutPending = grouped['checkout_pending'] ?? [];
+        print('[DEBUG] Checkout pending count: ${checkoutPending.length}');
         
         setState(() {
-          _checkoutRequests = allRequests.where((req) => 
-            req['status']?.toString().toLowerCase() == 'requested'
-          ).toList();
+          _checkoutRequests = List<Map<String, dynamic>>.from(checkoutPending);
         });
+        
+        print('[DEBUG] Set _checkoutRequests with ${_checkoutRequests.length} items');
+      } else {
+        print('[DEBUG] Error: ${result['error']}');
       }
     } catch (e) {
       // Silently fail for checkout requests
-      print('Failed to load checkout requests: $e');
+      print('[ERROR] Failed to load checkout requests: $e');
     }
   }
 
@@ -186,11 +241,21 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
     );
 
     if (confirmed == true) {
+      if (_ownerId == null || _ownerId! <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid owner ID'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       setState(() => _isLoading = true);
       
       final result = await CheckoutService.approveCheckout(
         requestId: request['request_id'],
-        ownerId: widget.ownerId,
+        ownerId: _ownerId!,
       );
 
       if (!mounted) return;
@@ -261,11 +326,21 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
     );
 
     if (confirmed == true) {
+      if (_ownerId == null || _ownerId! <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid owner ID'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       setState(() => _isLoading = true);
       
       final result = await CheckoutService.disapproveCheckout(
         requestId: request['request_id'],
-        ownerId: widget.ownerId,
+        ownerId: _ownerId!,
         reason: reasonController.text,
       );
 
@@ -488,8 +563,8 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
     final tenantName = request['tenant_name'] ?? 'Unknown Tenant';
     final dormName = request['dorm_name'] ?? 'N/A';
     final roomType = request['room_type'] ?? 'N/A';
-    final reason = request['reason'];
-    final requestDate = request['request_date'] ?? 'N/A';
+    final reason = request['request_reason'];
+    final requestDate = request['created_at'] ?? 'N/A';
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),

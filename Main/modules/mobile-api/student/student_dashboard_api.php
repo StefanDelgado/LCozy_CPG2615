@@ -116,7 +116,7 @@ try {
         JOIN dormitories d ON r.dorm_id = d.dorm_id
         JOIN users u ON d.owner_id = u.user_id
         WHERE b.student_id = ? 
-    AND b.status IN ('pending', 'approved', 'active', 'completed', 'cancelled', 'rejected', 'ongoing')
+        AND b.status IN ('pending', 'approved', 'active', 'completed', 'cancelled', 'rejected', 'ongoing', 'checkout_requested', 'checkout_approved')
         ORDER BY b.created_at DESC
         LIMIT 10
     ");
@@ -166,6 +166,32 @@ try {
         ];
     }, $active_bookings);
 
+    // Get recent messages (last 5 unread)
+    try {
+        $messagesStmt = $pdo->prepare("
+            SELECT 
+                m.message_id,
+                m.sender_id,
+                m.body,
+                m.created_at,
+                m.urgency,
+                u.name as sender_name,
+                d.name as dorm_name
+            FROM messages m
+            LEFT JOIN users u ON m.sender_id = u.user_id
+            LEFT JOIN dormitories d ON m.dorm_id = d.dorm_id
+            WHERE m.receiver_id = ? 
+            AND m.read_at IS NULL
+            ORDER BY m.created_at DESC
+            LIMIT 5
+        ");
+        $messagesStmt->execute([$student_id]);
+        $recent_messages = $messagesStmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('Messages query error: ' . $e->getMessage());
+        $recent_messages = [];
+    }
+
     // Return success response
     echo json_encode([
         'ok' => true,
@@ -178,7 +204,8 @@ try {
             'active_reservations' => $active_reservations,
             'payments_due' => $payments_due,
             'unread_messages' => $unread_messages,
-            'active_bookings' => $formatted_bookings
+            'active_bookings' => $formatted_bookings,
+            'recent_messages' => $recent_messages
         ]
     ]);
 
