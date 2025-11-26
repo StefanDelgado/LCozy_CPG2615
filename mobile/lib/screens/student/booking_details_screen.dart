@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_theme.dart';
 import '../../services/checkout_service.dart';
+import '../../services/booking_service.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -20,6 +21,7 @@ class BookingDetailsScreen extends StatefulWidget {
 
 class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   bool _isLoading = false;
+  final BookingService _bookingService = BookingService();
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +40,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final canRequestCheckout =
         (status == 'active' || status == 'approved') &&
         !_hasCheckoutRequest();
+
+    // Check if user can cancel booking (pending or approved, before payment)
+    final canCancelBooking = 
+        (status == 'pending' || status == 'approved') &&
+        !_hasPaymentMade();
 
     return Scaffold(
       appBar: AppBar(
@@ -140,6 +147,41 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         widget.booking['payment_status'] ?? 'Pending'),
                   ]),
 
+                  // Cancel Booking Button (for pending/approved before payment)
+                  if (canCancelBooking) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton.icon(
+                        onPressed: _isLoading ? null : _showCancelBookingDialog,
+                        icon: const Icon(Icons.cancel_outlined, size: 20),
+                        label: const Text(
+                          'Cancel Booking',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red[700],
+                          side: BorderSide(color: Colors.red[700]!, width: 2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Cancel this booking before payment',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+
                   // Checkout Button
                   if (canRequestCheckout) ...[
                     const SizedBox(height: 32),
@@ -226,6 +268,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     // Check if status indicates checkout was requested
     final status = widget.booking['status']?.toString().toLowerCase() ?? '';
     return status.contains('checkout');
+  }
+
+  bool _hasPaymentMade() {
+    // Check if any payment has been made (paid or verified)
+    // This should be checked from the booking data or payment records
+    // For now, we'll assume if status is 'active' or beyond, payment was made
+    final status = widget.booking['status']?.toString().toLowerCase() ?? '';
+    return status == 'active' || status == 'completed' || status.contains('checkout');
   }
 
   Color _getStatusColor(String status) {
@@ -397,6 +447,124 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         SnackBar(
           content: Text(result['error'] ?? 'Failed to submit request'),
           backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _showCancelBookingDialog() async {
+    final reasonController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red[700], size: 28),
+            const SizedBox(width: 8),
+            const Text('Cancel Booking?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Are you sure you want to cancel this booking?',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange[300]!),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '⚠️ This action cannot be undone',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '• Your booking will be cancelled\n• Room will become available again\n• You can only cancel before payment',
+                    style: TextStyle(fontSize: 12, height: 1.5),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Reason for cancellation (optional)',
+                hintText: 'Why are you canceling?',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.edit_note),
+              ),
+              maxLines: 3,
+              maxLength: 300,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep Booking'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Cancel Booking'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _submitCancellation(reasonController.text);
+    }
+  }
+
+  Future<void> _submitCancellation(String reason) async {
+    setState(() => _isLoading = true);
+
+    final bookingId = widget.booking['booking_id'] is int
+        ? widget.booking['booking_id']
+        : int.tryParse(widget.booking['booking_id']?.toString() ?? '0') ?? 0;
+
+    final result = await _bookingService.cancelBooking(
+      bookingId: bookingId,
+      studentEmail: widget.userEmail,
+      cancellationReason: reason.isNotEmpty ? reason : null,
+    );
+
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Booking cancelled successfully!'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      // Go back to refresh the list
+      Navigator.pop(context, true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Failed to cancel booking'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
         ),
       );
     }

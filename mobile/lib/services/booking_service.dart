@@ -244,4 +244,70 @@ class BookingService {
       };
     }
   }
+
+  /// Cancels a booking (student cancellation)
+  /// 
+  /// Parameters:
+  /// - [bookingId]: The ID of the booking to cancel
+  /// - [studentEmail]: The email of the student canceling
+  /// - [cancellationReason]: Optional reason for cancellation
+  /// 
+  /// Returns:
+  /// - Map with keys:
+  ///   - success: boolean indicating if the request was successful
+  ///   - message: Success or error message
+  Future<Map<String, dynamic>> cancelBooking({
+    required int bookingId,
+    required String studentEmail,
+    String? cancellationReason,
+  }) async {
+    try {
+      print('📋 [BookingService] Canceling booking...');
+      print('📋 [BookingService] Booking ID: $bookingId');
+      print('📋 [BookingService] Student Email: $studentEmail');
+      print('📋 [BookingService] Reason: $cancellationReason');
+
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/student/cancel_booking.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'booking_id': bookingId,
+          'student_email': studentEmail,
+          'cancellation_reason': cancellationReason ?? '',
+        }),
+      );
+
+      print('📋 [BookingService] Response status: ${response.statusCode}');
+      print('📋 [BookingService] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          print('📋 [BookingService] ✅ Booking cancelled successfully');
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Booking cancelled successfully',
+          };
+        } else {
+          print('📋 [BookingService] ❌ Cancellation failed: ${data['error']}');
+          return {
+            'success': false,
+            'message': data['error'] ?? 'Failed to cancel booking',
+          };
+        }
+      } else {
+        print('📋 [BookingService] ❌ Server error: ${response.statusCode}');
+        return {
+          'success': false,
+          'message': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('📋 [BookingService] ❌ Exception: $e');
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
 }
