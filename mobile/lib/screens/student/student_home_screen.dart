@@ -298,6 +298,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         children: [
           _buildActiveBookingsSection(activeBookings, completedBookings, allBookings),
           const SizedBox(height: 24),
+          _buildNotificationsSection(),
+          const SizedBox(height: 24),
           _buildQuickActionsSection(),
         ],
       ),
@@ -436,6 +438,181 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           }),
       ],
     );
+  }
+
+  Widget _buildNotificationsSection() {
+    final recentMessages = (dashboardData['recent_messages'] as List?) ?? [];
+    
+    if (recentMessages.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Recent Notifications',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatListScreen(
+                      currentUserEmail: widget.userEmail,
+                      currentUserRole: 'student',
+                    ),
+                  ),
+                );
+              },
+              child: const Text('View All'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...recentMessages.take(3).map((message) {
+          final senderName = message['sender_name'] ?? 'Unknown';
+          final body = message['body'] ?? '';
+          final dormName = message['dorm_name'] ?? '';
+          final createdAt = message['created_at'] ?? '';
+          final urgency = message['urgency'] ?? 'normal';
+          
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: urgency == 'urgent' 
+                  ? Colors.red.withOpacity(0.3)
+                  : Colors.grey.withOpacity(0.2),
+                width: urgency == 'urgent' ? 2 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(
+                        Icons.notifications,
+                        color: AppTheme.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  senderName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              if (urgency == 'urgent')
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Text(
+                                    'URGENT',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          if (dormName.isNotEmpty)
+                            Text(
+                              dormName,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  body.length > 100 ? '${body.substring(0, 100)}...' : body,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _formatTimeAgo(createdAt),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  String _formatTimeAgo(String dateTimeStr) {
+    try {
+      final dateTime = DateTime.parse(dateTimeStr);
+      final difference = DateTime.now().difference(dateTime);
+
+      if (difference.inDays > 0) {
+        return '${difference.inDays}d ago';
+      } else if (difference.inHours > 0) {
+        return '${difference.inHours}h ago';
+      } else if (difference.inMinutes > 0) {
+        return '${difference.inMinutes}m ago';
+      } else {
+        return 'Just now';
+      }
+    } catch (e) {
+      return dateTimeStr;
+    }
   }
 
   Widget _buildQuickActionsSection() {
