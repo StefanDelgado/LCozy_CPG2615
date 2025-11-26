@@ -52,15 +52,26 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     try {
       final result = await _bookingService.getStudentBookings(widget.userEmail);
+      
+      print('[DEBUG STUDENT] API result: $result');
 
       if (result['success']) {
         final data = result['data'];
+        print('[DEBUG STUDENT] Full data structure: $data');
+        print('[DEBUG STUDENT] data.keys: ${data.keys}');
+        print('[DEBUG STUDENT] stats: ${data['stats']}');
+        print('[DEBUG STUDENT] stats.keys: ${data['stats']?.keys}');
+        print('[DEBUG STUDENT] recent_messages from stats: ${data['stats']?['recent_messages']}');
+        
         if (data['stats'] != null && data['student'] != null) {
           setState(() {
             dashboardData = {
               ...data['stats'],
               'student': data['student'],
             };
+            print('[DEBUG STUDENT] dashboardData after set: $dashboardData');
+            print('[DEBUG STUDENT] dashboardData.keys: ${dashboardData.keys}');
+            print('[DEBUG STUDENT] dashboardData[recent_messages]: ${dashboardData['recent_messages']}');
             isLoading = false;
           });
         } else {
@@ -70,6 +81,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         throw Exception(result['error'] ?? 'Failed to load dashboard');
       }
     } catch (e) {
+      print('[ERROR STUDENT] Dashboard fetch error: $e');
       setState(() {
         error = 'Failed to load dashboard: ${e.toString()}';
         // Set default empty values
@@ -443,10 +455,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   Widget _buildNotificationsSection() {
     final recentMessages = (dashboardData['recent_messages'] as List?) ?? [];
     
-    if (recentMessages.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
+    print('[DEBUG NOTIFICATIONS] dashboardData keys: ${dashboardData.keys}');
+    print('[DEBUG NOTIFICATIONS] recent_messages: $recentMessages');
+    print('[DEBUG NOTIFICATIONS] recent_messages length: ${recentMessages.length}');
+    
+    // TEMPORARY: Always show the section for testing
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -477,12 +490,53 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        ...recentMessages.take(3).map((message) {
-          final senderName = message['sender_name'] ?? 'Unknown';
-          final body = message['body'] ?? '';
-          final dormName = message['dorm_name'] ?? '';
-          final createdAt = message['created_at'] ?? '';
-          final urgency = message['urgency'] ?? 'normal';
+        if (recentMessages.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.notifications_none, color: Colors.grey[400], size: 32),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'No new notifications',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ...recentMessages.take(3).map((notification) {
+          // Determine notification type
+          final notificationType = notification['notification_type'] ?? 'message';
+          final isBookingUpdate = notificationType == 'booking_update';
+          
+          // Common fields
+          final body = notification['body'] ?? '';
+          final createdAt = notification['created_at'] ?? '';
+          final urgency = notification['urgency'] ?? 'normal';
+          final dormName = notification['dorm_name'] ?? '';
+          
+          // Type-specific fields
+          final senderName = notification['sender_name'] ?? 'System';
+          final roomType = notification['room_type'] ?? '';
+          
+          // Display title
+          final title = isBookingUpdate ? 'Booking Update' : senderName;
+          
+          // Icon and color based on type
+          final icon = isBookingUpdate ? Icons.event_note : Icons.message;
+          final iconColor = isBookingUpdate 
+              ? const Color(0xFF3498DB) 
+              : AppTheme.primary;
           
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
@@ -504,91 +558,114 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 ),
               ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.notifications,
-                        color: AppTheme.primary,
-                        size: 20,
+            child: InkWell(
+              onTap: () {
+                if (isBookingUpdate) {
+                  // Navigate to bookings tab
+                  setState(() {
+                    _selectedIndex = 1; // Bookings tab
+                  });
+                } else {
+                  // Navigate to messages
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatListScreen(
+                        currentUserEmail: widget.userEmail,
+                        currentUserRole: 'student',
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  senderName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                              if (urgency == 'urgent')
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Text(
-                                    'URGENT',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
+                  );
+                }
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: iconColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Icon(
+                          icon,
+                          color: iconColor,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    title,
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
+                                      fontSize: 14,
                                     ),
                                   ),
                                 ),
-                            ],
-                          ),
-                          if (dormName.isNotEmpty)
-                            Text(
-                              dormName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
+                                if (urgency == 'urgent')
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Text(
+                                      'URGENT',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                        ],
+                            if (dormName.isNotEmpty)
+                              Text(
+                                isBookingUpdate && roomType.isNotEmpty
+                                    ? '$dormName • $roomType'
+                                    : dormName,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    body.length > 100 ? '${body.substring(0, 100)}...' : body,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.black87,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  body.length > 100 ? '${body.substring(0, 100)}...' : body,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.black87,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _formatTimeAgo(createdAt),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey[500],
+                  const SizedBox(height: 8),
+                  Text(
+                    _formatTimeAgo(createdAt),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[500],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         }).toList(),

@@ -176,7 +176,8 @@ try {
                 m.created_at,
                 m.urgency,
                 u.name as sender_name,
-                d.name as dorm_name
+                d.name as dorm_name,
+                'message' as notification_type
             FROM messages m
             LEFT JOIN users u ON m.sender_id = u.user_id
             LEFT JOIN dormitories d ON m.dorm_id = d.dorm_id
@@ -192,6 +193,52 @@ try {
         $recent_messages = [];
     }
 
+    // Get recent booking updates (last 7 days)
+    try {
+        $bookingUpdatesStmt = $pdo->prepare("
+            SELECT 
+                b.booking_id,
+                b.status,
+                b.updated_at as created_at,
+                d.name as dorm_name,
+                r.room_type,
+                'booking_update' as notification_type,
+                CASE 
+                    WHEN b.status = 'approved' THEN 'Your booking has been approved!'
+                    WHEN b.status = 'rejected' THEN 'Your booking has been rejected'
+                    WHEN b.status = 'checkout_approved' THEN 'Your checkout request has been approved'
+                    WHEN b.status = 'checkout_requested' THEN 'Your checkout request is pending'
+                    WHEN b.status = 'completed' THEN 'Your booking has been completed'
+                    WHEN b.status = 'cancelled' THEN 'Your booking has been cancelled'
+                    ELSE CONCAT('Booking status: ', b.status)
+                END as body,
+                CASE 
+                    WHEN b.status IN ('rejected', 'cancelled') THEN 'urgent'
+                    ELSE 'normal'
+                END as urgency
+            FROM bookings b
+            JOIN rooms r ON b.room_id = r.room_id
+            JOIN dormitories d ON r.dorm_id = d.dorm_id
+            WHERE b.student_id = ?
+            AND b.updated_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            AND b.status IN ('approved', 'rejected', 'checkout_approved', 'checkout_requested', 'completed', 'cancelled')
+            ORDER BY b.updated_at DESC
+            LIMIT 5
+        ");
+        $bookingUpdatesStmt->execute([$student_id]);
+        $booking_updates = $bookingUpdatesStmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('Booking updates query error: ' . $e->getMessage());
+        $booking_updates = [];
+    }
+
+    // Combine and sort notifications
+    $all_notifications = array_merge($recent_messages, $booking_updates);
+    usort($all_notifications, function($a, $b) {
+        return strtotime($b['created_at']) - strtotime($a['created_at']);
+    });
+    $all_notifications = array_slice($all_notifications, 0, 5);
+
     // Return success response
     echo json_encode([
         'ok' => true,
@@ -205,7 +252,7 @@ try {
             'payments_due' => $payments_due,
             'unread_messages' => $unread_messages,
             'active_bookings' => $formatted_bookings,
-            'recent_messages' => $recent_messages
+            'recent_messages' => $all_notifications
         ]
     ]);
 
