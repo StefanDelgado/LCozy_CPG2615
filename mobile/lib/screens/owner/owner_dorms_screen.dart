@@ -8,6 +8,7 @@ import '../../widgets/owner/dorms/add_dorm_dialog.dart';
 import '../../widgets/owner/dorms/edit_dorm_dialog.dart';
 import 'room_management_screen.dart';
 import 'owner_reviews_screen.dart';
+import 'dorm_details_screen.dart';
 
 /// Screen for managing owner's dormitories
 class OwnerDormsScreen extends StatefulWidget {
@@ -209,6 +210,17 @@ class _OwnerDormsScreenState extends State<OwnerDormsScreen> {
                 builder: (_) => OwnerReviewsScreen(
                   dormId: int.tryParse(dorm['dorm_id'].toString()) ?? 0,
                   dormName: dorm['name'] ?? '',
+                ),
+              ),
+            );
+          },
+          onViewDetails: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DormDetailsScreen(
+                  dorm: dorm,
+                  ownerEmail: widget.ownerEmail,
                 ),
               ),
             );

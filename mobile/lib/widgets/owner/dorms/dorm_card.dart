@@ -7,6 +7,7 @@ class DormCard extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback? onViewReviews;
+  final VoidCallback? onViewDetails;
 
   const DormCard({
   super.key,
@@ -15,6 +16,7 @@ class DormCard extends StatelessWidget {
   required this.onEdit,
   required this.onDelete,
   this.onViewReviews,
+  this.onViewDetails,
   });
 
   @override
@@ -168,9 +170,22 @@ class DormCard extends StatelessWidget {
                       onEdit();
                     } else if (value == 'delete') {
                       onDelete();
+                    } else if (value == 'details') {
+                      onViewDetails?.call();
                     }
                   },
                   itemBuilder: (BuildContext context) => [
+                    if (onViewDetails != null)
+                      const PopupMenuItem(
+                        value: 'details',
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Color(0xFF9333EA), size: 20),
+                            SizedBox(width: 12),
+                            Text('View Details & Certifications'),
+                          ],
+                        ),
+                      ),
                     const PopupMenuItem(
                       value: 'edit',
                       child: Row(
