@@ -116,14 +116,9 @@ try {
         ");
         $stmt->execute([$booking_id]);
 
-        // Free up the room (update room availability if needed)
-        $stmt = $pdo->prepare("
-            UPDATE rooms r
-            JOIN bookings b ON r.room_id = b.room_id
-            SET r.is_available = 1
-            WHERE b.booking_id = ?
-        ");
-        $stmt->execute([$booking_id]);
+        // Note: Room availability is managed separately based on active bookings
+        // We don't automatically set rooms to vacant when a booking is cancelled
+        // because there might be other active bookings for the same room (shared rooms)
 
         $pdo->commit();
 
