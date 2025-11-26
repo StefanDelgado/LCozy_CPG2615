@@ -65,9 +65,11 @@ class StudentReservationsScreen extends StatelessWidget {
                     onTap: () {
                       final isActiveBooking = (status == 'active' || status == 'approved' || 
                                                 status.contains('checkout'));
+                      final isCompletedBooking = status == 'completed';
+                      final isPendingBooking = status == 'pending';
                       
-                      if (isActiveBooking) {
-                        // Navigate to booking details for active bookings
+                      if (isActiveBooking || isCompletedBooking || isPendingBooking) {
+                        // Navigate to booking details for active, completed, and pending bookings
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -79,7 +81,7 @@ class StudentReservationsScreen extends StatelessWidget {
                           ),
                         );
                       } else {
-                        // Navigate to dorm details for other statuses
+                        // Navigate to dorm details for other statuses (cancelled, rejected)
                         Navigator.push(
                           context,
                           MaterialPageRoute(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../utils/app_theme.dart';
 import '../../services/checkout_service.dart';
 import '../../services/booking_service.dart';
+import 'submit_review_screen.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -36,15 +37,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final bookingType = widget.booking['booking_type'] ?? 'shared';
     final daysUntil = widget.booking['days_until_checkin'] ?? 0;
 
-    // Check if user can request checkout
+    // Check if user can request checkout (only when active)
     final canRequestCheckout =
-        (status == 'active' || status == 'approved') &&
+        status == 'active' &&
         !_hasCheckoutRequest();
 
-    // Check if user can cancel booking (pending or approved, before payment)
+    // Check if user can cancel booking (only pending or approved, before payment)
     final canCancelBooking = 
         (status == 'pending' || status == 'approved') &&
         !_hasPaymentMade();
+
+    // Check if user can write a review (only when completed)
+    final canWriteReview = status == 'completed';
 
     return Scaffold(
       appBar: AppBar(
@@ -208,6 +212,67 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Request to check out from this booking',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+
+                  // Write Review Button (for completed bookings)
+                  if (canWriteReview) ...[
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: _isLoading ? null : () {
+                          final bookingId = widget.booking['booking_id'] is int
+                              ? widget.booking['booking_id']
+                              : int.tryParse(widget.booking['booking_id']?.toString() ?? '0') ?? 0;
+                          final dormId = dorm['dorm_id']?.toString() ?? '';
+                          
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SubmitReviewScreen(
+                                dormId: dormId,
+                                studentEmail: widget.userEmail,
+                                bookingId: bookingId,
+                                studentId: widget.studentId,
+                              ),
+                            ),
+                          ).then((submitted) {
+                            if (submitted == true) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Review submitted successfully!'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          });
+                        },
+                        icon: const Icon(Icons.rate_review, size: 20),
+                        label: const Text(
+                          'Write Review',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Share your experience with this dorm',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],

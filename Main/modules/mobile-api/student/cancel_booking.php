@@ -93,7 +93,7 @@ try {
                 notes = CONCAT(
                     COALESCE(notes, ''),
                     IF(COALESCE(notes, '') != '', '\n', ''),
-                    'Cancelled by student on ', NOW(), 
+                    'Cancelled by student on ', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), 
                     IF(? != '', CONCAT('. Reason: ', ?), '')
                 ),
                 updated_at = NOW()
@@ -108,7 +108,7 @@ try {
                 notes = CONCAT(
                     COALESCE(notes, ''),
                     IF(COALESCE(notes, '') != '', '\n', ''),
-                    'Payment cancelled due to booking cancellation on ', NOW()
+                    'Payment cancelled due to booking cancellation on ', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s')
                 ),
                 updated_at = NOW()
             WHERE booking_id = ? AND status IN ('pending', 'submitted')
