@@ -12,17 +12,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$name || !$email || !$pass || !$secret) {
         $error = "All fields are required.";
+
     } elseif ($secret !== ADMIN_SECRET_KEY) {
         $error = "Invalid admin registration key.";
+
+    // New password rule (8–16 chars, uppercase, lowercase, special char)
+    } elseif (!preg_match('/^(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*()\-_=+\[\]{};:,.<>\/?]).{8,16}$/', $pass)) {
+        $error = "Password must be 8–16 characters and include at least 1 uppercase, 1 lowercase, and 1 special character.";
+
     } else {
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email=?");
         $stmt->execute([$email]);
+
         if ($stmt->fetchColumn() > 0) {
             $error = "Email already registered.";
         } else {
             $hash = password_hash($pass, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (name,email,password,role) VALUES (?,?,?,?)");
-            $stmt->execute([$name,$email,$hash,'admin']);
+
+            $stmt = $pdo->prepare("INSERT INTO users (name,email,password,role,verified) VALUES (?,?,?,?,1)");
+            $stmt->execute([$name, $email, $hash, 'admin']);
 
             $success = "Admin account created successfully! You can now login.";
         }
@@ -76,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <label>Email
         <input type="email" name="email" required>
       </label>
-      <label>Password
+      <label>Password (8–16 chars, 1 uppercase, 1 lowercase, 1 special)
         <input type="password" name="password" required>
       </label>
       <label>Admin Registration Key
