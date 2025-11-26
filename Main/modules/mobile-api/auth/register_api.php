@@ -59,8 +59,8 @@ try {
     // Insert new user
     $hash = password_hash($password, PASSWORD_DEFAULT);
     $stmt = $pdo->prepare("
-        INSERT INTO users (name, email, password, role, created_at, verified) 
-        VALUES (?, ?, ?, ?, NOW(), ?)
+        INSERT INTO users (name, email, password, role, created_at, verified, terms_accepted, terms_accepted_at, terms_version) 
+        VALUES (?, ?, ?, ?, NOW(), ?, 1, NOW(), 'v1.0')
     ");
     $stmt->execute([$name, $email, $hash, $role, $verified_status]);
 

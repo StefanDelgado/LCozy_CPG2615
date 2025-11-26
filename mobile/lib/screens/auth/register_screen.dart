@@ -25,6 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _errorMessage = '';
   String _emailError = '';
   String _passwordError = '';
+  bool _termsAccepted = false;
 
   @override
   void dispose() {
@@ -123,6 +124,100 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  void _showTermsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Terms and Conditions'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'LCozy Dormitory Management System',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '1. Acceptance of Terms',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'By registering and using the LCozy Dormitory Management System, you agree to be bound by these Terms and Conditions.',
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '2. User Responsibilities',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              if (_selectedRole == 'Student') ...[
+                const Text('For Students:'),
+                const Text('• Provide accurate and truthful information'),
+                const Text('• Pay rent and fees on time'),
+                const Text('• Respect dorm rules and regulations'),
+                const Text('• Report issues promptly'),
+                const Text('• Maintain cleanliness in shared spaces'),
+              ] else ...[
+                const Text('For Dorm Owners:'),
+                const Text('• Provide accurate facility information'),
+                const Text('• Maintain safe living conditions'),
+                const Text('• Address tenant concerns promptly'),
+                const Text('• Comply with local regulations'),
+                const Text('• Process payments fairly'),
+              ],
+              const SizedBox(height: 12),
+              const Text(
+                '3. Privacy and Data Protection',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'We collect and protect personal information necessary for dormitory management. Your data will not be shared without consent.',
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '4. Payment Terms',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'All payments through the system. Late payments may incur penalties.',
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '5. Cancellation Policy',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'Students may cancel bookings before payment without penalty. After payment, cancellations require owner approval.',
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '6. Liability',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'LCozy acts as a platform. We are not responsible for disputes, property damage, or personal injuries.',
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '7. Termination',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'We reserve the right to terminate accounts that violate terms or engage in fraudulent activities.',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleRegister() async {
     // Clear previous error
     setState(() {
@@ -136,6 +231,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _confirmPasswordController.text.trim().isEmpty) {
       setState(() {
         _errorMessage = 'Please fill in all fields.';
+      });
+      return;
+    }
+
+    // Check terms acceptance
+    if (!_termsAccepted) {
+      setState(() {
+        _errorMessage = 'Please accept the Terms and Conditions to continue.';
       });
       return;
     }
@@ -390,6 +493,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
                       ),
+                    const SizedBox(height: 16),
+
+                    // Terms and Conditions Checkbox
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _termsAccepted ? AppTheme.primary : Colors.grey[300]!,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Checkbox(
+                            value: _termsAccepted,
+                            activeColor: AppTheme.primary,
+                            onChanged: (value) {
+                              setState(() {
+                                _termsAccepted = value ?? false;
+                              });
+                            },
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _termsAccepted = !_termsAccepted;
+                                });
+                              },
+                              child: RichText(
+                                text: TextSpan(
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey[800],
+                                  ),
+                                  children: [
+                                    const TextSpan(text: 'I agree to the '),
+                                    WidgetSpan(
+                                      child: GestureDetector(
+                                        onTap: _showTermsDialog,
+                                        child: Text(
+                                          'Terms and Conditions',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: AppTheme.primary,
+                                            fontWeight: FontWeight.bold,
+                                            decoration: TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 16),
 
                     // Error Message

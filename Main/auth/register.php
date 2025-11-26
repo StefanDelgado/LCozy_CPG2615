@@ -17,10 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pass  = $_POST['password'] ?? '';
     $confirm_pass = $_POST['confirm_password'] ?? '';
     $role  = $_POST['role'] ?? 'student';
+    $terms_accepted = isset($_POST['terms_accepted']) && $_POST['terms_accepted'] === 'on';
 
     // VALIDATION ----------------------------
     if (!$name || !$email || !$pass || !$confirm_pass || !$phone) {
         $error = "All fields are required, including phone number.";
+
+    } elseif (!$terms_accepted) {
+        $error = "You must accept the Terms and Conditions to register.";
 
     } elseif ($pass !== $confirm_pass) {
         $error = "Passwords do not match.";
@@ -71,8 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Insert user
             $stmt = $pdo->prepare("
-                INSERT INTO users (name, email, phone, password, role, verified)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO users (name, email, phone, password, role, verified, terms_accepted, terms_accepted_at, terms_version)
+                VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), 'v1.0')
             ");
             $stmt->execute([$name, $email, $phone, $hash, $role, $verified_status]);
 
@@ -248,11 +252,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </select>
       </label>
 
+      <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.7rem; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+        <input type="checkbox" name="terms_accepted" id="terms_accepted" required style="width: auto; margin: 0;">
+        <label for="terms_accepted" style="margin: 0; font-size: 0.85rem; cursor: pointer;">
+          I agree to the <a href="javascript:void(0)" onclick="showTerms()" style="color: #6a5acd; text-decoration: underline; font-weight: 600;">Terms and Conditions</a>
+        </label>
+      </div>
+
       <button type="submit">Register</button>
     </form>
 
     <p>Already have an account? <a href="login.php">Login</a></p>
     <p><a href="register_admin.php" style="font-size:0.85rem;color:#999;">Register as Admin</a></p>
   </div>
+
+  <script>
+  function showTerms() {
+    alert(`LCozy Dormitory Management System - Terms and Conditions
+
+1. Acceptance of Terms
+By registering and using the LCozy system, you agree to these Terms and Conditions.
+
+2. User Responsibilities
+Students: Provide accurate information, pay rent on time, respect dorm rules, report issues promptly.
+Owners: Provide accurate facility information, maintain safe conditions, address concerns promptly.
+
+3. Privacy and Data Protection
+We protect your personal information and will not share it without consent.
+
+4. Payment Terms
+All payments through the system. Late payments may incur penalties.
+
+5. Cancellation Policy
+Students may cancel bookings before payment without penalty.
+
+6. Liability
+LCozy acts as a platform. We are not responsible for disputes or damages.
+
+7. Termination
+We reserve the right to terminate accounts that violate terms.
+
+For full terms, please contact support.`);
+  }
+  </script>
 </body>
 </html>
