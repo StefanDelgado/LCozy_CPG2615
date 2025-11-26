@@ -7,6 +7,7 @@ import '../../widgets/student/view_details/overview_tab.dart';
 import '../../widgets/student/view_details/rooms_tab.dart';
 import '../../widgets/student/view_details/reviews_tab.dart';
 import '../../widgets/student/view_details/contact_tab.dart';
+import '../../widgets/student/view_details/certifications_tab.dart';
 import '../../widgets/student/tabs/location_tab.dart';
 import '../../widgets/student/view_details/stat_chip.dart';
 import '../shared/chat_conversation_screen.dart';
@@ -41,7 +42,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
     fetchDormDetails();
   }
 
@@ -382,6 +383,7 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
                     Tab(text: 'Overview'),
                     Tab(text: 'Rooms'),
                     Tab(text: 'Reviews'),
+                    Tab(text: 'Certifications'),
                     Tab(text: 'Location'),
                     Tab(text: 'Contact'),
                   ],
@@ -404,6 +406,10 @@ class _ViewDetailsScreenState extends State<ViewDetailsScreen> with SingleTicker
                         studentEmail: widget.userEmail,
                       ),
                       ReviewsTab(reviews: _reviews),
+                      CertificationsTab(
+                        dormId: dormDetails['dorm_id'] as int? ?? 
+                               int.tryParse(widget.property['dorm_id']?.toString() ?? '0') ?? 0,
+                      ),
                       LocationTab(dorm: dormDetails),
                       ContactTab(
                         owner: dormDetails['owner'] as Map<String, dynamic>? ?? {},
