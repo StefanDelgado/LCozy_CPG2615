@@ -231,7 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="text" name="phone" required placeholder="e.g. 09171234567">
       </label>
 
-      <label>Password (8–16 characters, must include uppercase, lowercase & special char)
+      <label>Password
         <input type="password" name="password" minlength="8" maxlength="16" required>
       </label>
 
