@@ -177,6 +177,7 @@ if ($user['role'] === 'student') {
         <a href="/modules/shared/available_dorms.php">Available Dorms</a>
         <a href="/modules/student/student_reservations.php">My Reservations</a>
         <a href="/modules/student/student_payments.php">Payment Management</a>
+        <li><a href="../auth/change_password.php">Change Password</a></li>
 
 
       <?php elseif ($user['role'] === 'owner'): ?>
@@ -185,6 +186,7 @@ if ($user['role'] === 'student') {
         <a href="/modules/owner/owner_tenants.php">Tenant Management</a>
         <a href="/modules/owner/owner_bookings.php">Booking Management</a>
         <a href="/modules/owner/owner_payments.php">Payment Management</a>
+        <li><a href="../auth/change_password.php">Change Password</a></li>
       <?php endif; ?>
     </nav>
 

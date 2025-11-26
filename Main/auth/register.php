@@ -19,22 +19,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role  = $_POST['role'] ?? 'student';
 
     // VALIDATION ----------------------------
-if (!$name || !$email || !$pass || !$confirm_pass || !$phone) {
-    $error = "All fields are required, including phone number.";
+    if (!$name || !$email || !$pass || !$confirm_pass || !$phone) {
+        $error = "All fields are required, including phone number.";
 
-} elseif ($pass !== $confirm_pass) {
-    $error = "Passwords do not match.";
+    } elseif ($pass !== $confirm_pass) {
+        $error = "Passwords do not match.";
 
-} elseif (!preg_match('/^(?=.*[!@#$%^&*()\-_=+\[\]{};:,.<>\/?]).{4,8}$/', $pass)) {
-    // 4–8 characters AND must include a special character
-    $error = "Password must be 4–8 characters long and must include at least one special character.";
+    // NEW PASSWORD RULES (8–16 chars, uppercase, lowercase, special char)
+    } elseif (!preg_match('/^(?=.*[A-Z])(?=.*[a-z])(?=.*[\W_]).{8,16}$/', $pass)) {
+        $error = "Password must be 8–16 characters long and include uppercase, lowercase, and a special character.";
 
-} elseif (!in_array($role, ['student', 'owner'])) {
-    $error = "Invalid role selected.";
+    } elseif (!in_array($role, ['student', 'owner'])) {
+        $error = "Invalid role selected.";
 
-} elseif (!preg_match('/^[0-9+\-\s]{7,15}$/', $phone)) {
-    $error = "Invalid phone number format.";
-}
+    } elseif (!preg_match('/^[0-9+\-\s]{7,15}$/', $phone)) {
+        $error = "Invalid phone number format.";
+    }
 
     if (!$error) {
 
@@ -57,9 +57,9 @@ if (!$name || !$email || !$pass || !$confirm_pass || !$phone) {
 
             // Email cleanliness check
             $is_clean = true;
-            if (preg_match('/[._%+-]{2,}/', $email)) $is_clean = false; // no repeated symbols
-            if (preg_match('/\.\./', $email)) $is_clean = false;        // no double dots
-            if (preg_match('/^[._%+-]|[._%+-]$/', $email)) $is_clean = false; // no special char at start/end
+            if (preg_match('/[._%+-]{2,}/', $email)) $is_clean = false;
+            if (preg_match('/\.\./', $email)) $is_clean = false;
+            if (preg_match('/^[._%+-]|[._%+-]$/', $email)) $is_clean = false;
 
             if (in_array($email_domain, $fake_domains)) {
                 $verified_status = -1; // auto reject
@@ -231,12 +231,12 @@ if (!$name || !$email || !$pass || !$confirm_pass || !$phone) {
         <input type="text" name="phone" required placeholder="e.g. 09171234567">
       </label>
 
-      <label>Password (4–8 characters)
-        <input type="password" name="password" minlength="4" maxlength="8" required>
+      <label>Password (8–16 characters, must include uppercase, lowercase & special char)
+        <input type="password" name="password" minlength="8" maxlength="16" required>
       </label>
 
       <label>Confirm Password
-        <input type="password" name="confirm_password" minlength="4" maxlength="8" required>
+        <input type="password" name="confirm_password" minlength="8" maxlength="16" required>
       </label>
 
       <label>Role

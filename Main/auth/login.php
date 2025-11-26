@@ -12,30 +12,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email = trim($_POST['email'] ?? '');
   $password = $_POST['password'] ?? '';
 
-  $stmt = $pdo->prepare("SELECT user_id, name, email, password, role, verified FROM users WHERE email = ?");
-  $stmt->execute([$email]);
-  $user = $stmt->fetch();
+  // ENFORCE PASSWORD COMPLEXITY
+  $password_pattern = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,16}$/';
 
-  if ($user && password_verify($password, $user['password'])) {
-    // Check verification status: 1 = verified, 0 = pending, -1 = rejected
-    if ((int)$user['verified'] !== 1) {
-      if ((int)$user['verified'] === -1) {
-        $error = 'Your account was rejected. Contact support.';
-      } else {
-        $error = 'Please activate your account. Check your email for the activation link.';
-      }
-    } else {
-      $_SESSION['user'] = [
-        'user_id' => $user['user_id'],
-        'name'    => $user['name'],
-        'email'   => $user['email'],
-        'role'    => $user['role'],
-      ];
-
-      redirect_to_dashboard($user['role']);
-    }
+  if (!preg_match($password_pattern, $password)) {
+      $error = "Password must be 8–16 characters with uppercase, lowercase, number, and special character.";
   } else {
-    $error = 'Invalid email or password';
+
+      // PROCEED WITH LOGIN
+      $stmt = $pdo->prepare("SELECT user_id, name, email, password, role, verified FROM users WHERE email = ?");
+      $stmt->execute([$email]);
+      $user = $stmt->fetch();
+
+      if ($user && password_verify($password, $user['password'])) {
+
+        // Check verification status
+        if ((int)$user['verified'] !== 1) {
+          if ((int)$user['verified'] === -1) {
+            $error = 'Your account was rejected. Contact support.';
+          } else {
+            $error = 'Please activate your account. Check your email for the activation link.';
+          }
+        } else {
+
+          // SUCCESSFUL LOGIN
+          $_SESSION['user'] = [
+            'user_id' => $user['user_id'],
+            'name'    => $user['name'],
+            'email'   => $user['email'],
+            'role'    => $user['role'],
+          ];
+
+          redirect_to_dashboard($user['role']);
+        }
+
+      } else {
+        $error = 'Invalid email or password.';
+      }
   }
 }
 ?>
@@ -45,7 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="utf-8">
   <title>CozyDorms — Login</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-
   <link rel="stylesheet" href="../assets/style.css">
 
   <style>
