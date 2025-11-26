@@ -59,17 +59,22 @@ class CheckoutService {
     required int ownerId,
   }) async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            '${ApiConstants.baseUrl}/modules/mobile-api/checkout/get_owner_requests.php?owner_id=$ownerId'),
-      );
+      final url = '${ApiConstants.baseUrl}/modules/mobile-api/checkout/get_owner_requests.php?owner_id=$ownerId';
+      print('[DEBUG] Fetching checkout requests from: $url');
+      
+      final response = await http.get(Uri.parse(url));
+      
+      print('[DEBUG] Response status: ${response.statusCode}');
+      print('[DEBUG] Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
+        return decoded;
       } else {
         return {'success': false, 'error': 'Failed to fetch checkout requests'};
       }
     } catch (e) {
+      print('[ERROR] getOwnerRequests exception: $e');
       return {'success': false, 'error': 'Connection error: $e'};
     }
   }

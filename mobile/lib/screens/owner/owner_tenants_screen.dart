@@ -88,24 +88,35 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
   /// Fetches checkout requests from the API
   Future<void> _fetchCheckoutRequests() async {
     try {
+      print('[DEBUG] Fetching checkout requests for owner_id: ${widget.ownerId}');
       final result = await CheckoutService.getOwnerRequests(
         ownerId: widget.ownerId,
       );
 
+      print('[DEBUG] Checkout requests response: $result');
+
       if (result['success'] == true) {
         final data = result['data'];
+        print('[DEBUG] Data: $data');
+        
         // Get only pending (requested status) requests for the checkout tab
         final grouped = data['grouped'] ?? {};
+        print('[DEBUG] Grouped: $grouped');
+        
+        final checkoutPending = grouped['checkout_pending'] ?? [];
+        print('[DEBUG] Checkout pending count: ${checkoutPending.length}');
         
         setState(() {
-          _checkoutRequests = List<Map<String, dynamic>>.from(
-            grouped['pending'] ?? []
-          );
+          _checkoutRequests = List<Map<String, dynamic>>.from(checkoutPending);
         });
+        
+        print('[DEBUG] Set _checkoutRequests with ${_checkoutRequests.length} items');
+      } else {
+        print('[DEBUG] Error: ${result['error']}');
       }
     } catch (e) {
       // Silently fail for checkout requests
-      print('Failed to load checkout requests: $e');
+      print('[ERROR] Failed to load checkout requests: $e');
     }
   }
 
