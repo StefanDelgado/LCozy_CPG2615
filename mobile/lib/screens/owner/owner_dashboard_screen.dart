@@ -62,18 +62,29 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     
     try {
       final result = await _dashboardService.getOwnerDashboard(widget.ownerEmail);
+      
+      print('[DEBUG] Dashboard API result: $result');
 
       if (result['success'] == true) {
         setState(() {
           dashboardData = result['data'];
+          print('[DEBUG] Dashboard data: $dashboardData');
+          
           // Extract owner name and ID from API response if available
           if (dashboardData['owner_info'] != null) {
+            print('[DEBUG] owner_info found: ${dashboardData['owner_info']}');
+            
             if (dashboardData['owner_info']['name'] != null) {
               ownerName = dashboardData['owner_info']['name'];
             }
             if (dashboardData['owner_info']['owner_id'] != null) {
               ownerId = dashboardData['owner_info']['owner_id'];
+              print('[DEBUG] Owner ID set to: $ownerId');
+            } else {
+              print('[DEBUG] owner_id is null in owner_info');
             }
+          } else {
+            print('[DEBUG] owner_info is null');
           }
           isLoading = false;
         });
@@ -81,6 +92,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         throw Exception(result['error'] ?? 'Failed to load dashboard data');
       }
     } catch (e) {
+      print('[ERROR] Dashboard fetch error: $e');
       setState(() {
         dashboardData = {
           'stats': {
