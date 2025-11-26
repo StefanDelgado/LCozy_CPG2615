@@ -139,8 +139,10 @@ try {
 
 } catch (PDOException $e) {
     error_log('Database error in cancel_booking.php: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Database error occurred']);
+    error_log('Stack trace: ' . $e->getTraceAsString());
+    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
 } catch (Exception $e) {
     error_log('Error in cancel_booking.php: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    error_log('Stack trace: ' . $e->getTraceAsString());
+    echo json_encode(['success' => false, 'error' => 'Error: ' . $e->getMessage()]);
 }
