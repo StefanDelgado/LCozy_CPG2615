@@ -94,15 +94,13 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
 
       if (result['success'] == true) {
         final data = result['data'];
-        // Get only pending requests for the checkout tab
-        final allRequests = List<Map<String, dynamic>>.from(
-          data['requests'] ?? []
-        );
+        // Get only pending (requested status) requests for the checkout tab
+        final grouped = data['grouped'] ?? {};
         
         setState(() {
-          _checkoutRequests = allRequests.where((req) => 
-            req['status']?.toString().toLowerCase() == 'requested'
-          ).toList();
+          _checkoutRequests = List<Map<String, dynamic>>.from(
+            grouped['pending'] ?? []
+          );
         });
       }
     } catch (e) {
@@ -488,8 +486,8 @@ class _OwnerTenantsScreenState extends State<OwnerTenantsScreen> {
     final tenantName = request['tenant_name'] ?? 'Unknown Tenant';
     final dormName = request['dorm_name'] ?? 'N/A';
     final roomType = request['room_type'] ?? 'N/A';
-    final reason = request['reason'];
-    final requestDate = request['request_date'] ?? 'N/A';
+    final reason = request['request_reason'];
+    final requestDate = request['created_at'] ?? 'N/A';
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
