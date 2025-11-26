@@ -203,19 +203,30 @@ $total_revenue = array_sum(array_column($current_tenants, 'total_paid'));
 
                 <!-- Action Buttons -->
                 <div style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
-                    <button onclick="openMessageModal(<?= $tenant['student_id'] ?>, <?= $tenant['dorm_id'] ?>, '<?= htmlspecialchars($tenant['tenant_name']) ?>')" 
-                            class="btn btn-primary" style="flex: 1;">
-                        <i class="fa fa-envelope"></i> Send Message
-                    </button>
-                    <button onclick="openPaymentModal(<?= $tenant['booking_id'] ?>, <?= $tenant['student_id'] ?>, '<?= htmlspecialchars($tenant['tenant_name']) ?>')" 
-                            class="btn btn-secondary" style="flex: 1;">
-                        <i class="fa fa-dollar-sign"></i> Add Payment
-                    </button>
-                    <button onclick="openPaymentHistoryModal(<?= $tenant['tenant_id'] ?>, '<?= htmlspecialchars($tenant['tenant_name']) ?>')" 
-                            class="btn btn-outline" style="flex: 1;">
-                        <i class="fa fa-history"></i> View History
-                    </button>
-                </div>
+    <button onclick="openMessageModal(<?= $tenant['student_id'] ?>, <?= $tenant['dorm_id'] ?>, '<?= htmlspecialchars($tenant['tenant_name']) ?>')" 
+            class="btn btn-primary" style="flex: 1;">
+        <i class="fa fa-envelope"></i> Send Message
+    </button>
+
+    <button onclick="openPaymentModal(<?= $tenant['booking_id'] ?>, <?= $tenant['student_id'] ?>, '<?= htmlspecialchars($tenant['tenant_name']) ?>')" 
+            class="btn btn-secondary" style="flex: 1;">
+        <i class="fa fa-dollar-sign"></i> Add Payment
+    </button>
+
+    <button onclick="openPaymentHistoryModal(<?= $tenant['tenant_id'] ?>, '<?= htmlspecialchars($tenant['tenant_name']) ?>')" 
+            class="btn btn-outline" style="flex: 1;">
+        <i class="fa fa-history"></i> View History
+    </button>
+
+    <!-- NEW CHECKOUT BUTTON -->
+    <form method="POST" action="tenant_checkout.php" style="flex: 1;">
+        <input type="hidden" name="tenant_id" value="<?= $tenant['tenant_id'] ?>">
+        <button type="submit" class="btn btn-danger" style="width: 100%; background: #e63946; color: white;">
+            <i class="fa fa-sign-out-alt"></i> Check-Out
+        </button>
+    </form>
+</div>
+
             </div>
         <?php endforeach; ?>
     <?php endif; ?>
