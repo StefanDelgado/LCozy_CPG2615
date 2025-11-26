@@ -107,6 +107,7 @@ class CheckoutService {
   static Future<Map<String, dynamic>> disapproveCheckout({
     required int requestId,
     required int ownerId,
+    String? reason,
   }) async {
     try {
       final response = await http.post(
@@ -115,6 +116,7 @@ class CheckoutService {
         body: jsonEncode({
           'request_id': requestId,
           'owner_id': ownerId,
+          'reason': reason ?? '',
         }),
       );
 

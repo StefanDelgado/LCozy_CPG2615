@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'student_home_screen.dart';
 import 'view_details_screen.dart';
 import 'submit_review_screen.dart';
+import 'booking_details_screen.dart';
 
 class StudentReservationsScreen extends StatelessWidget {
   final List<dynamic> bookings;
@@ -63,19 +64,37 @@ class StudentReservationsScreen extends StatelessWidget {
                           )
                         : null,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ViewDetailsScreen(
-                            property: {
-                              'dorm_id': dorm['dorm_id']?.toString() ?? '',
-                              'name': dorm['name']?.toString() ?? '',
-                              'address': dorm['address']?.toString() ?? '',
-                            },
-                            userEmail: userEmail,
+                      final isActiveBooking = (status == 'active' || status == 'approved' || 
+                                                status.contains('checkout'));
+                      
+                      if (isActiveBooking) {
+                        // Navigate to booking details for active bookings
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BookingDetailsScreen(
+                              booking: booking,
+                              userEmail: userEmail,
+                              studentId: studentId,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      } else {
+                        // Navigate to dorm details for other statuses
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ViewDetailsScreen(
+                              property: {
+                                'dorm_id': dorm['dorm_id']?.toString() ?? '',
+                                'name': dorm['name']?.toString() ?? '',
+                                'address': dorm['address']?.toString() ?? '',
+                              },
+                              userEmail: userEmail,
+                            ),
+                          ),
+                        );
+                      }
                     },
                   ),
                 );

@@ -37,6 +37,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   Map<String, dynamic> dashboardData = {};
   bool isLoading = true;
   String ownerName = ''; // Store owner name
+  int? ownerId; // Store owner ID
 
   @override
   void initState() {
@@ -65,9 +66,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       if (result['success'] == true) {
         setState(() {
           dashboardData = result['data'];
-          // Extract owner name from API response if available
-          if (dashboardData['owner_info'] != null && dashboardData['owner_info']['name'] != null) {
-            ownerName = dashboardData['owner_info']['name'];
+          // Extract owner name and ID from API response if available
+          if (dashboardData['owner_info'] != null) {
+            if (dashboardData['owner_info']['name'] != null) {
+              ownerName = dashboardData['owner_info']['name'];
+            }
+            if (dashboardData['owner_info']['owner_id'] != null) {
+              ownerId = dashboardData['owner_info']['owner_id'];
+            }
           }
           isLoading = false;
         });
@@ -141,7 +147,10 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                   OwnerBookingScreen(ownerEmail: widget.ownerEmail),
                   OwnerMessagesList(ownerEmail: widget.ownerEmail),
                   OwnerPaymentsScreen(ownerEmail: widget.ownerEmail),
-                  OwnerTenantsScreen(ownerEmail: widget.ownerEmail),
+                  OwnerTenantsScreen(
+                    ownerEmail: widget.ownerEmail,
+                    ownerId: ownerId ?? 0,
+                  ),
                   Container(), // Placeholder for settings
                 ],
               ),

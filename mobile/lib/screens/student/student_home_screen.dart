@@ -10,6 +10,7 @@ import '../../widgets/student/home/empty_bookings_widget.dart';
 import 'submit_review_screen.dart';
 import 'view_details_screen.dart';
 import 'student_reservations.dart';
+import 'booking_details_screen.dart';
 // Temporary imports from legacy structure
 import 'browse_dorms_screen.dart';
 import 'student_payments_screen.dart';
@@ -354,24 +355,47 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           ...visibleBookings.map((booking) {
             final status = booking['status'].toString().toLowerCase();
             final dorm = booking['dorm'] ?? {};
+            final studentId = dashboardData['student']?['id'] ?? 0;
+            final isActiveBooking = (status == 'active' || status == 'approved' || 
+                                      status.contains('checkout'));
+            
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ViewDetailsScreen(
-                          property: {
-                            'dorm_id': dorm['dorm_id']?.toString() ?? '',
-                            'name': dorm['name']?.toString() ?? '',
-                            'address': dorm['address']?.toString() ?? '',
-                          },
-                          userEmail: widget.userEmail,
+                    if (isActiveBooking) {
+                      // Navigate to booking details for active bookings
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BookingDetailsScreen(
+                            booking: booking,
+                            userEmail: widget.userEmail,
+                            studentId: studentId,
+                          ),
                         ),
-                      ),
-                    );
+                      ).then((shouldRefresh) {
+                        if (shouldRefresh == true) {
+                          fetchDashboardData();
+                        }
+                      });
+                    } else {
+                      // Navigate to dorm details for other statuses
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ViewDetailsScreen(
+                            property: {
+                              'dorm_id': dorm['dorm_id']?.toString() ?? '',
+                              'name': dorm['name']?.toString() ?? '',
+                              'address': dorm['address']?.toString() ?? '',
+                            },
+                            userEmail: widget.userEmail,
+                          ),
+                        ),
+                      );
+                    }
                   },
                   child: BookingCard(booking: booking),
                 ),

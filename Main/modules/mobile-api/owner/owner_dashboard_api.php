@@ -155,6 +155,9 @@ try {
     echo json_encode([
         'success' => true,
         'data' => [
+            'owner_info' => [
+                'owner_id' => (int)$owner_id
+            ],
             'stats' => [
                 'rooms' => (int)$total_rooms,
                 'tenants' => (int)$total_tenants,

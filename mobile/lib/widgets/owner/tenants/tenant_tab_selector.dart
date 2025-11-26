@@ -4,6 +4,7 @@ import '../../../utils/app_theme.dart';
 class TenantTabSelector extends StatelessWidget {
   final int selectedTab;
   final int currentTenantsCount;
+  final int checkoutRequestsCount;
   final Function(int) onTabChanged;
 
   static const Color _orange = AppTheme.primary;
@@ -12,6 +13,7 @@ class TenantTabSelector extends StatelessWidget {
     super.key,
     required this.selectedTab,
     required this.currentTenantsCount,
+    this.checkoutRequestsCount = 0,
     required this.onTabChanged,
   });
 
@@ -30,15 +32,21 @@ class TenantTabSelector extends StatelessWidget {
       child: Row(
         children: [
           _buildTab(
-            label: 'Current tenants',
+            label: 'Current',
             isSelected: selectedTab == 0,
             count: currentTenantsCount,
             onTap: () => onTabChanged(0),
           ),
           _buildTab(
-            label: 'Past tenants',
+            label: 'Checkout',
             isSelected: selectedTab == 1,
+            count: checkoutRequestsCount,
             onTap: () => onTabChanged(1),
+          ),
+          _buildTab(
+            label: 'Past',
+            isSelected: selectedTab == 2,
+            onTap: () => onTabChanged(2),
           ),
         ],
       ),
