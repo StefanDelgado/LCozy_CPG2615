@@ -59,12 +59,57 @@ try {
         INSERT INTO dormitories (
             owner_id, name, address, description, 
             features, latitude, longitude, verified, 
-            deposit_required, deposit_months, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NOW())
+            deposit_required, deposit_months, 
+            owner_id_document, business_permit, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, NOW())
     ");
     
     $deposit_required = isset($data['deposit_required']) ? (int)$data['deposit_required'] : 0;
     $deposit_months = isset($data['deposit_months']) ? (int)$data['deposit_months'] : 1;
+    
+    // Initialize document paths
+    $owner_id_path = null;
+    $business_permit_path = null;
+    
+    // Handle Owner ID Document upload
+    if (isset($_FILES['owner_id_document']) && $_FILES['owner_id_document']['error'] === 0) {
+        $upload_dir = __DIR__ . '/../../../uploads/owner_documents/';
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+        
+        $file_extension = strtolower(pathinfo($_FILES['owner_id_document']['name'], PATHINFO_EXTENSION));
+        $allowed_extensions = ['pdf', 'jpg', 'jpeg', 'png'];
+        
+        if (in_array($file_extension, $allowed_extensions)) {
+            $unique_filename = 'owner_id_' . uniqid() . '.' . $file_extension;
+            $target_path = $upload_dir . $unique_filename;
+            
+            if (move_uploaded_file($_FILES['owner_id_document']['tmp_name'], $target_path)) {
+                $owner_id_path = 'uploads/owner_documents/' . $unique_filename;
+            }
+        }
+    }
+    
+    // Handle Business Permit upload
+    if (isset($_FILES['business_permit']) && $_FILES['business_permit']['error'] === 0) {
+        $upload_dir = __DIR__ . '/../../../uploads/owner_documents/';
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+        
+        $file_extension = strtolower(pathinfo($_FILES['business_permit']['name'], PATHINFO_EXTENSION));
+        $allowed_extensions = ['pdf', 'jpg', 'jpeg', 'png'];
+        
+        if (in_array($file_extension, $allowed_extensions)) {
+            $unique_filename = 'business_permit_' . uniqid() . '.' . $file_extension;
+            $target_path = $upload_dir . $unique_filename;
+            
+            if (move_uploaded_file($_FILES['business_permit']['tmp_name'], $target_path)) {
+                $business_permit_path = 'uploads/owner_documents/' . $unique_filename;
+            }
+        }
+    }
     
     $stmt->execute([
         $owner['user_id'],
@@ -75,7 +120,9 @@ try {
         $latitude,
         $longitude,
         $deposit_required,
-        $deposit_months
+        $deposit_months,
+        $owner_id_path,
+        $business_permit_path
     ]);
 
     echo json_encode([

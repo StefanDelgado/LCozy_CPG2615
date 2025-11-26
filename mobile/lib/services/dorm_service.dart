@@ -280,10 +280,38 @@ class DormService {
     try {
       final uri = Uri.parse('$_baseUrl/modules/mobile-api/dorms/add_dorm_api.php');
       
-      final response = await http.post(
-        uri,
-        body: dormData,
-      );
+      // Use MultipartRequest to handle file uploads
+      var request = http.MultipartRequest('POST', uri);
+      
+      // Add text fields
+      dormData.forEach((key, value) {
+        if (key != 'owner_id_path' && key != 'business_permit_path' && 
+            key != 'owner_id_filename' && key != 'business_permit_filename') {
+          request.fields[key] = value.toString();
+        }
+      });
+      
+      // Add owner ID document if provided
+      if (dormData.containsKey('owner_id_path') && dormData['owner_id_path'] != null) {
+        final file = await http.MultipartFile.fromPath(
+          'owner_id_document',
+          dormData['owner_id_path'],
+        );
+        request.files.add(file);
+      }
+      
+      // Add business permit if provided
+      if (dormData.containsKey('business_permit_path') && dormData['business_permit_path'] != null) {
+        final file = await http.MultipartFile.fromPath(
+          'business_permit',
+          dormData['business_permit_path'],
+        );
+        request.files.add(file);
+      }
+      
+      // Send the request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

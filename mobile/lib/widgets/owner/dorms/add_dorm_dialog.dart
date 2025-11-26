@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../utils/app_theme.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../location_picker_widget.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 
 /// Dialog for adding a new dormitory
 class AddDormDialog extends StatefulWidget {
@@ -32,6 +34,12 @@ class _AddDormDialogState extends State<AddDormDialog> {
   
   // Multiple images
   List<String> _selectedImages = []; // Will store base64 or file paths
+  
+  // Owner documents
+  File? _ownerIdFile;
+  String? _ownerIdFileName;
+  File? _businessPermitFile;
+  String? _businessPermitFileName;
 
   @override
   void dispose() {
@@ -40,6 +48,50 @@ class _AddDormDialogState extends State<AddDormDialog> {
     _descriptionController.dispose();
     _featuresController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickOwnerIdDocument() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      );
+
+      if (result != null) {
+        setState(() {
+          _ownerIdFile = File(result.files.single.path!);
+          _ownerIdFileName = result.files.single.name;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking file: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickBusinessPermit() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      );
+
+      if (result != null) {
+        setState(() {
+          _businessPermitFile = File(result.files.single.path!);
+          _businessPermitFileName = result.files.single.name;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking file: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _handleSubmit() async {
@@ -72,6 +124,17 @@ class _AddDormDialogState extends State<AddDormDialog> {
       // Add images if any (to be implemented in service layer)
       if (_selectedImages.isNotEmpty) {
         dormData['images'] = _selectedImages.join('|');
+      }
+      
+      // Add owner documents if selected
+      if (_ownerIdFile != null) {
+        dormData['owner_id_path'] = _ownerIdFile!.path;
+        dormData['owner_id_filename'] = _ownerIdFileName ?? 'owner_id';
+      }
+      
+      if (_businessPermitFile != null) {
+        dormData['business_permit_path'] = _businessPermitFile!.path;
+        dormData['business_permit_filename'] = _businessPermitFileName ?? 'business_permit';
       }
       
       await widget.onAdd(dormData);
@@ -272,6 +335,92 @@ class _AddDormDialogState extends State<AddDormDialog> {
                           style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                         ),
                       ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Owner Documents Section
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFF7ED), Color(0xFFFFEDD5)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFED7AA), width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.verified_user, 
+                            color: Color(0xFFEA580C), size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Owner Verification Documents',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1F2937),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      // Owner ID Document
+                      OutlinedButton.icon(
+                        onPressed: _isSubmitting ? null : _pickOwnerIdDocument,
+                        icon: Icon(
+                          _ownerIdFile != null ? Icons.check_circle : Icons.upload_file,
+                          color: _ownerIdFile != null ? Colors.green : const Color(0xFFEA580C),
+                        ),
+                        label: Text(
+                          _ownerIdFileName ?? 'Upload Owner ID',
+                          style: const TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFEA580C),
+                          side: BorderSide(
+                            color: _ownerIdFile != null ? Colors.green : const Color(0xFFEA580C),
+                            width: 2,
+                          ),
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      
+                      // Business Permit
+                      OutlinedButton.icon(
+                        onPressed: _isSubmitting ? null : _pickBusinessPermit,
+                        icon: Icon(
+                          _businessPermitFile != null ? Icons.check_circle : Icons.upload_file,
+                          color: _businessPermitFile != null ? Colors.green : const Color(0xFFEA580C),
+                        ),
+                        label: Text(
+                          _businessPermitFileName ?? 'Upload Business Permit',
+                          style: const TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFEA580C),
+                          side: BorderSide(
+                            color: _businessPermitFile != null ? Colors.green : const Color(0xFFEA580C),
+                            width: 2,
+                          ),
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Optional: Upload documents for faster verification',
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                      ),
                     ],
                   ),
                 ),
