@@ -102,9 +102,10 @@ try {
         $stmt->execute([$cancellation_reason, $cancellation_reason, $booking_id]);
 
         // Cancel any pending payments associated with this booking
+        // Note: Only update status if it's not 'cancelled' already
         $stmt = $pdo->prepare("
             UPDATE payments 
-            SET status = 'cancelled',
+            SET status = 'rejected',
                 notes = CONCAT(
                     COALESCE(notes, ''),
                     IF(COALESCE(notes, '') != '', '\n', ''),
