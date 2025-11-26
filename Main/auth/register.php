@@ -79,8 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       // Show notification based on verification status
       if (isset($verified_status)) {
         if ($verified_status === 1) {
-          $success = "Account created successfully! Check your email to activate your account.";
-          $notify = "Your email was automatically verified. Please activate your account via the link sent to your email.";
+          $success = "Account created successfully! You can now log in.";
+          $notify = "Your account is ready. You can now log in with your credentials.";
         } elseif ($verified_status === 0) {
           $success = "Account created successfully!";
           $notify = "Your email requires admin approval or further verification. You will be notified once your account is reviewed.";

@@ -68,6 +68,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
+  /// Validates password complexity
+  String? _validatePasswordComplexity(String password) {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+    
+    // Check for uppercase letter
+    if (!password.contains(RegExp(r'[A-Z]'))) {
+      return 'Password must contain at least 1 uppercase letter';
+    }
+    
+    // Check for lowercase letter
+    if (!password.contains(RegExp(r'[a-z]'))) {
+      return 'Password must contain at least 1 lowercase letter';
+    }
+    
+    // Check for number
+    if (!password.contains(RegExp(r'[0-9]'))) {
+      return 'Password must contain at least 1 number';
+    }
+    
+    // Check for special character
+    if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+      return 'Password must contain at least 1 special character';
+    }
+    
+    return null; // Password is valid
+  }
+
+  /// Builds a requirement item widget
+  Widget _buildRequirement(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Row(
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 14,
+            color: Colors.grey[600],
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleRegister() async {
     // Clear previous error
     setState(() {
@@ -111,10 +166,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    // Check password length
-    if (_passwordController.text.length < 6) {
+    // Validate password complexity
+    final passwordComplexityError = _validatePasswordComplexity(_passwordController.text);
+    if (passwordComplexityError != null) {
       setState(() {
-        _errorMessage = 'Password must be at least 6 characters.';
+        _errorMessage = passwordComplexityError;
       });
       return;
     }
@@ -288,6 +344,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
                       textInputAction: TextInputAction.next,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, left: 12, right: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Password Requirements:',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          _buildRequirement('At least 8 characters'),
+                          _buildRequirement('At least 1 uppercase letter (A-Z)'),
+                          _buildRequirement('At least 1 lowercase letter (a-z)'),
+                          _buildRequirement('At least 1 number (0-9)'),
+                          _buildRequirement('At least 1 special character (!@#\$%^&*...)'),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
 

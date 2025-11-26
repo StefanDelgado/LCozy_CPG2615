@@ -50,7 +50,7 @@ try {
         $message = 'Your email was rejected. Please use a valid email provider.';
     } elseif (in_array($email_domain, $trusted_domains) && $is_clean) {
         $verified_status = 1; // auto accept
-        $message = 'Your email was automatically verified. Please check your email for activation.';
+        $message = 'Account created successfully! You can now log in.';
     } else {
         $verified_status = 0; // pending
         $message = 'Your email requires admin approval or further verification.';

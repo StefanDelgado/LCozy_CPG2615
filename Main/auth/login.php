@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       if ((int)$user['verified'] === -1) {
         $error = 'Your account was rejected. Contact support.';
       } else {
-        $error = 'Please activate your account. Check your email for the activation link.';
+        $error = 'Your account is pending approval. Please wait for admin verification.';
       }
     } else {
       $_SESSION['user'] = [
