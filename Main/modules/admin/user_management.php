@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../../auth/auth.php';
-require_role('admin');
-require_role('superadmin');
+require_role(['admin','superadmin']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
     $name  = trim($_POST['name']);

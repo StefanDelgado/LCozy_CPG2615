@@ -5,8 +5,7 @@ error_reporting(E_ALL);
 
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../auth/auth.php';
-require_role('admin');
-require_role('superadmin');
+require_role(['admin','superadmin']);
 
 // Date range filter
 $start_date = $_GET['start_date'] ?? date('Y-m-01'); // First day of current month

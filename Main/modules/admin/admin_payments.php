@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../../auth/auth.php';
-require_role('admin');
-require_role('superadmin');
+require_role(['admin','superadmin']);
 require_once __DIR__ . '/../../config.php';
 
 $page_title = "All Payments Overview";

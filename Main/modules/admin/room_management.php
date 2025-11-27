@@ -1,7 +1,6 @@
 <?php 
 require_once __DIR__ . '/../../partials/header.php'; 
-require_role('owner');
-require_role('superadmin');
+require_role(['admin','superadmin']);
 require_once __DIR__ . '/../../config.php';
 
 $owner_id = $_SESSION['user']['user_id'];
