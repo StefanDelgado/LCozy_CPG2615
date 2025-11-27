@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <label>Email
         <input type="email" name="email" required>
       </label>
-      <label>Password (8–16 chars, 1 uppercase, 1 lowercase, 1 special)
+      <label>Password
         <input type="password" name="password" required>
       </label>
       <label>Admin Registration Key
