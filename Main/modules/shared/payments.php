@@ -1,6 +1,7 @@
 <?php 
 require_once __DIR__ . '/../../partials/header.php'; 
 require_role('admin');
+require_role('superadmin');
 ?>
 
 <div class="page-header">

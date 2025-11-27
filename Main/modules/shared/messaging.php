@@ -1,6 +1,7 @@
 <?php 
 require_once __DIR__ . '/../../partials/header.php'; 
 require_role('admin');
+require_role('superadmin');
 
 // Ensure DB connection is available (header.php already includes config but keep a safe require)
 require_once __DIR__ . '/../../config.php';

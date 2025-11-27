@@ -1,7 +1,7 @@
 <?php
 // tenant_checkout.php
 require_once __DIR__ . '/../../auth/auth.php';
-require_role('student'); // tenant role
+require_role('student');
 require_once __DIR__ . '/../../config.php';
 $page_title = "Request Checkout";
 include __DIR__ . '/../../partials/header.php';
