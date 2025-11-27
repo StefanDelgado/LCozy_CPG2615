@@ -4,35 +4,73 @@ require_once __DIR__ . '/../config.php';
 $error = '';
 $success = '';
 
+// Check if superadmin already exists
+$stmt = $pdo->query("SELECT COUNT(*) FROM users WHERE role='superadmin'");
+$superadmin_exists = $stmt->fetchColumn() > 0;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name   = trim($_POST['name'] ?? '');
     $email  = trim($_POST['email'] ?? '');
     $pass   = $_POST['password'] ?? '';
     $secret = trim($_POST['secret'] ?? '');
 
-    if (!$name || !$email || !$pass || !$secret) {
+    // Common validation
+    if (!$name || !$email || !$pass) {
         $error = "All fields are required.";
+    }
+    // Password rules
+    elseif (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,16}$/', $pass)) {
+        $error = "Password must be 8–16 characters with uppercase, lowercase and a special character.";
+    }
+    else {
+        // Creating FIRST superadmin
+        if (!$superadmin_exists) {
 
-    } elseif ($secret !== ADMIN_SECRET_KEY) {
-        $error = "Invalid admin registration key.";
+            // Prevent admin key for superadmin
+            if (!empty($secret)) {
+                $error = "Superadmin creation should NOT use the admin key.";
+            } else {
 
-    // New password rule (8–16 chars, uppercase, lowercase, special char)
-    } elseif (!preg_match('/^(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*()\-_=+\[\]{};:,.<>\/?]).{8,16}$/', $pass)) {
-        $error = "Password must be 8–16 characters and include at least 1 uppercase, 1 lowercase, and 1 special character.";
+                // Ensure email is unique
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email=?");
+                $stmt->execute([$email]);
 
-    } else {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email=?");
-        $stmt->execute([$email]);
+                if ($stmt->fetchColumn() > 0) {
+                    $error = "Email already registered.";
+                } else {
+                    // Create superadmin
+                    $hash = password_hash($pass, PASSWORD_DEFAULT);
+                    $stmt = $pdo->prepare("
+                        INSERT INTO users (name, email, password, role, verified, created_at)
+                        VALUES (?, ?, ?, 'superadmin', 1, NOW())
+                    ");
+                    $stmt->execute([$name, $email, $hash]);
 
-        if ($stmt->fetchColumn() > 0) {
-            $error = "Email already registered.";
-        } else {
-            $hash = password_hash($pass, PASSWORD_DEFAULT);
+                    $success = "Super Admin created successfully. You may now log in.";
+                }
+            }
+        }
+        // Creating a normal admin (superadmin already exists)
+        else {
+            if (!$secret || $secret !== ADMIN_SECRET_KEY) {
+                $error = "Invalid admin registration key.";
+            } else {
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email=?");
+                $stmt->execute([$email]);
 
-            $stmt = $pdo->prepare("INSERT INTO users (name,email,password,role,verified) VALUES (?,?,?,?,1)");
-            $stmt->execute([$name, $email, $hash, 'admin']);
+                if ($stmt->fetchColumn() > 0) {
+                    $error = "Email already registered.";
+                } else {
+                    $hash = password_hash($pass, PASSWORD_DEFAULT);
+                    $stmt = $pdo->prepare("
+                        INSERT INTO users (name,email,password,role,verified,created_at)
+                        VALUES (?,?,?, 'admin', 1, NOW())
+                    ");
+                    $stmt->execute([$name,$email,$hash]);
 
-            $success = "Admin account created successfully! You can now login.";
+                    $success = "Admin account created successfully! You can now login.";
+                }
+            }
         }
     }
 }
@@ -44,6 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>CozyDorms — Admin Registration</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="../assets/style.css">
+
   <style>
     body {
       margin: 0;
@@ -72,26 +111,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     p a:hover { text-decoration: underline; }
   </style>
 </head>
+
 <body>
   <div class="auth-card">
-    <h1>Register Admin</h1>
+    <h1>
+      <?= !$superadmin_exists ? "Create Super Admin" : "Register Admin" ?>
+    </h1>
+
     <?php if ($error): ?><div class="alert error"><?=$error?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert success"><?=$success?></div><?php endif; ?>
+
     <form method="post" autocomplete="off">
+
       <label>Full Name
         <input type="text" name="name" required>
       </label>
+
       <label>Email
         <input type="email" name="email" required>
       </label>
+
       <label>Password
         <input type="password" name="password" required>
       </label>
+
+      <?php if ($superadmin_exists): ?>
+      <!-- Only show admin key if superadmin already created -->
       <label>Admin Registration Key
         <input type="text" name="secret" placeholder="Enter secret key" required>
       </label>
-      <button type="submit">Register Admin</button>
+      <?php endif; ?>
+
+      <button type="submit">
+        <?= !$superadmin_exists ? "Create Super Admin" : "Register Admin" ?>
+      </button>
     </form>
+
     <p>Already have an account? <a href="login.php">Login</a></p>
   </div>
 </body>
