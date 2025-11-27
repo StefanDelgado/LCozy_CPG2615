@@ -76,12 +76,24 @@ if (isset($_GET['delete'])) {
     exit;
 }
 
-$users = $pdo->query("
-    SELECT user_id, name, email, role, address, phone, license_no, profile_pic, id_document, verified, created_at 
-    FROM users 
-    WHERE role != 'superadmin'
-    ORDER BY created_at DESC
-")->fetchAll();
+// FETCH USERS — Superadmin sees all, Admins cannot see Superadmins
+if ($_SESSION['role'] === 'admin') {
+    $stmt = $pdo->prepare("
+        SELECT user_id, name, email, role, address, phone, license_no, profile_pic, id_document, verified, created_at
+        FROM users
+        WHERE role != 'superadmin'
+        ORDER BY created_at DESC
+    ");
+} else { // superadmin
+    $stmt = $pdo->prepare("
+        SELECT user_id, name, email, role, address, phone, license_no, profile_pic, id_document, verified, created_at
+        FROM users
+        ORDER BY created_at DESC
+    ");
+}
+
+$stmt->execute();
+$users = $stmt->fetchAll();
 
 $page_title = "User Management";
 require_once __DIR__ . '/../../partials/header.php';
