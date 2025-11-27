@@ -79,6 +79,7 @@ if (isset($_GET['delete'])) {
 $users = $pdo->query("
     SELECT user_id, name, email, role, address, phone, license_no, profile_pic, id_document, verified, created_at 
     FROM users 
+    WHERE role != 'superadmin'
     ORDER BY created_at DESC
 ")->fetchAll();
 
