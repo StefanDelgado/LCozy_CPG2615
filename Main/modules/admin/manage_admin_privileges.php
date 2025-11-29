@@ -271,16 +271,57 @@ $pageTitle = "Manage Admin Privileges";
         .btn-secondary:hover {
             background: #d1d5db;
         }
+        
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        .top-nav {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .top-nav h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+        
+        .top-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+        
+        .top-nav a:hover {
+            background: rgba(255,255,255,0.3);
+        }
     </style>
 </head>
 <body>
-    <?php include '../../partials/admin_header.php'; ?>
+    <!-- Top Navigation -->
+    <div class="top-nav">
+        <h2><i class="fas fa-key"></i> LCozy Admin Privileges</h2>
+        <div>
+            <a href="superadmin_management.php"><i class="fas fa-arrow-left"></i> Back to Super Admin</a>
+            <a href="../../dashboards/admin_dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
+        </div>
+    </div>
     
-    <div class="main-container">
-        <?php include '../../partials/admin_sidebar.php'; ?>
+    <div class="main-container" style="margin: 0; width: 100%; padding: 30px; max-width: 1200px; margin: 0 auto;">
         
-        <main class="main-content">
-            <div class="page-header">
+        <main class="main-content" style="margin: 0; width: 100%;">
+            <div class="page-header" style="margin-bottom: 30px;">
                 <h1><i class="fas fa-key"></i> Manage Admin Privileges</h1>
                 <p>Configure privileges for admin users</p>
             </div>
