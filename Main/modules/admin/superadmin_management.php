@@ -20,7 +20,7 @@ $adminRequestsStmt = $pdo->prepare("
         ar.*,
         u.name AS requester_name,
         u.email AS requester_email,
-        u.role AS current_role,
+        u.role AS user_role,
         ru.name AS reviewer_name
     FROM admin_approval_requests ar
     INNER JOIN users u ON ar.requester_user_id = u.user_id
@@ -324,7 +324,7 @@ $availablePrivileges = [
                                 <tr>
                                     <td><strong><?php echo htmlspecialchars($request['requester_name']); ?></strong></td>
                                     <td><?php echo htmlspecialchars($request['requester_email']); ?></td>
-                                    <td><span class="role-badge"><?php echo ucfirst($request['current_role']); ?></span></td>
+                                    <td><span class="role-badge"><?php echo ucfirst($request['user_role']); ?></span></td>
                                     <td><?php echo htmlspecialchars($request['reason'] ?? 'No reason provided'); ?></td>
                                     <td>
                                         <span class="status-badge status-<?php echo $request['status']; ?>">
