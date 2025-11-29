@@ -252,7 +252,9 @@ class RecentPaymentsWidget extends StatelessWidget {
       case 'overdue':
         return 'Overdue';
       default:
-        return status[0].toUpperCase() + status.substring(1);
+        return status.isNotEmpty 
+            ? status[0].toUpperCase() + status.substring(1)
+            : 'Unknown';
     }
   }
 

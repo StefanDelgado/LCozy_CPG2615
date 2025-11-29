@@ -165,7 +165,7 @@ class RecentMessagesPreviewWidget extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    senderName[0].toUpperCase(),
+                    senderName.isNotEmpty ? senderName[0].toUpperCase() : 'U',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

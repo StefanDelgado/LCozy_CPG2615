@@ -49,12 +49,35 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   Future<void> _fetchOwnerName() async {
     // Extract name from email or fetch from API
     // For now, use email prefix as name
-    final emailPrefix = widget.ownerEmail.split('@')[0];
-    setState(() {
-      ownerName = emailPrefix.replaceAll('.', ' ').split(' ').map((word) => 
-        word[0].toUpperCase() + word.substring(1)
-      ).join(' ');
-    });
+    try {
+      final emailParts = widget.ownerEmail.split('@');
+      if (emailParts.isEmpty) {
+        setState(() {
+          ownerName = 'Owner';
+        });
+        return;
+      }
+      
+      final emailPrefix = emailParts[0];
+      setState(() {
+        ownerName = emailPrefix
+            .replaceAll('.', ' ')
+            .split(' ')
+            .where((word) => word.isNotEmpty) // Filter out empty strings
+            .map((word) => word[0].toUpperCase() + word.substring(1))
+            .join(' ');
+        
+        // Fallback if ownerName is empty
+        if (ownerName.isEmpty) {
+          ownerName = 'Owner';
+        }
+      });
+    } catch (e) {
+      print('[ERROR] Error fetching owner name: $e');
+      setState(() {
+        ownerName = 'Owner';
+      });
+    }
   }
 
   Future<void> fetchDashboardData() async {

@@ -126,7 +126,9 @@ class RecentBookingsWidget extends StatelessWidget {
   Widget _buildBookingItem(dynamic booking) {
     final status = booking['status'] ?? 'pending';
     final statusColor = _getStatusColor(status);
-    final statusText = status[0].toUpperCase() + status.substring(1);
+    final statusText = status.isNotEmpty 
+        ? status[0].toUpperCase() + status.substring(1)
+        : 'Unknown';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -157,7 +159,10 @@ class RecentBookingsWidget extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                (booking['student_name'] ?? 'U')[0].toUpperCase(),
+                () {
+                  final name = booking['student_name'] ?? 'U';
+                  return name.isNotEmpty ? name[0].toUpperCase() : 'U';
+                }(),
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
