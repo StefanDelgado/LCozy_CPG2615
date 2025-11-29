@@ -37,7 +37,7 @@ function require_role($role) {
 function redirect_to_dashboard($role) {
     switch ($role) {
         case 'superadmin':
-            header('Location: /dashboards/admin_dashboard.php');
+            header('Location: /dashboards/superadmin_dashboard.php');
             break;
         case 'admin':
             header('Location: /dashboards/admin_dashboard.php');
