@@ -11,7 +11,7 @@ $activePage = "superadmin";
 $msg = $_GET['msg'] ?? null;
 
 // Fetch all admin requests
-$adminRequestsStmt = $conn->prepare("
+$adminRequestsStmt = $pdo->prepare("
     SELECT 
         ar.*,
         u.name AS requester_name,
@@ -29,7 +29,7 @@ $adminRequestsStmt->execute();
 $adminRequests = $adminRequestsStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Fetch all admins
-$adminsStmt = $conn->prepare("
+$adminsStmt = $pdo->prepare("
     SELECT 
         u.*,
         COUNT(DISTINCT ap.privilege_id) AS privilege_count,
@@ -44,7 +44,7 @@ $adminsStmt->execute();
 $admins = $adminsStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Get recent super admin actions
-$auditStmt = $conn->prepare("
+$auditStmt = $pdo->prepare("
     SELECT 
         al.*,
         au.name AS admin_name,

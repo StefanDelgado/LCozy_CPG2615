@@ -17,7 +17,7 @@ $superAdminId = $currentUser['user_id'];
 
 try {
     // Fetch the request
-    $stmt = $conn->prepare("
+    $stmt = $pdo->prepare("
         SELECT ar.*, u.name, u.email, u.role 
         FROM admin_approval_requests ar
         INNER JOIN users u ON ar.requester_user_id = u.user_id
@@ -31,16 +31,16 @@ try {
         exit;
     }
     
-    $conn->beginTransaction();
+    $pdo->beginTransaction();
     
     if ($action === 'approve') {
         // Update user role to admin
-        $updateUserStmt = $conn->prepare("UPDATE users SET role = 'admin' WHERE user_id = ?");
+        $updateUserStmt = $pdo->prepare("UPDATE users SET role = 'admin' WHERE user_id = ?");
         $updateUserStmt->execute([$request['requester_user_id']]);
         
         // Grant default privileges to new admin
         $defaultPrivileges = ['manage_users', 'approve_owners', 'view_reports'];
-        $privilegeStmt = $conn->prepare("
+        $privilegeStmt = $pdo->prepare("
             INSERT INTO admin_privileges (admin_user_id, privilege_name, granted_by) 
             VALUES (?, ?, ?)
         ");
@@ -54,7 +54,7 @@ try {
         }
         
         // Update request status
-        $updateRequestStmt = $conn->prepare("
+        $updateRequestStmt = $pdo->prepare("
             UPDATE admin_approval_requests 
             SET status = 'approved', reviewed_by = ?, reviewed_at = NOW(), review_notes = 'Approved by super admin'
             WHERE request_id = ?
@@ -62,7 +62,7 @@ try {
         $updateRequestStmt->execute([$superAdminId, $requestId]);
         
         // Log the action
-        $logStmt = $conn->prepare("
+        $logStmt = $pdo->prepare("
             INSERT INTO admin_audit_log (admin_user_id, action_type, target_user_id, action_details, ip_address)
             VALUES (?, 'approve_admin', ?, ?, ?)
         ");
@@ -73,12 +73,12 @@ try {
             $_SERVER['REMOTE_ADDR']
         ]);
         
-        $conn->commit();
+        $pdo->commit();
         header("Location: superadmin_management.php?msg=Admin+request+approved+successfully");
         
     } else { // reject
         // Update request status
-        $updateRequestStmt = $conn->prepare("
+        $updateRequestStmt = $pdo->prepare("
             UPDATE admin_approval_requests 
             SET status = 'rejected', reviewed_by = ?, reviewed_at = NOW(), review_notes = 'Rejected by super admin'
             WHERE request_id = ?
@@ -86,7 +86,7 @@ try {
         $updateRequestStmt->execute([$superAdminId, $requestId]);
         
         // Log the action
-        $logStmt = $conn->prepare("
+        $logStmt = $pdo->prepare("
             INSERT INTO admin_audit_log (admin_user_id, action_type, target_user_id, action_details, ip_address)
             VALUES (?, 'reject_admin_request', ?, ?, ?)
         ");
@@ -97,12 +97,12 @@ try {
             $_SERVER['REMOTE_ADDR']
         ]);
         
-        $conn->commit();
+        $pdo->commit();
         header("Location: superadmin_management.php?msg=Admin+request+rejected");
     }
     
 } catch (Exception $e) {
-    $conn->rollBack();
+    $pdo->rollBack();
     header("Location: superadmin_management.php?msg=Error:+{$e->getMessage()}");
     exit;
 }

@@ -16,7 +16,7 @@ $superAdminId = $currentUser['user_id'];
 
 try {
     // Fetch admin details
-    $stmt = $conn->prepare("SELECT * FROM users WHERE user_id = ? AND role = 'admin'");
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE user_id = ? AND role = 'admin'");
     $stmt->execute([$adminId]);
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -25,19 +25,19 @@ try {
         exit;
     }
     
-    $conn->beginTransaction();
+    $pdo->beginTransaction();
     
     // Remove all privileges
-    $deletePrivStmt = $conn->prepare("DELETE FROM admin_privileges WHERE admin_user_id = ?");
+    $deletePrivStmt = $pdo->prepare("DELETE FROM admin_privileges WHERE admin_user_id = ?");
     $deletePrivStmt->execute([$adminId]);
     
     // Change role back to student or owner (keep their original role if possible)
     // For simplicity, we'll change to 'student'
-    $updateRoleStmt = $conn->prepare("UPDATE users SET role = 'student' WHERE user_id = ?");
+    $updateRoleStmt = $pdo->prepare("UPDATE users SET role = 'student' WHERE user_id = ?");
     $updateRoleStmt->execute([$adminId]);
     
     // Log the action
-    $logStmt = $conn->prepare("
+    $logStmt = $pdo->prepare("
         INSERT INTO admin_audit_log (admin_user_id, action_type, target_user_id, action_details, ip_address)
         VALUES (?, 'revoke_admin', ?, ?, ?)
     ");
@@ -48,11 +48,11 @@ try {
         $_SERVER['REMOTE_ADDR']
     ]);
     
-    $conn->commit();
+    $pdo->commit();
     header("Location: superadmin_management.php?msg=Admin+privileges+revoked+successfully");
     
 } catch (Exception $e) {
-    $conn->rollBack();
+    $pdo->rollBack();
     header("Location: superadmin_management.php?msg=Error:+{$e->getMessage()}");
     exit;
 }

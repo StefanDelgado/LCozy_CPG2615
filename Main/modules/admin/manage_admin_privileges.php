@@ -15,7 +15,7 @@ $currentUser = current_user();
 $superAdminId = $currentUser['user_id'];
 
 // Fetch admin details
-$stmt = $conn->prepare("
+$stmt = $pdo->prepare("
     SELECT u.*, 
            GROUP_CONCAT(ap.privilege_name) AS privileges
     FROM users u
@@ -36,15 +36,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $selectedPrivileges = $_POST['privileges'] ?? [];
     
     try {
-        $conn->beginTransaction();
+        $pdo->beginTransaction();
         
         // Remove all existing privileges
-        $deleteStmt = $conn->prepare("DELETE FROM admin_privileges WHERE admin_user_id = ?");
+        $deleteStmt = $pdo->prepare("DELETE FROM admin_privileges WHERE admin_user_id = ?");
         $deleteStmt->execute([$adminId]);
         
         // Insert selected privileges
         if (!empty($selectedPrivileges)) {
-            $insertStmt = $conn->prepare("
+            $insertStmt = $pdo->prepare("
                 INSERT INTO admin_privileges (admin_user_id, privilege_name, granted_by) 
                 VALUES (?, ?, ?)
             ");
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Log the action
-        $logStmt = $conn->prepare("
+        $logStmt = $pdo->prepare("
             INSERT INTO admin_audit_log (admin_user_id, action_type, target_user_id, action_details, ip_address)
             VALUES (?, 'update_privileges', ?, ?, ?)
         ");
@@ -66,12 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SERVER['REMOTE_ADDR']
         ]);
         
-        $conn->commit();
+        $pdo->commit();
         header("Location: superadmin_management.php?msg=Privileges+updated+successfully");
         exit;
         
     } catch (Exception $e) {
-        $conn->rollBack();
+        $pdo->rollBack();
         header("Location: manage_admin_privileges.php?id=$adminId&msg=Error:+{$e->getMessage()}");
         exit;
     }
