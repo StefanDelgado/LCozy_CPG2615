@@ -78,6 +78,7 @@ $user = current_user();
         <h2>Super Admin</h2>
         <p>Welcome, <strong><?= htmlspecialchars($user['name']) ?></strong></p>
 
+        <a href="/modules/admin/superadmin_management.php">Main Management</a>
         <a href="/modules/admin/admin_management.php">Admin Management</a>
         <a href="/modules/owner/owner_management.php">Owner Management</a>
         <a href="/modules/student/student_management.php">Student Management</a>
