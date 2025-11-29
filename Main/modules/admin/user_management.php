@@ -2,16 +2,29 @@
 require_once __DIR__ . '/../../auth/auth.php';
 require_role(['admin','superadmin']);
 
+$userRole = $_SESSION['user']['role'];
+
+// =========================
+// CREATE USER
+// =========================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
     $name  = trim($_POST['name']);
     $email = trim($_POST['email']);
     $pass  = $_POST['password'];
     $role  = $_POST['role'];
+
+    // Prevent creating superadmins
+    if ($role === 'superadmin') {
+        header("Location: user_management.php?msg=Superadmin+cannot+be+created+here");
+        exit;
+    }
+
     $address = trim($_POST['address'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $license = ($role === 'owner') ? trim($_POST['license_no'] ?? '') : 'N/A';
 
-    $uploads = ['profile_pic','id_image','selfie_image'];
+    // Upload handler
+    $uploads = ['profile_pic','id_image'];
     $paths = [];
     foreach ($uploads as $u) {
         if (!empty($_FILES[$u]['name'])) {
@@ -35,53 +48,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
         ");
         $stmt->execute([
             $name, $email, $hash, $role, $address, $phone, $license,
-            $paths['profile_pic'], $paths['id_document']
+            $paths['profile_pic'], $paths['id_image']
         ]);
         header("Location: user_management.php?msg=User+created");
         exit;
     }
 }
 
+// =========================
+// EDIT USER
+// =========================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_user'])) {
-    $id    = $_POST['user_id'];
+    $id    = (int)$_POST['user_id'];
     $name  = trim($_POST['name']);
     $email = trim($_POST['email']);
     $role  = $_POST['role'];
+
+    // prevent editing superadmin role
+    if ($role === 'superadmin') {
+        header("Location: user_management.php?msg=Superadmin+cannot+be+assigned");
+        exit;
+    }
+
     $address = trim($_POST['address'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $license = ($role === 'owner') ? trim($_POST['license_no'] ?? '') : 'N/A';
 
-    $stmt = $pdo->prepare("UPDATE users SET name=?, email=?, role=?, address=?, phone=?, license_no=? WHERE user_id=?");
+    // Prevent admins from editing superadmin
+    if ($userRole === 'admin' && $id === 1) {
+        header("Location: user_management.php?msg=Forbidden");
+        exit;
+    }
+
+    $stmt = $pdo->prepare("
+        UPDATE users 
+        SET name=?, email=?, role=?, address=?, phone=?, license_no=? 
+        WHERE user_id=?
+    ");
     $stmt->execute([$name, $email, $role, $address, $phone, $license, $id]);
+
     header("Location: user_management.php?msg=User+updated");
     exit;
 }
 
-  // Handle manual verification actions
-  if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_user'])) {
+// =========================
+// VERIFY USER
+// =========================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_user'])) {
     $id = (int)$_POST['user_id'];
+    
+    // prevent altering superadmin
+    if ($id === 1) {
+        header("Location: user_management.php?msg=Cannot+modify+superadmin");
+        exit;
+    }
+
     $action = $_POST['verify_action'];
     $status = ($action === 'accept') ? 1 : (($action === 'reject') ? -1 : 0);
+
     $stmt = $pdo->prepare("UPDATE users SET verified=? WHERE user_id=?");
     $stmt->execute([$status, $id]);
+
     header("Location: user_management.php?msg=Verification+updated");
     exit;
-  }
+}
 
+// =========================
+// DELETE USER
+// =========================
 if (isset($_GET['delete'])) {
     $userId = (int) $_GET['delete'];
+
+    // prevent deletion of superadmin
+    if ($userId === 1) {
+        header("Location: user_management.php?msg=Cannot+delete+superadmin");
+        exit;
+    }
+
     $stmt = $pdo->prepare("DELETE FROM users WHERE user_id = ?");
     $stmt->execute([$userId]);
+
     header("Location: user_management.php?msg=User+deleted");
     exit;
 }
 
-$users = $pdo->query("
-    SELECT user_id, name, email, role, address, phone, license_no, profile_pic, id_document, verified, created_at 
-    FROM users 
-    WHERE role != 'superadmin'
-    ORDER BY created_at DESC
-")->fetchAll();
+// =========================
+// FETCH USERS
+// =========================
+
+// Admin cannot see superadmin
+if ($userRole === 'admin') {
+    $stmt = $pdo->prepare("
+        SELECT user_id, name, email, role, address, phone, license_no, profile_pic, id_document, verified, created_at
+        FROM users
+        WHERE role != 'superadmin'
+        ORDER BY created_at DESC
+    ");
+} 
+else { // superadmin sees everything
+    $stmt = $pdo->prepare("
+        SELECT user_id, name, email, role, address, phone, license_no, profile_pic, id_document, verified, created_at
+        FROM users
+        ORDER BY FIELD(role,'superadmin','admin','owner','student'), created_at DESC
+    ");
+}
+
+$stmt->execute();
+$users = $stmt->fetchAll();
 
 $page_title = "User Management";
 require_once __DIR__ . '/../../partials/header.php';
