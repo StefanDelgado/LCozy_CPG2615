@@ -298,7 +298,7 @@ $availablePrivileges = [
     <div class="top-nav">
         <h2><i class="fas fa-crown"></i> LCozy Super Admin</h2>
         <div>
-            <a href="../../dashboards/admin_dashboard.php"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <a href="../../dashboards/superadmin_dashboard.php"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
             <a href="../../auth/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
     </div>
