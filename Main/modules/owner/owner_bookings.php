@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
     if (isset($_POST['approve_booking'])) {
         $new_status = 'approved';
     } elseif (isset($_POST['reject_booking'])) {
-        $new_status = 'rejected';
+        $new_status = 'disapproved';
     } else {
         $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Invalid action specified'];
         header('Location: owner_bookings.php');
@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
 
             $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking approved and payment reminder created.'];
         } else {
-            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking rejected successfully.'];
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Booking disapproved successfully.'];
         }
 
         $pdo->commit();
@@ -172,7 +172,7 @@ $sql = "
     JOIN rooms r ON b.room_id = r.room_id
     JOIN dormitories d ON r.dorm_id = d.dorm_id
     WHERE d.owner_id = ?
-    ORDER BY FIELD(COALESCE(b.status, 'pending'),'pending','approved','rejected','cancelled','completed'), 
+    ORDER BY FIELD(COALESCE(b.status, 'pending'),'pending','approved','disapproved','cancelled','completed'), 
              b.start_date DESC
 ";
 $stmt = $pdo->prepare($sql);
@@ -184,7 +184,7 @@ $stats = [
     'total' => count($bookings),
     'pending' => 0,
     'approved' => 0,
-    'rejected' => 0,
+    'disapproved' => 0,
     'active' => 0,
     'completed' => 0
 ];
@@ -253,7 +253,7 @@ unset($_SESSION['flash']);
   <strong>Status:</strong>
   <span class="status-badge pending">Pending</span>
   <span class="status-badge approved">Approved</span>
-  <span class="status-badge rejected">Rejected</span>
+  <span class="status-badge disapproved">Disapproved</span>
   <span class="status-badge cancelled">Cancelled</span>
   <span class="status-badge completed">Completed</span>
 </div>
@@ -520,7 +520,7 @@ unset($_SESSION['flash']);
   border: 1px solid #bee5eb;
 }
 
-.status-badge.rejected {
+.status-badge.disapproved {
   background: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
@@ -593,7 +593,7 @@ unset($_SESSION['flash']);
   border-left-color: #17a2b8;
 }
 
-.booking-card.rejected {
+.booking-card.disapproved {
   border-left-color: #dc3545;
 }
 
