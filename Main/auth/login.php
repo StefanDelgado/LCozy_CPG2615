@@ -7,7 +7,10 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Error message for failed login
 $error = '';
+// Informational message (e.g., session timed out)
+$info = trim($_GET['msg'] ?? '');
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email = trim($_POST['email'] ?? '');
   $password = $_POST['password'] ?? '';
@@ -39,6 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'email'   => $user['email'],
         'role'    => $user['role'],
       ];
+
+          // Regenerate session id to prevent fixation and set last activity timestamp
+          if (function_exists('session_regenerate_id')) {
+              session_regenerate_id(true);
+          }
+          $_SESSION['last_activity'] = time();
 
           redirect_to_dashboard($user['role']);
         }
@@ -136,7 +145,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
   <div class="auth-card">
     <h1>Welcome Back</h1>
-    <?php if ($error): ?><div class="alert"><?=$error?></div><?php endif; ?>
+    <?php if ($info): ?><div class="alert" style="background:#e6f4ff;color:#034f84"><?=htmlspecialchars(str_replace('+',' ',$info))?></div><?php endif; ?>
+    <?php if ($error): ?><div class="alert" style="background:#f8d7da;color:#721c24"><?=$error?></div><?php endif; ?>
     <form method="post" autocomplete="off">
       <label>Email
         <input type="email" name="email" required>

@@ -4,6 +4,23 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/../config.php';
 
+// Session timeout (seconds). Default: 30 minutes.
+if (!defined('SESSION_TIMEOUT')) {
+    define('SESSION_TIMEOUT', 1800);
+}
+
+// Enforce session timeout: if last activity exists and exceeded, destroy session and redirect to login
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > SESSION_TIMEOUT) {
+    // Clean up session and redirect to login with timeout message
+    session_unset();
+    session_destroy();
+    header('Location: /auth/login.php?msg=Session+timed+out');
+    exit;
+}
+
+// Update last activity timestamp for active sessions
+$_SESSION['last_activity'] = time();
+
 function current_user() {
     return $_SESSION['user'] ?? null;
 }
