@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../auth/auth.php';
-require_role('owner');
+require_role('owner', 'superadmin');
 require_once __DIR__ . '/../../config.php';
 
 include __DIR__ . '/../../partials/header.php';

@@ -2,7 +2,7 @@
 // Main/modules/student/student_verification_upload.php
 
 require_once __DIR__ . '/../../auth/auth.php';
-require_role('student');
+require_role('student', 'superadmin');
 
 require_once __DIR__ . '/../../config.php';
 

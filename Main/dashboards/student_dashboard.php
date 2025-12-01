@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../partials/header.php'; 
-require_role('student');
+require_role('student', 'superadmin');
 require_once __DIR__ . '/../config.php';
 
 $student_id = current_user()['user_id'];

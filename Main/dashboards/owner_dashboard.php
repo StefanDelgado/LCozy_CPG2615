@@ -1,6 +1,6 @@
 <?php 
 require_once __DIR__ . '/../partials/header.php'; 
-require_role('owner');
+require_role('owner', 'superadmin');
 require_once __DIR__ . '/../config.php';
 
 $user_id = current_user()['user_id'];
