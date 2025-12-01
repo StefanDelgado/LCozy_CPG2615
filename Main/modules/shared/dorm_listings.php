@@ -135,7 +135,7 @@ $total_dorms = count($dorms);
         <a href="?action=approve&id=<?= $dorm['dorm_id'] ?>" class="btn success">Approve</a>
       <?php endif; ?>
       <?php if ($dorm['verified'] != -1): ?>
-        <a href="?action=reject&id=<?= $dorm['dorm_id'] ?>" class="btn danger">Reject</a>
+        <a href="?action=reject&id=<?= $dorm['dorm_id'] ?>" class="btn danger">Disapprove</a>
       <?php endif; ?>
     </div>
 
