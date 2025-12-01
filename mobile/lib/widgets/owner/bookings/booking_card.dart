@@ -5,6 +5,7 @@ class BookingCard extends StatelessWidget {
   final Map<String, dynamic> booking;
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
+  final VoidCallback? onAcknowledge;
   final bool isProcessing;
 
   const BookingCard({
@@ -12,6 +13,7 @@ class BookingCard extends StatelessWidget {
     required this.booking,
     this.onApprove,
     this.onReject,
+    this.onAcknowledge,
     this.isProcessing = false,
   });
 
@@ -26,6 +28,10 @@ class BookingCard extends StatelessWidget {
     final price = booking['price']?.toString() ?? '₱0';
     final status = (booking['status'] ?? '').toString().toLowerCase();
     final isPending = status == 'pending';
+    final isCancelled = status == 'cancelled';
+    final isAcknowledged = booking['cancellation_acknowledged'] == 1 || 
+                          booking['cancellation_acknowledged'] == '1' ||
+                          booking['cancellation_acknowledged'] == true;
     
     final statusColor = _getStatusColor(status);
     final statusGradient = _getStatusGradient(status);
@@ -351,6 +357,92 @@ class BookingCard extends StatelessWidget {
                       ),
                   ],
                 ),
+              ),
+            
+            // Acknowledge Button or Status (for cancelled bookings)
+            if (isCancelled)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: isAcknowledged
+                    ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF86EFAC), width: 1),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF22C55E),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Cancellation Acknowledged',
+                              style: TextStyle(
+                                color: Color(0xFF15803D),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : onAcknowledge != null
+                        ? Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton.icon(
+                              onPressed: isProcessing ? null : onAcknowledge,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              icon: isProcessing 
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : const Icon(Icons.verified, size: 20),
+                              label: const Text(
+                                'Acknowledge Cancellation',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
               ),
           ],
         ),

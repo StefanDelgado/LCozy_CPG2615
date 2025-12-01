@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 26, 2025 at 12:31 AM
+-- Generation Time: Dec 01, 2025 at 07:45 AM
 -- Server version: 10.6.23-MariaDB-cll-lve
 -- PHP Version: 8.3.27
 
@@ -20,6 +20,71 @@ SET time_zone = "+00:00";
 --
 -- Database: `cozydorms`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin_approval_requests`
+--
+
+CREATE TABLE `admin_approval_requests` (
+  `request_id` int(11) NOT NULL,
+  `requester_user_id` int(11) NOT NULL COMMENT 'User requesting admin privileges',
+  `requested_role` enum('admin') NOT NULL DEFAULT 'admin',
+  `reason` text DEFAULT NULL COMMENT 'Why they need admin access',
+  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `reviewed_by` int(11) DEFAULT NULL COMMENT 'Super admin who reviewed',
+  `reviewed_at` datetime DEFAULT NULL,
+  `review_notes` text DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin_audit_log`
+--
+
+CREATE TABLE `admin_audit_log` (
+  `log_id` int(11) NOT NULL,
+  `admin_user_id` int(11) NOT NULL COMMENT 'Admin who performed the action',
+  `action_type` varchar(100) NOT NULL COMMENT 'Type of action (e.g., grant_privilege, approve_admin, delete_user)',
+  `target_user_id` int(11) DEFAULT NULL COMMENT 'User affected by the action',
+  `action_details` text DEFAULT NULL COMMENT 'JSON or text details of the action',
+  `ip_address` varchar(45) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `admin_audit_log`
+--
+
+INSERT INTO `admin_audit_log` (`log_id`, `admin_user_id`, `action_type`, `target_user_id`, `action_details`, `ip_address`, `created_at`) VALUES
+(1, 1, 'update_privileges', 115, 'Updated privileges for Noel Lacson: manage_users, approve_owners, manage_reviews, manage_dorms', '112.198.67.240', '2025-11-29 23:24:04');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin_privileges`
+--
+
+CREATE TABLE `admin_privileges` (
+  `privilege_id` int(11) NOT NULL,
+  `admin_user_id` int(11) NOT NULL,
+  `privilege_name` varchar(100) NOT NULL COMMENT 'Permission name (e.g., manage_users, approve_owners, manage_reviews)',
+  `granted_by` int(11) DEFAULT NULL COMMENT 'Super admin who granted this privilege',
+  `granted_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `admin_privileges`
+--
+
+INSERT INTO `admin_privileges` (`privilege_id`, `admin_user_id`, `privilege_name`, `granted_by`, `granted_at`) VALUES
+(1, 115, 'manage_users', 1, '2025-11-29 23:24:04'),
+(2, 115, 'approve_owners', 1, '2025-11-29 23:24:04'),
+(3, 115, 'manage_reviews', 1, '2025-11-29 23:24:04'),
+(4, 115, 'manage_dorms', 1, '2025-11-29 23:24:04');
 
 -- --------------------------------------------------------
 
@@ -133,10 +198,12 @@ INSERT INTO `bookings` (`booking_id`, `room_id`, `student_id`, `booking_type`, `
 (54, 69, 88, 'shared', '2025-10-20', '2026-04-18', 'approved', '2025-10-20 01:21:00', '2025-10-20 08:16:58', '2025-10-20 10:16:58', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (55, 46, 30, 'shared', '2025-10-23', '2026-04-21', 'completed', '2025-10-23 08:55:19', '2025-10-23 15:40:48', '2025-10-23 17:40:48', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (56, 46, 30, 'shared', '2025-10-25', '2026-04-23', 'completed', '2025-10-25 04:56:23', '2025-10-25 11:55:26', '2025-10-25 13:55:26', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(57, 28, 112, 'shared', '2025-11-21', '2026-05-20', 'active', '2025-11-21 06:36:34', '2025-11-21 11:49:32', '2025-11-21 13:49:32', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(57, 28, 112, 'shared', '2025-11-21', '2026-05-20', '', '2025-11-26 02:04:29', '2025-11-21 11:49:32', '2025-11-21 13:49:32', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (58, 28, 113, 'shared', '2025-11-21', '2026-05-21', 'active', '2025-11-21 07:17:54', '2025-11-21 13:42:18', '2025-11-21 15:42:18', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (59, 74, 118, 'shared', '2025-11-22', '2026-05-21', 'approved', '2025-11-21 20:19:43', '2025-11-22 03:19:10', '2025-11-22 05:19:10', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(60, 74, 120, 'shared', '2025-11-22', '2026-05-21', 'approved', '2025-11-21 20:27:26', '2025-11-22 03:27:06', '2025-11-22 05:27:06', NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+(60, 74, 120, 'shared', '2025-11-22', '2026-05-21', 'approved', '2025-11-21 20:27:26', '2025-11-22 03:27:06', '2025-11-22 05:27:06', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(61, 28, 112, 'shared', '2025-11-26', '2026-05-25', 'cancelled', '2025-11-26 03:10:39', '2025-11-26 09:13:26', '2025-11-26 11:13:26', NULL, NULL, NULL, 'Cancelled by student on 2025-11-26 03:10:39', NULL, NULL, NULL),
+(62, 28, 30, 'shared', '2025-12-01', '2026-05-30', 'cancelled', '2025-11-30 23:19:28', '2025-12-01 06:02:48', '2025-12-01 08:02:48', NULL, NULL, NULL, 'Cancelled by student on 2025-11-30 23:19:28', NULL, NULL, NULL);
 
 --
 -- Triggers `bookings`
@@ -195,6 +262,14 @@ CREATE TABLE `checkout_requests` (
   `processed_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
+--
+-- Dumping data for table `checkout_requests`
+--
+
+INSERT INTO `checkout_requests` (`id`, `booking_id`, `tenant_id`, `owner_id`, `request_reason`, `status`, `created_at`, `updated_at`, `processed_by`, `processed_at`) VALUES
+(1, 57, 112, 15, 'testing', 'disapproved', '2025-11-26 01:10:00', '2025-11-26 02:02:23', 15, '2025-11-26 02:02:23'),
+(2, 57, 112, 15, 'testing request', 'approved', '2025-11-26 02:03:22', '2025-11-26 02:04:29', 15, '2025-11-26 02:04:29');
+
 -- --------------------------------------------------------
 
 --
@@ -216,32 +291,51 @@ CREATE TABLE `dormitories` (
   `cover_image` varchar(255) DEFAULT NULL,
   `features` text DEFAULT NULL,
   `deposit_months` int(11) DEFAULT 1 COMMENT 'Number of months required as deposit (1-12)',
-  `deposit_required` tinyint(1) DEFAULT 1 COMMENT 'Whether deposit is required (1=yes, 0=no)'
+  `deposit_required` tinyint(1) DEFAULT 1 COMMENT 'Whether deposit is required (1=yes, 0=no)',
+  `owner_id_document` varchar(255) DEFAULT NULL COMMENT 'Owner ID document file path',
+  `business_permit` varchar(255) DEFAULT NULL COMMENT 'Business permit document file path'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `dormitories`
 --
 
-INSERT INTO `dormitories` (`dorm_id`, `owner_id`, `name`, `address`, `description`, `verified`, `created_at`, `latitude`, `longitude`, `status`, `updated_at`, `cover_image`, `features`, `deposit_months`, `deposit_required`) VALUES
-(1, 3, 'Sunshine Dormitory', 'Lacson Street, Bacolod City', 'Affordable dorm with free WiFi and study lounge.', 0, '2025-08-22 02:25:32', 10.67650000, 122.95090000, 'verified', '2025-08-22 04:24:01', NULL, NULL, 1, 1),
-(3, 5, 'Blue Haven Dormitory', 'Araneta Avenue, Bacolod City', 'Close to universities, laundry service available, 24/7 security.', 1, '2025-08-22 02:25:32', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', NULL, NULL, 1, 1),
-(4, 4, 'Evergreen Dorms', 'Burgos Avenue, Bacolod City', 'Spacious rooms with air conditioning and shared kitchen.', 0, '2025-08-22 02:30:36', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', NULL, NULL, 1, 1),
-(5, 8, 'Southern Oasis', 'P Hernaez St.', 'A cozy dorm with a cozy atmosphere', 1, '2025-10-07 01:15:32', 10.68530000, 122.95670000, 'pending', '2025-10-16 09:47:11', 'dorm_68e469b41e437.png', 'Free Wifi, Aircon, Meals provided every morning.', 1, 1),
-(6, 15, 'Anna\'s Haven Dormitory', '6100 Tops Rd, Bacolod, Negros Occidental, Philippines', 'A cozy and affordable dorm perfect for university students. Located near major schools and transport lines.', 1, '2025-10-10 16:58:30', 10.67523870, 122.95728190, 'pending', '2025-10-16 09:23:38', 'dorm_68e93b36b97a4.png', 'Wi-Fi, Study Lounge, CCTV Security, Air-conditioned Rooms, Laundry Area', 1, 1),
-(7, 45, 'lozola', 'Bacolod', 'Secure and awesome', 1, '2025-10-11 07:32:12', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68ea07fc77de4.jpg', 'Wifi, Aircon, Study Room, Kitchen,', 1, 1),
-(8, 17, 'The Greenfield Residences', 'Burgos Avenue, Brgy. Villamonte, Bacolod City', 'Modern dormitory offering a quiet study-friendly environment with 24/7 access.', 0, '2025-10-14 05:01:20', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68edd92060847.jpg', 'Private Bathroom, Common Kitchen, Wi-Fi, Parking Space, Visitor Lobby', 1, 1),
-(9, 18, 'Casa de Felisa Dorm', 'Brgy. Mandalagan, Bacolod City', 'Home-like atmosphere with spacious rooms ideal for long-term student boarders.', 0, '2025-10-14 05:57:42', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68ede65686ffa.jpg', 'Air Conditioning, Free Water, Shared Kitchen, CCTV, Common Area', 1, 1),
-(10, 19, 'DormHub Bacolod', '17th Lacson Street, near Robinsons Place, Bacolod City', 'A digitalized dorm for tech-savvy students with app-based access and smart utilities.', 0, '2025-10-14 06:04:13', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68ede7dd98ba7.jpg', 'Smart Lock, Wi-Fi 6, Study Cubicles, Rooftop Area, 24/7 Security', 1, 1),
-(11, 20, 'La Salle Courtyard Residence', 'Narra Avenue, near University of St. La Salle, Bacolod City', 'Premium dorm for USLS students offering comfort and convenience within walking distance to campus.', 0, '2025-10-14 06:13:05', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68ede9f182e68.jpg', 'Wi-Fi, Study Hall, Air-Conditioned Rooms, Mini Café, Biometric Entry', 1, 1),
-(12, 21, 'SunnyStay Dormitory', '8th Street, Brgy. Taculing, Bacolod City', 'Bright and airy dorm designed for female students, close to jeepney routes and eateries.', 0, '2025-10-14 06:18:12', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68edeb244bf96.jpg', 'Wi-Fi, Laundry Service, CCTV, Study Desks, Shared Kitchen', 1, 1),
-(13, 22, 'St. Claire Student Inn', '15th Street, near USLS Gate 2, Bacolod City', 'Safe and budget-friendly dorm ideal for first-year college students.', 0, '2025-10-14 06:23:43', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68edec6f6a5e3.jpg', '24/7 Security, Free Drinking Water, Wi-Fi, Common Lounge, Refrigerator', 1, 1),
-(14, 55, 'Good Runners', 'MXG5+V9J, Bacolod, Negros Occidental, Philippines', 'A house of Good people', 1, '2025-10-16 12:55:55', 10.67767337, 122.95872856, 'pending', '2025-10-16 13:00:13', NULL, 'wifi, Shared kitchen, parking, aircon', 1, 1),
-(15, 55, 'Bad Runners', 'MXH3+H7W, Bacolod, Negros Occidental, Philippines', 'a house of bad runners', 0, '2025-10-16 12:56:40', 10.67904694, 122.95319986, 'pending', '2025-10-16 13:00:31', NULL, 'wifi, aircon', 1, 1),
-(16, 58, 'St. Pete Dorms', 'Rosario st. bacolod', 'Blessed St. Peter dorm a house of resting students.', 1, '2025-10-19 15:02:11', 10.66365140, 122.94653660, 'pending', '2025-10-19 15:03:02', NULL, 'Safe, AC, WiFi, No Paranormal', 1, 1),
-(17, 61, 'JazyDorm', 'Unnamed Road, Bago, Negros Occidental, Philippines', 'Cozy and cool', 1, '2025-10-20 00:10:28', 10.46341630, 122.92309910, 'pending', '2025-10-20 00:13:11', NULL, 'Wifi, Aircon, study space,', 2, 1),
-(18, 15, 'Anna Second dorm', 'St. John\'s Institute, Bacolod, Negros Occidental, Philippines', '2nd coming of the dorm', -1, '2025-11-21 14:21:45', 10.67509810, 122.95755870, 'pending', '2025-11-26 01:32:50', NULL, 'ac, kitchen, bsthrooms', 2, 1),
-(19, 116, 'Cisco', '1700 La Salle', '.', 1, '2025-11-22 03:02:24', NULL, NULL, 'pending', '2025-11-22 03:14:52', 'dorm_69212aac31c91.jpg', '', 3, 1);
+INSERT INTO `dormitories` (`dorm_id`, `owner_id`, `name`, `address`, `description`, `verified`, `created_at`, `latitude`, `longitude`, `status`, `updated_at`, `cover_image`, `features`, `deposit_months`, `deposit_required`, `owner_id_document`, `business_permit`) VALUES
+(1, 3, 'Sunshine Dormitory', 'Lacson Street, Bacolod City', 'Affordable dorm with free WiFi and study lounge.', 0, '2025-08-22 02:25:32', 10.67650000, 122.95090000, 'verified', '2025-08-22 04:24:01', NULL, NULL, 1, 1, NULL, NULL),
+(3, 5, 'Blue Haven Dormitory', 'Araneta Avenue, Bacolod City', 'Close to universities, laundry service available, 24/7 security.', 1, '2025-08-22 02:25:32', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', NULL, NULL, 1, 1, NULL, NULL),
+(4, 4, 'Evergreen Dorms', 'Burgos Avenue, Bacolod City', 'Spacious rooms with air conditioning and shared kitchen.', 0, '2025-08-22 02:30:36', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', NULL, NULL, 1, 1, NULL, NULL),
+(5, 8, 'Southern Oasis', 'P Hernaez St.', 'A cozy dorm with a cozy atmosphere', 1, '2025-10-07 01:15:32', 10.68530000, 122.95670000, 'pending', '2025-10-16 09:47:11', 'dorm_68e469b41e437.png', 'Free Wifi, Aircon, Meals provided every morning.', 1, 1, NULL, NULL),
+(6, 15, 'Anna\'s Haven Dormitory', '6100 Tops Rd, Bacolod, Negros Occidental, Philippines', 'A cozy and affordable dorm perfect for university students. Located near major schools and transport lines.', 1, '2025-10-10 16:58:30', 10.67523870, 122.95728190, 'pending', '2025-10-16 09:23:38', 'dorm_68e93b36b97a4.png', 'Wi-Fi, Study Lounge, CCTV Security, Air-conditioned Rooms, Laundry Area', 1, 1, NULL, NULL),
+(7, 45, 'lozola', 'Bacolod', 'Secure and awesome', 1, '2025-10-11 07:32:12', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68ea07fc77de4.jpg', 'Wifi, Aircon, Study Room, Kitchen,', 1, 1, NULL, NULL),
+(8, 17, 'The Greenfield Residences', 'Burgos Avenue, Brgy. Villamonte, Bacolod City', 'Modern dormitory offering a quiet study-friendly environment with 24/7 access.', 0, '2025-10-14 05:01:20', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68edd92060847.jpg', 'Private Bathroom, Common Kitchen, Wi-Fi, Parking Space, Visitor Lobby', 1, 1, NULL, NULL),
+(9, 18, 'Casa de Felisa Dorm', 'Brgy. Mandalagan, Bacolod City', 'Home-like atmosphere with spacious rooms ideal for long-term student boarders.', 0, '2025-10-14 05:57:42', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68ede65686ffa.jpg', 'Air Conditioning, Free Water, Shared Kitchen, CCTV, Common Area', 1, 1, NULL, NULL),
+(10, 19, 'DormHub Bacolod', '17th Lacson Street, near Robinsons Place, Bacolod City', 'A digitalized dorm for tech-savvy students with app-based access and smart utilities.', 0, '2025-10-14 06:04:13', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68ede7dd98ba7.jpg', 'Smart Lock, Wi-Fi 6, Study Cubicles, Rooftop Area, 24/7 Security', 1, 1, NULL, NULL),
+(11, 20, 'La Salle Courtyard Residence', 'Narra Avenue, near University of St. La Salle, Bacolod City', 'Premium dorm for USLS students offering comfort and convenience within walking distance to campus.', 0, '2025-10-14 06:13:05', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68ede9f182e68.jpg', 'Wi-Fi, Study Hall, Air-Conditioned Rooms, Mini Café, Biometric Entry', 1, 1, NULL, NULL),
+(12, 21, 'SunnyStay Dormitory', '8th Street, Brgy. Taculing, Bacolod City', 'Bright and airy dorm designed for female students, close to jeepney routes and eateries.', 0, '2025-10-14 06:18:12', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68edeb244bf96.jpg', 'Wi-Fi, Laundry Service, CCTV, Study Desks, Shared Kitchen', 1, 1, NULL, NULL),
+(13, 22, 'St. Claire Student Inn', '15th Street, near USLS Gate 2, Bacolod City', 'Safe and budget-friendly dorm ideal for first-year college students.', 0, '2025-10-14 06:23:43', 10.69170000, 122.97460000, 'pending', '2025-10-16 09:47:11', 'dorm_68edec6f6a5e3.jpg', '24/7 Security, Free Drinking Water, Wi-Fi, Common Lounge, Refrigerator', 1, 1, NULL, NULL),
+(14, 55, 'Good Runners', 'MXG5+V9J, Bacolod, Negros Occidental, Philippines', 'A house of Good people', 1, '2025-10-16 12:55:55', 10.67767337, 122.95872856, 'pending', '2025-10-16 13:00:13', NULL, 'wifi, Shared kitchen, parking, aircon', 1, 1, NULL, NULL),
+(15, 55, 'Bad Runners', 'MXH3+H7W, Bacolod, Negros Occidental, Philippines', 'a house of bad runners', 0, '2025-10-16 12:56:40', 10.67904694, 122.95319986, 'pending', '2025-10-16 13:00:31', NULL, 'wifi, aircon', 1, 1, NULL, NULL),
+(16, 58, 'St. Pete Dorms', 'Rosario st. bacolod', 'Blessed St. Peter dorm a house of resting students.', 1, '2025-10-19 15:02:11', 10.66365140, 122.94653660, 'pending', '2025-10-19 15:03:02', NULL, 'Safe, AC, WiFi, No Paranormal', 1, 1, NULL, NULL),
+(17, 61, 'JazyDorm', 'Unnamed Road, Bago, Negros Occidental, Philippines', 'Cozy and cool', 1, '2025-10-20 00:10:28', 10.46341630, 122.92309910, 'pending', '2025-10-20 00:13:11', NULL, 'Wifi, Aircon, study space,', 2, 1, NULL, NULL),
+(18, 15, 'Anna Second dorm', 'St. John\'s Institute, Bacolod, Negros Occidental, Philippines', '2nd coming of the dorm', -1, '2025-11-21 14:21:45', 10.67509810, 122.95755870, 'pending', '2025-11-26 01:32:50', NULL, 'ac, kitchen, bsthrooms', 2, 1, NULL, NULL),
+(19, 116, 'Cisco', '1700 La Salle', '.', 1, '2025-11-22 03:02:24', NULL, NULL, 'pending', '2025-11-22 03:14:52', 'dorm_69212aac31c91.jpg', '', 3, 1, NULL, NULL),
+(20, 131, 'Femboys House', 'SBC Building, Bacolod, Negros Occidental, Philippines', 'femboys', 0, '2025-11-30 15:52:24', 10.67760946, 122.95991879, 'pending', '2025-11-30 15:52:24', NULL, 'Femboys', 1, 1, 'uploads/owner_documents/owner_id_692c6838482e9.jpg', 'uploads/owner_documents/business_permit_692c6838487b6.jpg'),
+(21, 15, 'Anna 2', 'MM Building, Bacolod, Negros Occidental, Philippines', 'Anna lasale', 0, '2025-12-01 06:24:23', 10.67828400, 122.96253030, 'pending', '2025-12-01 06:24:23', NULL, 'lasalle', 1, 1, 'uploads/owner_documents/owner_id_692d349725fc1.jpg', 'uploads/owner_documents/business_permit_692d349726483.jpg');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dorm_certifications`
+--
+
+CREATE TABLE `dorm_certifications` (
+  `certification_id` int(11) NOT NULL,
+  `dorm_id` int(11) NOT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `certification_type` varchar(100) DEFAULT NULL COMMENT 'e.g., Business Permit, Fire Safety, Sanitary Permit, etc.',
+  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -355,7 +449,12 @@ INSERT INTO `messages` (`message_id`, `sender_id`, `receiver_id`, `dorm_id`, `bo
 (54, 85, 15, 6, NULL, 'Okay pwede e deploy', '2025-10-20 00:21:52', '2025-10-20 00:21:52', 'normal', NULL, NULL),
 (55, 88, 61, 17, NULL, 'Hi', '2025-10-20 01:18:24', '2025-10-20 01:18:29', 'normal', NULL, NULL),
 (56, 61, 88, 17, NULL, 'Hello', '2025-10-20 01:18:33', '2025-10-20 01:18:36', 'normal', NULL, NULL),
-(57, 61, 88, 17, NULL, 'What', '2025-10-20 19:40:21', NULL, 'normal', NULL, NULL);
+(57, 61, 88, 17, NULL, 'What', '2025-10-20 19:40:21', NULL, 'normal', NULL, NULL),
+(58, 112, 15, 6, NULL, 'Tenant requested checkout for booking #57 at Anna\'s Haven Dormitory. Reason: testing', '2025-11-26 01:10:00', '2025-11-26 01:23:04', 'normal', NULL, NULL),
+(59, 15, 112, 6, NULL, 'Your checkout request for booking #57 at Anna\'s Haven Dormitory was not approved by the owner.', '2025-11-26 02:02:23', '2025-11-26 02:05:22', 'normal', NULL, NULL),
+(60, 112, 15, 6, NULL, 'Tenant requested checkout for booking #57 at Anna\'s Haven Dormitory. Reason: testing request', '2025-11-26 02:03:22', '2025-11-26 02:20:38', 'normal', NULL, NULL),
+(61, 15, 112, 6, NULL, 'Your checkout request for booking #57 at Anna\'s Haven Dormitory has been approved by the owner.', '2025-11-26 02:04:29', '2025-11-26 02:05:22', 'normal', NULL, NULL),
+(62, 15, 30, 6, NULL, 'Hello get a bonus with the roo. Please', '2025-11-30 23:14:52', NULL, 'normal', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -421,26 +520,27 @@ INSERT INTO `payments` (`payment_id`, `booking_id`, `payment_type`, `student_id`
 (42, 58, 'monthly', 113, 15, 666.67, 'paid', '2025-11-21 14:17:54', '2025-11-28', NULL, NULL, '2025-11-21 07:17:54', '2025-11-21 06:43:16', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
 (43, 59, 'monthly', 118, NULL, 1500.00, '', '2025-11-22 03:19:43', '2025-11-22', 'receipt_43_1763782098.jpg', NULL, '2025-11-24 00:00:03', '2025-11-21 20:19:43', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
 (44, 60, 'monthly', 120, NULL, 1500.00, '', '2025-11-22 03:27:26', '2025-11-22', NULL, NULL, '2025-11-24 00:00:03', '2025-11-21 20:27:26', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(45, 35, 'monthly', 59, 58, 6000.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(46, 36, 'monthly', 62, 61, 500.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(47, 37, 'monthly', 63, 61, 2500.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(48, 38, 'monthly', 64, 61, 2500.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(49, 39, 'monthly', 65, 61, 10000.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(50, 40, 'monthly', 66, 61, 50000.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(51, 41, 'monthly', 67, 61, 500.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(52, 42, 'monthly', 68, 61, 2500.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(53, 43, 'monthly', 69, 61, 2500.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(54, 44, 'monthly', 70, 61, 1000.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(55, 45, 'monthly', 73, 61, 5000.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(56, 46, 'monthly', 74, 61, 5000.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(57, 47, 'monthly', 75, 61, 2000.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(58, 48, 'monthly', 76, 61, 1000.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(59, 49, 'monthly', 78, 61, 2500.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(60, 50, 'monthly', 76, 15, 200.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(61, 51, 'monthly', 83, 61, 2000.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(62, 52, 'monthly', 85, 15, 1000.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(63, 53, 'monthly', 86, 15, 666.67, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
-(64, 54, 'monthly', 88, 61, 2000.00, 'pending', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-25 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL);
+(45, 35, 'monthly', 59, 58, 6000.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(46, 36, 'monthly', 62, 61, 500.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(47, 37, 'monthly', 63, 61, 2500.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(48, 38, 'monthly', 64, 61, 2500.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(49, 39, 'monthly', 65, 61, 10000.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(50, 40, 'monthly', 66, 61, 50000.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(51, 41, 'monthly', 67, 61, 500.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(52, 42, 'monthly', 68, 61, 2500.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(53, 43, 'monthly', 69, 61, 2500.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(54, 44, 'monthly', 70, 61, 1000.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(55, 45, 'monthly', 73, 61, 5000.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(56, 46, 'monthly', 74, 61, 5000.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(57, 47, 'monthly', 75, 61, 2000.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(58, 48, 'monthly', 76, 61, 1000.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(59, 49, 'monthly', 78, 61, 2500.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(60, 50, 'monthly', 76, 15, 200.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(61, 51, 'monthly', 83, 61, 2000.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(62, 52, 'monthly', 85, 15, 1000.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(63, 53, 'monthly', 86, 15, 666.67, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(64, 54, 'monthly', 88, 61, 2000.00, '', '2025-11-25 07:00:04', '2025-11-30', NULL, NULL, '2025-11-27 00:00:04', '2025-11-25 00:00:04', 0, NULL, NULL, NULL, 'bank_transfer', NULL),
+(76, 61, 'monthly', 112, NULL, 666.67, 'rejected', '2025-11-26 09:14:08', '2025-11-26', NULL, 'Payment cancelled due to booking cancellation on 2025-11-26 03:10:39', '2025-11-26 03:10:39', '2025-11-26 02:14:08', 0, NULL, NULL, NULL, 'bank_transfer', NULL);
 
 --
 -- Triggers `payments`
@@ -682,7 +782,33 @@ INSERT INTO `tenants` (`tenant_id`, `booking_id`, `student_id`, `dorm_id`, `room
 (30, 57, 112, 6, 28, 'active', '2025-11-21 00:00:00', NULL, '2026-05-20', 4000.00, 0.00, NULL, '2025-11-21 12:10:03', '2025-11-21 13:36:34'),
 (31, 58, 113, 6, 28, 'active', '2025-11-21 00:00:00', NULL, '2026-05-21', 666.67, 0.00, NULL, '2025-11-21 13:43:16', '2025-11-21 14:17:54'),
 (32, 59, 118, 19, 74, 'active', '2025-11-22 00:00:00', NULL, '2026-05-21', 0.00, 0.00, NULL, '2025-11-22 03:19:43', '2025-11-22 03:19:43'),
-(33, 60, 120, 19, 74, 'active', '2025-11-22 00:00:00', NULL, '2026-05-21', 0.00, 0.00, NULL, '2025-11-22 03:27:26', '2025-11-22 03:27:26');
+(33, 60, 120, 19, 74, 'active', '2025-11-22 00:00:00', NULL, '2026-05-21', 0.00, 0.00, NULL, '2025-11-22 03:27:26', '2025-11-22 03:27:26'),
+(34, 61, 112, 6, 28, 'active', '2025-11-26 00:00:00', NULL, '2026-05-25', 0.00, 0.00, NULL, '2025-11-26 09:14:08', '2025-11-26 09:14:08');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `terms_and_conditions`
+--
+
+CREATE TABLE `terms_and_conditions` (
+  `id` int(11) NOT NULL,
+  `version` varchar(20) NOT NULL COMMENT 'Version identifier (e.g., v1.0, v1.1)',
+  `user_type` enum('student','owner','both') DEFAULT 'both' COMMENT 'Which user type this applies to',
+  `title` varchar(255) NOT NULL,
+  `content` text NOT NULL COMMENT 'HTML content of terms and conditions',
+  `effective_date` date NOT NULL COMMENT 'When this version becomes effective',
+  `is_active` tinyint(1) DEFAULT 1 COMMENT 'Whether this version is currently active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `terms_and_conditions`
+--
+
+INSERT INTO `terms_and_conditions` (`id`, `version`, `user_type`, `title`, `content`, `effective_date`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'v1.0', 'both', 'LCozy Dormitory Management System - Terms and Conditions', '<h3>1. Acceptance of Terms</h3>\r\n<p>By registering and using the LCozy Dormitory Management System, you agree to be bound by these Terms and Conditions.</p>\r\n\r\n<h3>2. User Responsibilities</h3>\r\n<p><strong>For Students:</strong></p>\r\n<ul>\r\n<li>Provide accurate and truthful information during registration</li>\r\n<li>Pay rent and other fees on time as agreed</li>\r\n<li>Respect dorm rules and regulations</li>\r\n<li>Report any issues or damages promptly</li>\r\n<li>Maintain cleanliness and order in shared spaces</li>\r\n</ul>\r\n\r\n<p><strong>For Dorm Owners:</strong></p>\r\n<ul>\r\n<li>Provide accurate information about dormitory facilities</li>\r\n<li>Maintain safe and habitable living conditions</li>\r\n<li>Address tenant concerns promptly</li>\r\n<li>Comply with local housing regulations</li>\r\n<li>Process payments and refunds fairly</li>\r\n</ul>\r\n\r\n<h3>3. Privacy and Data Protection</h3>\r\n<p>We collect and store personal information necessary for dormitory management. Your data will be protected and not shared with third parties without consent, except as required by law.</p>\r\n\r\n<h3>4. Payment Terms</h3>\r\n<p>All payments must be made through the system. Late payments may result in penalties. Refunds are subject to the cancellation policy.</p>\r\n\r\n<h3>5. Cancellation Policy</h3>\r\n<p>Students may cancel bookings before payment without penalty. After payment, cancellations are subject to owner approval and may incur fees.</p>\r\n\r\n<h3>6. Liability</h3>\r\n<p>LCozy acts as a platform connecting students and dorm owners. We are not responsible for disputes between parties, property damage, or personal injuries.</p>\r\n\r\n<h3>7. Termination</h3>\r\n<p>We reserve the right to terminate accounts that violate these terms or engage in fraudulent activities.</p>\r\n\r\n<h3>8. Changes to Terms</h3>\r\n<p>We may update these terms periodically. Continued use of the system constitutes acceptance of updated terms.</p>\r\n\r\n<h3>9. Contact</h3>\r\n<p>For questions about these terms, please contact support through the app.</p>', '2025-11-26', 1, '2025-11-26 10:22:23', '2025-11-26 10:22:23');
 
 -- --------------------------------------------------------
 
@@ -696,8 +822,11 @@ CREATE TABLE `users` (
   `address` varchar(255) DEFAULT NULL,
   `email` varchar(150) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('admin','owner','student') NOT NULL DEFAULT 'student',
+  `role` enum('superadmin','admin','owner','student') NOT NULL DEFAULT 'student',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `terms_accepted` tinyint(1) DEFAULT 0 COMMENT 'Whether user accepted terms and conditions',
+  `terms_accepted_at` datetime DEFAULT NULL COMMENT 'When user accepted terms',
+  `terms_version` varchar(20) DEFAULT NULL COMMENT 'Version of terms accepted (e.g., v1.0)',
   `verified` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0 = Pending, 1 = Verified, -1 = Rejected',
   `phone` varchar(20) DEFAULT NULL,
   `license_no` varchar(100) DEFAULT NULL,
@@ -709,110 +838,113 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `name`, `address`, `email`, `password`, `role`, `created_at`, `verified`, `phone`, `license_no`, `profile_pic`, `id_document`) VALUES
-(1, 'Angelo', NULL, 'angelo@gmail.com', '$2y$10$lmeeDUafjSWU9pZZd.sIz.0U7AG2GXt5yTOblJBhx0HRLQVP65vNa', 'admin', '2025-08-20 14:23:12', 1, NULL, NULL, NULL, NULL),
-(2, 'Sunday', NULL, 'sunday@gmail.com', '$2y$10$tpaHDGCq37RKImP2vRHT..fnYYaZMABCsR/rjxlemydDbVQyDdmm6', 'student', '2025-08-22 02:00:09', 0, NULL, NULL, NULL, NULL),
-(3, 'Oswald', NULL, 'oswald@gmail.com', '$2y$10$00XC6x0bMQP4FhEnfzUOyu0TDrph7lT3WNQobhd6snuB4124V8xD6', 'owner', '2025-08-22 02:01:40', 1, NULL, NULL, NULL, NULL),
-(4, 'Jake', NULL, 'jake@gmail.com', '$2y$10$cem8jAW8IFcNJB2C6OuO9.svVgFWGjyIW1.2pVVlr3OLk2wN4RwJm', 'owner', '2025-08-22 02:24:47', -1, NULL, NULL, NULL, NULL),
-(5, 'Kevin', NULL, 'kevin@gmail.com', '$2y$10$syH7gbYI2bjiUddci.vT5elIRRo6vK4jWxOkrfMmUeXkZ0T6WHY66', 'owner', '2025-08-22 02:25:03', 1, NULL, NULL, NULL, NULL),
-(6, 'John', NULL, 'John1@email.com', '$2y$10$3IuLCGJqUHewUzkM9vsooeLfIOixonJMHwp4yaVfZ/Sk54UocxK.e', 'student', '2025-10-06 00:09:18', 0, NULL, NULL, NULL, NULL),
-(7, 'Eric Sanchez', NULL, 'eric@gmail.com', '$2y$10$ocy/p71iP5sQs/gu/rLtg.RMbTTqmbPAoqF7QwCEa60TmpcLGRNAS', 'student', '2025-10-07 00:25:42', 0, '09457318765', NULL, NULL, NULL),
-(8, 'Bernard Diaz', NULL, 'diaz@gmail.com', '$2y$10$IJBgszxpooObYB00hNYpy.Xqxk9B2izHgtcAq4OdwTXYdPMULg0w6', 'owner', '2025-10-07 01:02:57', 1, '09768523456', NULL, NULL, NULL),
-(9, 'john florence', NULL, 'johnflorence@gmail.com', '$2y$10$ccMPd5e/6n..KfWt5bi7O.GnTOcVjcK4vkwhmhQoPMe/auuih5mQW', 'student', '2025-10-07 02:37:48', 0, '09456526238', NULL, NULL, NULL),
-(10, 'Stefan Jhonn D Delgado', NULL, 's2120062@gmail.com', '$2y$10$sdMfhva4sWkbVvGxsk3dfe4SLyexM/ywEa4yH1Lz0Is4G17nHeor2', 'student', '2025-10-08 10:57:44', 0, '09391762834', NULL, NULL, NULL),
-(11, 'Jamie Fowler', NULL, 'jamie@email.com', '$2y$10$PeR6Bsig96tWdf/tJ423ouak.7COQYuZV20eyHTCVaxvsA60ZrDzK', 'student', '2025-10-08 11:18:56', 0, '09876453254', NULL, NULL, NULL),
-(13, 'Juan Dela Cruz', NULL, 'juan.delacruz@example.net', '$2y$10$McI.t4f1cXSlOJTymIGpD.TzUKQyBcfDn.XeAUPsyHfOXBpyPFAnC', 'owner', '2025-10-09 03:46:39', 1, '09175551234', NULL, NULL, NULL),
-(14, 'Maria Santos', NULL, 'maria_s@example.com', '$2y$10$MqUwT6gHoIoddSxafaOGMOf1Ayqk87R6BWTS7W4nvSEitqpT.hMpy', 'owner', '2025-10-09 03:47:16', -1, '09205555678', NULL, NULL, NULL),
-(15, 'Anna Reyes', NULL, 'anna.reyes@email.com', '$2y$10$GcA1WBqEvjfPSMilhf6JAeayssvMMh2YjkQXs8jLupP2LC2rsToQG', 'owner', '2025-10-09 05:27:48', 1, '09123456789', NULL, NULL, NULL),
-(16, 'Mark Dela Cruz', NULL, 'mark.dc@email.net', '$2y$10$/ooC1kx/Kjfu.mxgy.zrTOZEX9GfHlygte8AG.DS5FQWTBO3xtzny', 'student', '2025-10-09 05:28:04', 0, '09234567890', NULL, NULL, NULL),
-(17, 'Julia Santos', NULL, 'julia.santos@email.org', '$2y$10$FzPRcx/dy1pX9oYi5iHm1usHELxZ6ENicqrrJ42Q1lS7xIcl73PWu', 'owner', '2025-10-09 05:28:22', -1, '09345678901', NULL, NULL, NULL),
-(18, 'Leo Gutierrez', '', 'leo.g@email.com', '$2y$10$FIMS9XX/o8/o30PF8KuiUOB9Lp2JE06cNR9BcPowbp9z22dtuXvk6', 'owner', '2025-10-09 05:28:40', 0, '09456789012', '', NULL, NULL),
-(19, 'Mia Navarro', NULL, 'mia.n@email.net', '$2y$10$yk6AyX7psnoKa7hqXoPsseBuXxviTJdRvt7x2UrHPh5MbQBLT6jEO', 'owner', '2025-10-09 05:29:00', 1, '09567890123', NULL, NULL, NULL),
-(20, 'Carlo Ramos', NULL, 'carlo.r@email.com', '$2y$10$P9Ee1v7KFY11BhU8PeUcuOpOzzjXHU0dW2Y8KGiQBXrVFpRKjKD4O', 'owner', '2025-10-09 05:32:52', -1, '09678901234', NULL, NULL, NULL),
-(21, 'Denise Lopez', NULL, 'denise.lopez@email.org', '$2y$10$gn0Dfqv3gfy6hEywgDYQ0eVaZbqsj3cHWRE6ztc9ljEHupnQh04MO', 'owner', '2025-10-09 05:33:18', 0, '09789012345', NULL, NULL, NULL),
-(22, 'Paolo Mendoza', NULL, 'paolo.m@email.com', '$2y$10$d3Kn85uc47zyMhxMHgzjiujAeCc1kfxqL0E3swAfsGgxC6dOKn7bO', 'owner', '2025-10-09 05:33:36', 0, '09890123456', NULL, NULL, NULL),
-(23, 'Tricia Lim', NULL, 'tricia.l@email.net', '$2y$10$mI5rc3iaT8vBwKSv2Oervuj/gEB4nJWx4UVrYJk7d70HBWijjXhIu', 'owner', '2025-10-09 05:33:57', 0, '09901234567', NULL, NULL, NULL),
-(24, 'Nathan Torres', NULL, 'nathan.t@email.org', '$2y$10$xmxxBLX/z.xld0SqF1hseeL6MSzKd1YfU9G7sTnhdtMSr3JAOa/F6', 'owner', '2025-10-09 05:34:14', 0, '09012345678', NULL, NULL, NULL),
-(25, 'Sophia Cruz', NULL, 'sophia.cruz@email.com', '$2y$10$DtX5fhDP11RqbzJ7GHrGWeig1aOa5HiiALzMZo6lyl.6ToAHI9K0W', 'owner', '2025-10-09 05:38:10', 0, '09111222333', NULL, NULL, NULL),
-(26, 'Kevin Santos', NULL, 'kevin.s@email.net', '$2y$10$KqkBT93tWbWxJ3flK4WY/ei7bnqi/TJ4DPpC9bvcXixS/RChRZ0Bq', 'owner', '2025-10-09 05:38:29', 0, '09222333444', NULL, NULL, NULL),
-(27, 'Bianca Reyes', NULL, 'bianca.r@email.org', '$2y$10$fbJdXt43OrMxBRwgG6x34.zqU7/FGApNsVOVE0obAAxKDdn6Z8DQ.', 'owner', '2025-10-09 05:38:46', 0, '09333444555', NULL, NULL, NULL),
-(28, 'Andre Villanueva', NULL, 'andre.v@email.com', '$2y$10$6u7YU5sr2n1EcgLuP/xO0OTDdklR92o360KOPAR6HDzYFML5OCQWm', 'owner', '2025-10-09 05:39:02', 0, '09444555666', NULL, NULL, NULL),
-(29, 'Lara Jimenez', NULL, 'lara.j@email.net', '$2y$10$iWOZpw0rmcyjaQda8.xyTe5yCwy75Tjk36jJDR2O8KFborZ.5hV9C', 'owner', '2025-10-09 05:39:18', 0, '09555666777', NULL, NULL, NULL),
-(30, 'Ethan Castillo', NULL, 'ethan.castillo@email.com', '$2y$10$JAERYBGf7naHaqTRbNibr.eOxUHaEUWXpcJ764P58iJDf.zeCQXgG', 'student', '2025-10-09 05:43:34', 1, '09178881234', NULL, NULL, NULL),
-(31, 'Chloe Manalo', NULL, 'chloe.manalo@email.net', '$2y$10$GXeT6p2ixFMUHuWM61T5ZOKaj5XT766fknFfXz3wMK/eSCftH0is2', 'student', '2025-10-09 05:43:49', 0, '09269992345', NULL, NULL, NULL),
-(32, 'Lucas Domingo', NULL, 'lucas.d@email.org', '$2y$10$P//DMtllMV8jiuljyHwX3OWj7Zl79f7mavqMeKH8QCIh.q6d9m5Yu', 'student', '2025-10-09 05:44:05', 0, '09354445678', NULL, NULL, NULL),
-(33, 'Isabelle Ramos', NULL, 'isabelle.r@email.com', '$2y$10$J115SGT9HufMWBE1Y3n6e.Dc0i5tMcfbbBzQGl.9G5EUOUNnwMYaO', 'student', '2025-10-09 05:44:19', 0, '09443336789', NULL, NULL, NULL),
-(34, 'Elijah Bautista', NULL, 'elijah.b@email.net', '$2y$10$XGvCcUbrjvTFYaiMfBCOyOrPtlQkBH/TQiFtYMBbH5Oygexs6BHTW', 'student', '2025-10-09 05:44:34', 0, '09562227890', NULL, NULL, NULL),
-(35, 'Hannah Fajardo', NULL, 'hannah.f@email.org', '$2y$10$udp5FON04E/NLjeQE5IaguUlTf1RD160WmOZG/loW5dt6IBbOtsDq', 'student', '2025-10-09 05:44:47', 0, '09671118901', NULL, NULL, NULL),
-(36, 'Aiden Vergara', NULL, 'aiden.v@email.com', '$2y$10$AGSyOxmP1.XfduxwkQEiLOwa2OaGM1WF2jS/vODoU2lMaZJydyLiq', 'student', '2025-10-09 05:45:02', 0, '09780009012', NULL, NULL, NULL),
-(37, 'Sofia Alvarez', NULL, 'sofia.alvarez@email.net', '$2y$10$aaxKJkSpku1R./7usnKoXe2GbmYQPu6jEm8aZT647uemplDLlR9ui', 'student', '2025-10-09 05:45:18', 0, '09891110123', NULL, NULL, NULL),
-(38, 'Liam Santiago', NULL, 'liam.s@email.org', '$2y$10$jZKIRo1RFDZBLaYpc6rGX./G/wdK98kNRNuzaTqZeoPH9MgL47WhS', 'student', '2025-10-09 05:45:33', 0, '09908881234', NULL, NULL, NULL),
-(39, 'Camille De Guzman', NULL, 'camille.dg@email.com', '$2y$10$k9hFiH8MckLgTfdrdd0PR.fcfrSTX8usFkvsaJkhfgbUXSYAsaPlu', 'student', '2025-10-09 05:45:48', 0, '09097772345', NULL, NULL, NULL),
-(40, 'Jacob Morales', NULL, 'jacob.m@email.net', '$2y$10$XEXczDpQin44KINOdLusXu./g07ngmQ.2NuP3fkDFO.BSF5nY/I3m', 'student', '2025-10-09 05:46:02', 0, '09186663456', NULL, NULL, NULL),
-(41, 'Alexa Cruz', NULL, 'alexa.cruz@email.org', '$2y$10$wujbhtrucaToLd0Ah3Bc.OwH8NrEF1ntwusp2s/TRhzchPKKZNA/K', 'student', '2025-10-09 05:46:17', 1, '09275554567', NULL, NULL, NULL),
-(42, 'Noah Enriquez', NULL, 'noah.enriquez@email.com', '$2y$10$9faaKs6k8o8CRsXMXIfXQ.mhyMCQFcEVC8BVhZ3Trj1Yl4PaO4GNe', 'student', '2025-10-09 05:46:29', 0, '09364445678', NULL, NULL, NULL),
-(43, 'Kylie Delos Reyes', NULL, 'kylie.dr@email.net', '$2y$10$3V/hQoA5bynyYG2Clw3C9OFvdN7g2ZrMkSel3.WfFjch/waJ96HIy', 'student', '2025-10-09 05:46:40', 0, '09453336789', NULL, NULL, NULL),
-(44, 'Nathaniel Reyes', NULL, 'nathaniel.r@email.org', '$2y$10$ulSD9yuBVnVqUuhyKaHqs.Rg/B0GfhK2RVNkWOHZS2Y7SbmnxHMNC', 'student', '2025-10-09 05:46:56', 0, '09542227890', NULL, NULL, NULL),
-(45, 'Fall Gomes', NULL, 'jpsgomes0212@gmail.com', '$2y$10$GULRRafuNafHQb0JFZmFAucbpqolQI0Xnl6Tcc8SxaHL/HLvccyJC', 'owner', '2025-10-11 07:22:53', 0, '09453196127', NULL, NULL, NULL),
-(46, 'Jan Pol Gomes', NULL, 'janpolgomes@gmal.com', '$2y$10$xiaLSF0v9z3UGK5d7eS1A.SXWfHtie6PaM/r1jm.uT2NUCE5rQLpS', 'student', '2025-10-11 10:05:13', 0, '09453196129', NULL, NULL, NULL),
-(47, 'Jan Pol Gomes', NULL, 'janpol@gmail.com', '$2y$10$OZp52j10PNJnJFs.yZGlYua5JWxTES1BJmrG.k/yrNz1S6xBrcqPC', 'student', '2025-10-11 10:06:43', 0, '09453196127', NULL, NULL, NULL),
-(48, 'Jhanna Gracey Villan', NULL, 'jhanna@gmail.com', '$2y$10$55XADUHThWKpFwwYe09bReyYZKmiJY65e4XxNS4o4u1G1E7Ir8cv6', 'student', '2025-10-13 23:48:11', 0, '09019203817', NULL, NULL, NULL),
-(49, 'James Ham', NULL, 'jamesham@email.com', '$2y$10$ti5K7WBkOm6MdSmIRgsZe.bR0FiMeBK3c4rpo6ZsZpXkYp.HYYyoy', 'student', '2025-10-14 00:05:07', 0, '09764537234', NULL, NULL, NULL),
-(50, 'John Garcia', NULL, 'garcia@email.com', '$2y$10$G7Xl.SKODvwTi4VkbLyCDebskx2gPw8vQNOFYgrcN63VtrGN.Fw/y', 'student', '2025-10-14 04:41:58', 0, '09874356273', NULL, NULL, NULL),
-(51, 'Azer Jan', NULL, 's2201387@usls.edu.ph', '$2y$10$SiBkIaJFN47lVorRVgcuieCWEvqIWRxsleYfijCAgM7zmEjNAvXgW', 'student', '2025-10-16 08:07:35', 1, '09100010101', NULL, NULL, NULL),
-(52, 'Leanne Gumban', NULL, 's2016022@usls.edu.ph', '$2y$10$647ogLFwqRcFXj.CW5bamOPe532Fyf..acMIFee0pfTvqFrh7QbtG', 'student', '2025-10-16 08:10:21', 0, '09062643027', NULL, NULL, NULL),
-(53, 'Kirby Calampinay', NULL, 's24321', '$2y$10$RSd/YTyn4SR4qQX415iaGe/0Vsx03p7ZTXxyScPJONm4LetMKWbw6', 'student', '2025-10-16 11:10:10', 0, NULL, NULL, NULL, NULL),
-(54, 'Sam Smith', NULL, 'jr74084@gmail.com', '$2y$10$ozLCeg6b8ydv0g7Ucqi8Ne8f1pAoN3pRAviaHDXqDTWE8pA14yU9S', 'student', '2025-10-16 11:12:48', 0, NULL, NULL, NULL, NULL),
-(55, 'Joshua Campo', NULL, 'campo.j@email.com', '$2y$10$5uGpdOBtHGvrguJIAaTF7.3qQji78PxXRI1L0YRg5LebEj0XbYvtS', 'owner', '2025-10-16 12:53:18', 0, NULL, NULL, NULL, NULL),
-(56, 'Mikey Segovia', NULL, 'anonsfwend19@gmail.com', '$2y$10$34qAUcRgeCD8Y.3hhCV8buRCCmkj18v35duoCQaoVM0uJYXmY7MQy', 'student', '2025-10-16 15:53:48', 0, NULL, NULL, NULL, NULL),
-(57, 'Brad Ed Sale', NULL, 'brod@gmail.com', '$2y$10$2Y868faqd.GMPl9pFNr3ZOnEyOzmExmHkvaLjuNV4/wJKjJXcrNfC', 'student', '2025-10-16 15:58:36', 0, NULL, NULL, NULL, NULL),
-(58, 'Justin Cantilero', NULL, 'j.cantilero@email.com', '$2y$10$mEpFSZxaeznO5BwOCYTAOOpbb2iMnmetnoKRkcoQBKIh.jXbPSiNq', 'owner', '2025-10-19 14:42:02', 0, NULL, NULL, NULL, NULL),
-(59, 'Kevin Figueroa', NULL, 'k.figueroa@email.com', '$2y$10$koyV8AiUxK9yCkKDCw0OqeEDHnNtb6/YcvXRvMwhnSBL.vVIXb5F.', 'student', '2025-10-19 14:45:52', 0, NULL, NULL, NULL, NULL),
-(60, 'Dray Young', 'Hilado St, Bacolod City', 'young@gmail.com', '$2y$10$XlVANn.R0lZmk1hB3lMXhuZZh6zzp2lpTKBhTzBl/hN9WQ9CuX6YC', 'student', '2025-10-19 17:38:07', 0, '09457654536', 'N/A', NULL, NULL),
-(61, 'Jay Ramos', NULL, 'jay@gmail.com', '$2y$10$A6B.Zee5z28Qa4.WjyliEOYwZp5nOdCzQiuQCK0vRKeEgf7.UBlA.', 'owner', '2025-10-20 00:02:54', 1, NULL, NULL, NULL, NULL),
-(62, 'Brad Ed Sale', NULL, 'brad12345@gmail.com', '$2y$10$mxSk/6nNqS6vbGoXhc5gG.AlSFcgSp4O0MK6HxT7Wfs2FtJTRXgmu', 'student', '2025-10-20 00:03:10', 0, NULL, NULL, NULL, NULL),
-(63, 'Elaiza Francisco', NULL, 's2500728@usls.edu.ph', '$2y$10$x.m.XlsWchHJwalt7y7/auTuC7VVMfHSkwDplpJzdyVxu4Y6ijdmC', 'student', '2025-10-20 01:45:34', 0, NULL, NULL, NULL, NULL),
-(64, 'w', NULL, 'w@s.com', '$2y$10$WTrLzNpSYgcmTyJlxQXVyu9I2d/WfMv1c5D8117T2mHmySiJ0fdJ.', 'student', '2025-10-20 01:55:28', 0, NULL, NULL, NULL, NULL),
-(65, 'Raymund Alfaro', NULL, 'raymund@gmail.com', '$2y$10$vGEyD9OHiK/d68dufGTRKupOL/gPO7GPqwna62GUfQ8LkaJdE43Ym', 'student', '2025-10-20 02:11:04', 0, NULL, NULL, NULL, NULL),
-(66, 'Razianth Oanes', NULL, 'raz123@gmail.com', '$2y$10$l7NwycPRf6f10Y9rAzU15.COeFLT92SCxFjWJ8yL2BT3wt2izy5Z2', 'student', '2025-10-20 02:29:46', 0, NULL, NULL, NULL, NULL),
-(67, 'Gorge Batumbakal', NULL, 'ilovelolis67@yahoo.cum', '$2y$10$ab04ZgSs21o.zYB2bwL7aOZp29jzqVbsvLvjvitiJPjMnOSijUTg.', 'student', '2025-10-20 02:38:38', 0, NULL, NULL, NULL, NULL),
-(68, 'Jeremy Isaac B. Martirez', NULL, 's2120515@usls.edu.ph', '$2y$10$..XvX/Bgqh9y2ap9.syOK.tcgDf6NY.2zsLSdW/KlFMDuuItYAU0u', 'student', '2025-10-20 02:47:40', 0, NULL, NULL, NULL, NULL),
-(69, 'Kevin M. Figueroa', NULL, 'zemaster18@gmail.com', '$2y$10$PY7z4hLd3wzTXdBjvg/2I.IIRKhOz2ZI..AIKKdNM1Zk3RpDO0BV6', 'student', '2025-10-20 02:52:23', 0, NULL, NULL, NULL, NULL),
-(70, 'Brad ed', NULL, 'doe@gmail.com', '$2y$10$zdQswIpwIBGIWXZtMugwVuwzvrui36zPAQT0VZ9ElbuntC1HEI92a', 'student', '2025-10-20 03:06:01', 0, NULL, NULL, NULL, NULL),
-(71, 'Fall asleep', NULL, 'whizy212@gmail.com', '$2y$10$Ka.SsmjXW3q/LzI/2bQV5uSo6Mct06sDqRXl4r6eYq.ptWn1Gjlx2', 'student', '2025-10-20 03:13:20', 0, NULL, NULL, NULL, NULL),
-(72, 'Fall Asleep', NULL, 'salebraded@gmail.com', '$2y$10$BtvRbO/j2HOYAB3IvMXXL.CFrCUZuebvu3KPp5oOc8X.j8Cm/Xt1K', 'student', '2025-10-20 03:13:56', 0, NULL, NULL, NULL, NULL),
-(73, 'Fall Asleep', NULL, 'test@email.com', '$2y$10$C9V9BDDhDTvHCvYUgbg7peQAKZBNe/cWdYwKgU6zEvm4d0b6tSMSG', 'student', '2025-10-20 03:14:29', 0, NULL, NULL, NULL, NULL),
-(74, 'Charles', NULL, 'dcharlesmarce@gmail.com', '$2y$10$EbkmLzNenWIiqd7xlieuKewHwk1SXsANnttvuohAxN5ORA58RQ0.2', 'student', '2025-10-20 03:27:44', 0, NULL, NULL, NULL, NULL),
-(75, 'pauly', NULL, 'paul@gmail.com', '$2y$10$Mg0VvP6Kh7sQe0LKZGlo2.sKZ.kx6zWigupULTm0B1bQ.Q/KPbxIO', 'student', '2025-10-20 03:41:06', 0, NULL, NULL, NULL, NULL),
-(76, 'student 1', NULL, 'student1@email.com', '$2y$10$KFzZ3cdoxjqXJuA1SiVin.ObUeNYIOkMterLdQhKDHqwU9WBuFE4e', 'student', '2025-10-20 03:54:10', 0, NULL, NULL, NULL, NULL),
-(77, 'norbert', NULL, 'norbert@gmail.com', '$2y$10$l854QJbxQKQ5d86w37x7z.OzGQGydIuJm7KMTRSpGdIEfe5liFL0C', 'student', '2025-10-20 04:09:22', 0, NULL, NULL, NULL, NULL),
-(78, 'Norbert Audines', NULL, 's...2303007@gmail.com', '$2y$10$uHKF4Ipf.jfjjO61N2rKL.GFDQw0ENuVgn0osPbxmP5RWeeaMa4Cy', 'student', '2025-10-20 04:10:33', 0, NULL, NULL, NULL, NULL),
-(79, 'Kylin Cabrera', NULL, '.........@gmail.com', '$2y$10$ZJaUIOMLtnNIebjgjWhC2.cmEoXq3XtFh.TeOLJjGtTtL1I4Ay9Xm', 'student', '2025-10-20 04:23:08', 0, NULL, NULL, NULL, NULL),
-(80, 'Kylin Cabs', NULL, '..........@gmail.com', '$2y$10$BKB4ddy0h6bIIg652AxHP.MDiLp2h2dnxBXIcfr/TZ33hqa4xzBtq', 'student', '2025-10-20 04:24:36', 0, NULL, NULL, NULL, NULL),
-(81, 'julian', NULL, 's2400346@usls.edu.ph', '$2y$10$.k9r9LoEaw7wJMal94imgeMWJhiQ9vB509YI7jI9cJOwLN4DNp/ti', 'student', '2025-10-20 05:30:31', 0, '09691118016', NULL, NULL, NULL),
-(82, 'e', NULL, 'ej@example.com', '$2y$10$XC8EpIHWCvJPZqU0p3DCnOtUA6aqxh/MbLFIaBtS36s2mGsIW9bcC', 'student', '2025-10-20 06:05:52', 0, NULL, NULL, NULL, NULL),
-(83, 'bry', NULL, 'bry123@gmail.com', '$2y$10$tsYj50U8Ir.mWRU1jYYU6OUIRqyFCl1RDr4RL8M7Y7cB0SAxbNomu', 'student', '2025-10-20 06:15:29', 0, NULL, NULL, NULL, NULL),
-(84, 'romeo standards', NULL, 'romeo@exampe.com', '$2y$10$hB/koHVBFY3cAGSlvCpg2u0cnZEp.aGdfVF87cYVjhtXplt29hdj2', 'student', '2025-10-20 07:12:32', 0, NULL, NULL, NULL, NULL),
-(85, 'Romeo Seva', NULL, 'romrom@example.com', '$2y$10$K8YfVzvjjrPQpEudmLffiu47lubs5W.GJp4/gaNnWqG5o2hnLW16e', 'student', '2025-10-20 07:15:17', 0, NULL, NULL, NULL, NULL),
-(86, 'Kharyl Alejo', NULL, 'alejokharyl1221@gmail.com', '$2y$10$198x0h4vWxRdG8QIGYOHl.1o8edA9.5LUMxd6KjZiiqzAi6.GxZa.', 'student', '2025-10-20 07:30:31', 0, NULL, NULL, NULL, NULL),
-(87, 'rojer', NULL, 'rojer@gmail.com', '$2y$10$x.vVvZOWUgHY4APe2b9dbOsqjHSptq9JHfOF5EIunlLWpnwaaSDia', 'student', '2025-10-20 08:05:35', 0, NULL, NULL, NULL, NULL),
-(88, 'David M', NULL, 'davidm@any.com', '$2y$10$Zfp4jJg5UoV1F/QskVOZOuVB2dmIaQJz7o/a2iiUBLUvsy.FeWF1y', 'student', '2025-10-20 08:08:20', 0, NULL, NULL, NULL, NULL),
-(101, 'Stefan', NULL, 'stefanjhonn123@gmail.com', '$2y$10$rvTVSIR8OncvaEO9dMFcXuzNnyVrNYxlfqt283PLbJCQ13h/.mMoy', 'student', '2025-10-23 13:13:01', 0, '08285779742', NULL, NULL, NULL),
-(105, 'stefan', NULL, 'delgado..@gmail.com', '$2y$10$JLkAitV4EourWM9BUYGsSOugW/n.GGKf..Vsd9CD9MYZvb.636Uuy', 'student', '2025-10-23 14:56:41', 0, NULL, NULL, NULL, NULL),
-(110, 'stefan', NULL, 'delgado@gmail.com', '$2y$10$V89dE6lppR/fL8JKDO76juIn2V.2w1LV7JAR/JrIMVXnBhTRq4hii', 'student', '2025-10-23 15:03:01', 1, NULL, NULL, NULL, NULL),
-(111, 'stefan', NULL, 'delgado@email.com', '$2y$10$W5T.vN0ZNAOBxPuvN.AQSu5rcXUfkIhYO7m.M4iO/4iJ1sMx7IfS2', 'student', '2025-10-23 15:04:07', -1, NULL, NULL, NULL, NULL),
-(112, 'Stefan Jhonn Delgado', NULL, 'stefan123@gmail.com', '$2y$10$42cwjS3VuYdk9n/ROM/ppezgz.HTPygTaN8uY66gsGKXpVepG62FC', 'student', '2025-11-21 07:32:04', 1, NULL, NULL, NULL, NULL),
-(113, 'Sid Delgado', NULL, 'sid123@gmail.com', '$2y$10$bJj0JtE1.vJ6OSfdqrlssu9.LOmmWBzC2gcaOa.e01mMx0t8QxT.m', 'student', '2025-11-21 13:41:25', 1, '0909090909', NULL, NULL, NULL),
-(114, 'Brad ed Sale', NULL, 'salebred@gmail.com', '$2y$10$gZycN7dNwWJd.qTgLosy8OugIEuhiLFFJULJFIdJ4ZqJM10NLZyo.', 'student', '2025-11-22 01:33:48', 1, NULL, NULL, NULL, NULL),
-(115, 'Noel Lacson', '', 'n.lacson@gmail.com', '$2y$10$r759pRJKuLtCv38N2kzHX.KjPTWLYidSg4ifyUI.hEVttRoNavhMe', 'admin', '2025-11-22 02:46:54', 1, '', 'N/A', NULL, NULL),
-(116, 'Roger Intong', NULL, 'r.intong@gmail.com', '$2y$10$YXCsRSsgMFqxKhhJwQ.ZZuAdoGhbkZoWDENRrz4ZPayOuR7Gj8EVm', 'owner', '2025-11-22 02:55:16', 1, '09123456789', NULL, NULL, NULL),
-(117, 'braded', NULL, 'salebrod@gmail.com', '$2y$10$fwCjV269FSV7hS3QHDY/UukjBNMH2dgExKhk/E6cgo1vwyegKCWee', 'student', '2025-11-22 03:13:41', 1, NULL, NULL, NULL, NULL),
-(118, 'Niel Bunda', NULL, 'n.bunda@gmail.com', '$2y$10$IITbJeYCikzOJDT4jauC6.a9qRUqf9MjKTP.dEuJl2gxEF3l8zLCq', 'student', '2025-11-22 03:14:21', 1, NULL, NULL, NULL, NULL),
-(119, 'bradsale', NULL, 'sale@gmail.com', '$2y$10$o4tvFFP9JRlY3R9PIticiOn2/GE9whwDef30dud0A4.31PQGM9SK.', 'owner', '2025-11-22 03:15:06', 1, NULL, NULL, NULL, NULL),
-(120, 'rad', NULL, 'salbrad@gmail.com', '$2y$10$VnBmpUU8gej64u1sq5XKI.nCYJyvSkjmBTKH/V.GJF9oEB/HooB7S', 'student', '2025-11-22 03:22:41', 1, NULL, NULL, NULL, NULL),
-(121, 'John Paul Gones', NULL, 'john@gmail.com', '$2y$10$c.du2/EgyuGdiv7joovUf.42P7VGe2jGwbKifBqxTBwtqCOAjgHOO', 'student', '2025-11-22 03:23:09', 1, NULL, NULL, NULL, NULL),
-(122, 'John Denver', NULL, 'denver@gmail.com', '$2y$10$sO2yWDfLaKOmG5NPAJujnufh3HSGCEgJFiRJWHQ5nbQ/kvz0JRO92', 'owner', '2025-11-24 23:45:22', 1, '09867342564', NULL, NULL, NULL),
-(123, 'Hi hello', NULL, 'hello@gmail.com', '$2y$10$Ct15sIzxTNedz0r3A8OGYuVwKjeMdXJSJD7nJXrd1uc/9eBfCJa1i', 'student', '2025-11-26 07:18:13', 1, NULL, NULL, NULL, NULL);
+INSERT INTO `users` (`user_id`, `name`, `address`, `email`, `password`, `role`, `created_at`, `terms_accepted`, `terms_accepted_at`, `terms_version`, `verified`, `phone`, `license_no`, `profile_pic`, `id_document`) VALUES
+(1, 'Angelo', NULL, 'angelo@gmail.com', '$2y$10$lmeeDUafjSWU9pZZd.sIz.0U7AG2GXt5yTOblJBhx0HRLQVP65vNa', 'superadmin', '2025-08-20 14:23:12', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(2, 'Sunday', NULL, 'sunday@gmail.com', '$2y$10$tpaHDGCq37RKImP2vRHT..fnYYaZMABCsR/rjxlemydDbVQyDdmm6', 'student', '2025-08-22 02:00:09', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(3, 'Oswald', NULL, 'oswald@gmail.com', '$2y$10$00XC6x0bMQP4FhEnfzUOyu0TDrph7lT3WNQobhd6snuB4124V8xD6', 'owner', '2025-08-22 02:01:40', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(4, 'Jake', NULL, 'jake@gmail.com', '$2y$10$cem8jAW8IFcNJB2C6OuO9.svVgFWGjyIW1.2pVVlr3OLk2wN4RwJm', 'owner', '2025-08-22 02:24:47', 0, NULL, NULL, -1, NULL, NULL, NULL, NULL),
+(5, 'Kevin', NULL, 'kevin@gmail.com', '$2y$10$syH7gbYI2bjiUddci.vT5elIRRo6vK4jWxOkrfMmUeXkZ0T6WHY66', 'owner', '2025-08-22 02:25:03', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(6, 'John', NULL, 'John1@email.com', '$2y$10$3IuLCGJqUHewUzkM9vsooeLfIOixonJMHwp4yaVfZ/Sk54UocxK.e', 'student', '2025-10-06 00:09:18', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(7, 'Eric Sanchez', NULL, 'eric@gmail.com', '$2y$10$ocy/p71iP5sQs/gu/rLtg.RMbTTqmbPAoqF7QwCEa60TmpcLGRNAS', 'student', '2025-10-07 00:25:42', 0, NULL, NULL, 0, '09457318765', NULL, NULL, NULL),
+(8, 'Bernard Diaz', NULL, 'diaz@gmail.com', '$2y$10$IJBgszxpooObYB00hNYpy.Xqxk9B2izHgtcAq4OdwTXYdPMULg0w6', 'owner', '2025-10-07 01:02:57', 0, NULL, NULL, 1, '09768523456', NULL, NULL, NULL),
+(9, 'john florence', NULL, 'johnflorence@gmail.com', '$2y$10$ccMPd5e/6n..KfWt5bi7O.GnTOcVjcK4vkwhmhQoPMe/auuih5mQW', 'student', '2025-10-07 02:37:48', 0, NULL, NULL, 0, '09456526238', NULL, NULL, NULL),
+(10, 'Stefan Jhonn D Delgado', NULL, 's2120062@gmail.com', '$2y$10$sdMfhva4sWkbVvGxsk3dfe4SLyexM/ywEa4yH1Lz0Is4G17nHeor2', 'student', '2025-10-08 10:57:44', 0, NULL, NULL, 0, '09391762834', NULL, NULL, NULL),
+(11, 'Jamie Fowler', NULL, 'jamie@email.com', '$2y$10$PeR6Bsig96tWdf/tJ423ouak.7COQYuZV20eyHTCVaxvsA60ZrDzK', 'student', '2025-10-08 11:18:56', 0, NULL, NULL, 0, '09876453254', NULL, NULL, NULL),
+(13, 'Juan Dela Cruz', NULL, 'juan.delacruz@example.net', '$2y$10$McI.t4f1cXSlOJTymIGpD.TzUKQyBcfDn.XeAUPsyHfOXBpyPFAnC', 'owner', '2025-10-09 03:46:39', 0, NULL, NULL, 1, '09175551234', NULL, NULL, NULL),
+(14, 'Maria Santos', NULL, 'maria_s@example.com', '$2y$10$MqUwT6gHoIoddSxafaOGMOf1Ayqk87R6BWTS7W4nvSEitqpT.hMpy', 'owner', '2025-10-09 03:47:16', 0, NULL, NULL, -1, '09205555678', NULL, NULL, NULL),
+(15, 'Anna Reyes', NULL, 'anna.reyes@email.com', '$2y$10$GcA1WBqEvjfPSMilhf6JAeayssvMMh2YjkQXs8jLupP2LC2rsToQG', 'owner', '2025-10-09 05:27:48', 0, NULL, NULL, 1, '09123456789', NULL, NULL, NULL),
+(16, 'Mark Dela Cruz', NULL, 'mark.dc@email.net', '$2y$10$/ooC1kx/Kjfu.mxgy.zrTOZEX9GfHlygte8AG.DS5FQWTBO3xtzny', 'student', '2025-10-09 05:28:04', 0, NULL, NULL, 0, '09234567890', NULL, NULL, NULL),
+(17, 'Julia Santos', NULL, 'julia.santos@email.org', '$2y$10$FzPRcx/dy1pX9oYi5iHm1usHELxZ6ENicqrrJ42Q1lS7xIcl73PWu', 'owner', '2025-10-09 05:28:22', 0, NULL, NULL, -1, '09345678901', NULL, NULL, NULL),
+(18, 'Leo Gutierrez', '', 'leo.g@email.com', '$2y$10$FIMS9XX/o8/o30PF8KuiUOB9Lp2JE06cNR9BcPowbp9z22dtuXvk6', 'owner', '2025-10-09 05:28:40', 0, NULL, NULL, 0, '09456789012', '', NULL, NULL),
+(19, 'Mia Navarro', NULL, 'mia.n@email.net', '$2y$10$yk6AyX7psnoKa7hqXoPsseBuXxviTJdRvt7x2UrHPh5MbQBLT6jEO', 'owner', '2025-10-09 05:29:00', 0, NULL, NULL, 1, '09567890123', NULL, NULL, NULL),
+(20, 'Carlo Ramos', NULL, 'carlo.r@email.com', '$2y$10$P9Ee1v7KFY11BhU8PeUcuOpOzzjXHU0dW2Y8KGiQBXrVFpRKjKD4O', 'owner', '2025-10-09 05:32:52', 0, NULL, NULL, -1, '09678901234', NULL, NULL, NULL),
+(21, 'Denise Lopez', NULL, 'denise.lopez@email.org', '$2y$10$gn0Dfqv3gfy6hEywgDYQ0eVaZbqsj3cHWRE6ztc9ljEHupnQh04MO', 'owner', '2025-10-09 05:33:18', 0, NULL, NULL, 0, '09789012345', NULL, NULL, NULL),
+(22, 'Paolo Mendoza', NULL, 'paolo.m@email.com', '$2y$10$d3Kn85uc47zyMhxMHgzjiujAeCc1kfxqL0E3swAfsGgxC6dOKn7bO', 'owner', '2025-10-09 05:33:36', 0, NULL, NULL, 0, '09890123456', NULL, NULL, NULL),
+(23, 'Tricia Lim', NULL, 'tricia.l@email.net', '$2y$10$mI5rc3iaT8vBwKSv2Oervuj/gEB4nJWx4UVrYJk7d70HBWijjXhIu', 'owner', '2025-10-09 05:33:57', 0, NULL, NULL, 0, '09901234567', NULL, NULL, NULL),
+(24, 'Nathan Torres', NULL, 'nathan.t@email.org', '$2y$10$xmxxBLX/z.xld0SqF1hseeL6MSzKd1YfU9G7sTnhdtMSr3JAOa/F6', 'owner', '2025-10-09 05:34:14', 0, NULL, NULL, 0, '09012345678', NULL, NULL, NULL),
+(25, 'Sophia Cruz', NULL, 'sophia.cruz@email.com', '$2y$10$DtX5fhDP11RqbzJ7GHrGWeig1aOa5HiiALzMZo6lyl.6ToAHI9K0W', 'owner', '2025-10-09 05:38:10', 0, NULL, NULL, 0, '09111222333', NULL, NULL, NULL),
+(26, 'Kevin Santos', NULL, 'kevin.s@email.net', '$2y$10$KqkBT93tWbWxJ3flK4WY/ei7bnqi/TJ4DPpC9bvcXixS/RChRZ0Bq', 'owner', '2025-10-09 05:38:29', 0, NULL, NULL, 0, '09222333444', NULL, NULL, NULL),
+(27, 'Bianca Reyes', NULL, 'bianca.r@email.org', '$2y$10$fbJdXt43OrMxBRwgG6x34.zqU7/FGApNsVOVE0obAAxKDdn6Z8DQ.', 'owner', '2025-10-09 05:38:46', 0, NULL, NULL, 0, '09333444555', NULL, NULL, NULL),
+(28, 'Andre Villanueva', NULL, 'andre.v@email.com', '$2y$10$6u7YU5sr2n1EcgLuP/xO0OTDdklR92o360KOPAR6HDzYFML5OCQWm', 'owner', '2025-10-09 05:39:02', 0, NULL, NULL, 0, '09444555666', NULL, NULL, NULL),
+(29, 'Lara Jimenez', NULL, 'lara.j@email.net', '$2y$10$iWOZpw0rmcyjaQda8.xyTe5yCwy75Tjk36jJDR2O8KFborZ.5hV9C', 'owner', '2025-10-09 05:39:18', 0, NULL, NULL, 0, '09555666777', NULL, NULL, NULL),
+(30, 'Ethan Castillo', NULL, 'ethan.castillo@email.com', '$2y$10$JAERYBGf7naHaqTRbNibr.eOxUHaEUWXpcJ764P58iJDf.zeCQXgG', 'student', '2025-10-09 05:43:34', 0, NULL, NULL, 1, '09178881234', NULL, NULL, NULL),
+(31, 'Chloe Manalo', NULL, 'chloe.manalo@email.net', '$2y$10$GXeT6p2ixFMUHuWM61T5ZOKaj5XT766fknFfXz3wMK/eSCftH0is2', 'student', '2025-10-09 05:43:49', 0, NULL, NULL, 0, '09269992345', NULL, NULL, NULL),
+(32, 'Lucas Domingo', NULL, 'lucas.d@email.org', '$2y$10$P//DMtllMV8jiuljyHwX3OWj7Zl79f7mavqMeKH8QCIh.q6d9m5Yu', 'student', '2025-10-09 05:44:05', 0, NULL, NULL, 0, '09354445678', NULL, NULL, NULL),
+(33, 'Isabelle Ramos', NULL, 'isabelle.r@email.com', '$2y$10$J115SGT9HufMWBE1Y3n6e.Dc0i5tMcfbbBzQGl.9G5EUOUNnwMYaO', 'student', '2025-10-09 05:44:19', 0, NULL, NULL, 0, '09443336789', NULL, NULL, NULL),
+(34, 'Elijah Bautista', NULL, 'elijah.b@email.net', '$2y$10$XGvCcUbrjvTFYaiMfBCOyOrPtlQkBH/TQiFtYMBbH5Oygexs6BHTW', 'student', '2025-10-09 05:44:34', 0, NULL, NULL, 0, '09562227890', NULL, NULL, NULL),
+(35, 'Hannah Fajardo', NULL, 'hannah.f@email.org', '$2y$10$udp5FON04E/NLjeQE5IaguUlTf1RD160WmOZG/loW5dt6IBbOtsDq', 'student', '2025-10-09 05:44:47', 0, NULL, NULL, 0, '09671118901', NULL, NULL, NULL),
+(36, 'Aiden Vergara', NULL, 'aiden.v@email.com', '$2y$10$AGSyOxmP1.XfduxwkQEiLOwa2OaGM1WF2jS/vODoU2lMaZJydyLiq', 'student', '2025-10-09 05:45:02', 0, NULL, NULL, 0, '09780009012', NULL, NULL, NULL),
+(37, 'Sofia Alvarez', NULL, 'sofia.alvarez@email.net', '$2y$10$aaxKJkSpku1R./7usnKoXe2GbmYQPu6jEm8aZT647uemplDLlR9ui', 'student', '2025-10-09 05:45:18', 0, NULL, NULL, 0, '09891110123', NULL, NULL, NULL),
+(38, 'Liam Santiago', NULL, 'liam.s@email.org', '$2y$10$jZKIRo1RFDZBLaYpc6rGX./G/wdK98kNRNuzaTqZeoPH9MgL47WhS', 'student', '2025-10-09 05:45:33', 0, NULL, NULL, 0, '09908881234', NULL, NULL, NULL),
+(39, 'Camille De Guzman', NULL, 'camille.dg@email.com', '$2y$10$k9hFiH8MckLgTfdrdd0PR.fcfrSTX8usFkvsaJkhfgbUXSYAsaPlu', 'student', '2025-10-09 05:45:48', 0, NULL, NULL, 0, '09097772345', NULL, NULL, NULL),
+(40, 'Jacob Morales', NULL, 'jacob.m@email.net', '$2y$10$XEXczDpQin44KINOdLusXu./g07ngmQ.2NuP3fkDFO.BSF5nY/I3m', 'student', '2025-10-09 05:46:02', 0, NULL, NULL, 0, '09186663456', NULL, NULL, NULL),
+(41, 'Alexa Cruz', NULL, 'alexa.cruz@email.org', '$2y$10$wujbhtrucaToLd0Ah3Bc.OwH8NrEF1ntwusp2s/TRhzchPKKZNA/K', 'student', '2025-10-09 05:46:17', 0, NULL, NULL, 1, '09275554567', NULL, NULL, NULL),
+(42, 'Noah Enriquez', NULL, 'noah.enriquez@email.com', '$2y$10$9faaKs6k8o8CRsXMXIfXQ.mhyMCQFcEVC8BVhZ3Trj1Yl4PaO4GNe', 'student', '2025-10-09 05:46:29', 0, NULL, NULL, 0, '09364445678', NULL, NULL, NULL),
+(43, 'Kylie Delos Reyes', NULL, 'kylie.dr@email.net', '$2y$10$3V/hQoA5bynyYG2Clw3C9OFvdN7g2ZrMkSel3.WfFjch/waJ96HIy', 'student', '2025-10-09 05:46:40', 0, NULL, NULL, 0, '09453336789', NULL, NULL, NULL),
+(44, 'Nathaniel Reyes', NULL, 'nathaniel.r@email.org', '$2y$10$ulSD9yuBVnVqUuhyKaHqs.Rg/B0GfhK2RVNkWOHZS2Y7SbmnxHMNC', 'student', '2025-10-09 05:46:56', 0, NULL, NULL, 0, '09542227890', NULL, NULL, NULL),
+(45, 'Fall Gomes', NULL, 'jpsgomes0212@gmail.com', '$2y$10$GULRRafuNafHQb0JFZmFAucbpqolQI0Xnl6Tcc8SxaHL/HLvccyJC', 'owner', '2025-10-11 07:22:53', 0, NULL, NULL, 0, '09453196127', NULL, NULL, NULL),
+(46, 'Jan Pol Gomes', NULL, 'janpolgomes@gmal.com', '$2y$10$xiaLSF0v9z3UGK5d7eS1A.SXWfHtie6PaM/r1jm.uT2NUCE5rQLpS', 'student', '2025-10-11 10:05:13', 0, NULL, NULL, 0, '09453196129', NULL, NULL, NULL),
+(47, 'Jan Pol Gomes', NULL, 'janpol@gmail.com', '$2y$10$OZp52j10PNJnJFs.yZGlYua5JWxTES1BJmrG.k/yrNz1S6xBrcqPC', 'student', '2025-10-11 10:06:43', 0, NULL, NULL, 0, '09453196127', NULL, NULL, NULL),
+(48, 'Jhanna Gracey Villan', NULL, 'jhanna@gmail.com', '$2y$10$55XADUHThWKpFwwYe09bReyYZKmiJY65e4XxNS4o4u1G1E7Ir8cv6', 'student', '2025-10-13 23:48:11', 0, NULL, NULL, 0, '09019203817', NULL, NULL, NULL),
+(49, 'James Ham', NULL, 'jamesham@email.com', '$2y$10$ti5K7WBkOm6MdSmIRgsZe.bR0FiMeBK3c4rpo6ZsZpXkYp.HYYyoy', 'student', '2025-10-14 00:05:07', 0, NULL, NULL, 0, '09764537234', NULL, NULL, NULL),
+(50, 'John Garcia', NULL, 'garcia@email.com', '$2y$10$G7Xl.SKODvwTi4VkbLyCDebskx2gPw8vQNOFYgrcN63VtrGN.Fw/y', 'student', '2025-10-14 04:41:58', 0, NULL, NULL, 0, '09874356273', NULL, NULL, NULL),
+(51, 'Azer Jan', NULL, 's2201387@usls.edu.ph', '$2y$10$SiBkIaJFN47lVorRVgcuieCWEvqIWRxsleYfijCAgM7zmEjNAvXgW', 'student', '2025-10-16 08:07:35', 0, NULL, NULL, 1, '09100010101', NULL, NULL, NULL),
+(52, 'Leanne Gumban', NULL, 's2016022@usls.edu.ph', '$2y$10$647ogLFwqRcFXj.CW5bamOPe532Fyf..acMIFee0pfTvqFrh7QbtG', 'student', '2025-10-16 08:10:21', 0, NULL, NULL, 0, '09062643027', NULL, NULL, NULL),
+(53, 'Kirby Calampinay', NULL, 's24321', '$2y$10$RSd/YTyn4SR4qQX415iaGe/0Vsx03p7ZTXxyScPJONm4LetMKWbw6', 'student', '2025-10-16 11:10:10', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(54, 'Sam Smith', NULL, 'jr74084@gmail.com', '$2y$10$ozLCeg6b8ydv0g7Ucqi8Ne8f1pAoN3pRAviaHDXqDTWE8pA14yU9S', 'student', '2025-10-16 11:12:48', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(55, 'Joshua Campo', NULL, 'campo.j@email.com', '$2y$10$5uGpdOBtHGvrguJIAaTF7.3qQji78PxXRI1L0YRg5LebEj0XbYvtS', 'owner', '2025-10-16 12:53:18', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(56, 'Mikey Segovia', NULL, 'anonsfwend19@gmail.com', '$2y$10$34qAUcRgeCD8Y.3hhCV8buRCCmkj18v35duoCQaoVM0uJYXmY7MQy', 'student', '2025-10-16 15:53:48', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(57, 'Brad Ed Sale', NULL, 'brod@gmail.com', '$2y$10$2Y868faqd.GMPl9pFNr3ZOnEyOzmExmHkvaLjuNV4/wJKjJXcrNfC', 'student', '2025-10-16 15:58:36', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(58, 'Justin Cantilero', NULL, 'j.cantilero@email.com', '$2y$10$mEpFSZxaeznO5BwOCYTAOOpbb2iMnmetnoKRkcoQBKIh.jXbPSiNq', 'owner', '2025-10-19 14:42:02', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(59, 'Kevin Figueroa', NULL, 'k.figueroa@email.com', '$2y$10$koyV8AiUxK9yCkKDCw0OqeEDHnNtb6/YcvXRvMwhnSBL.vVIXb5F.', 'student', '2025-10-19 14:45:52', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(60, 'Dray Young', 'Hilado St, Bacolod City', 'young@gmail.com', '$2y$10$XlVANn.R0lZmk1hB3lMXhuZZh6zzp2lpTKBhTzBl/hN9WQ9CuX6YC', 'student', '2025-10-19 17:38:07', 0, NULL, NULL, 0, '09457654536', 'N/A', NULL, NULL),
+(61, 'Jay Ramos', NULL, 'jay@gmail.com', '$2y$10$A6B.Zee5z28Qa4.WjyliEOYwZp5nOdCzQiuQCK0vRKeEgf7.UBlA.', 'owner', '2025-10-20 00:02:54', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(62, 'Brad Ed Sale', NULL, 'brad12345@gmail.com', '$2y$10$mxSk/6nNqS6vbGoXhc5gG.AlSFcgSp4O0MK6HxT7Wfs2FtJTRXgmu', 'student', '2025-10-20 00:03:10', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(63, 'Elaiza Francisco', NULL, 's2500728@usls.edu.ph', '$2y$10$x.m.XlsWchHJwalt7y7/auTuC7VVMfHSkwDplpJzdyVxu4Y6ijdmC', 'student', '2025-10-20 01:45:34', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(64, 'w', NULL, 'w@s.com', '$2y$10$WTrLzNpSYgcmTyJlxQXVyu9I2d/WfMv1c5D8117T2mHmySiJ0fdJ.', 'student', '2025-10-20 01:55:28', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(65, 'Raymund Alfaro', NULL, 'raymund@gmail.com', '$2y$10$vGEyD9OHiK/d68dufGTRKupOL/gPO7GPqwna62GUfQ8LkaJdE43Ym', 'student', '2025-10-20 02:11:04', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(66, 'Razianth Oanes', NULL, 'raz123@gmail.com', '$2y$10$l7NwycPRf6f10Y9rAzU15.COeFLT92SCxFjWJ8yL2BT3wt2izy5Z2', 'student', '2025-10-20 02:29:46', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(67, 'Gorge Batumbakal', NULL, 'ilovelolis67@yahoo.cum', '$2y$10$ab04ZgSs21o.zYB2bwL7aOZp29jzqVbsvLvjvitiJPjMnOSijUTg.', 'student', '2025-10-20 02:38:38', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(68, 'Jeremy Isaac B. Martirez', NULL, 's2120515@usls.edu.ph', '$2y$10$..XvX/Bgqh9y2ap9.syOK.tcgDf6NY.2zsLSdW/KlFMDuuItYAU0u', 'student', '2025-10-20 02:47:40', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(69, 'Kevin M. Figueroa', NULL, 'zemaster18@gmail.com', '$2y$10$PY7z4hLd3wzTXdBjvg/2I.IIRKhOz2ZI..AIKKdNM1Zk3RpDO0BV6', 'student', '2025-10-20 02:52:23', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(70, 'Brad ed', NULL, 'doe@gmail.com', '$2y$10$zdQswIpwIBGIWXZtMugwVuwzvrui36zPAQT0VZ9ElbuntC1HEI92a', 'student', '2025-10-20 03:06:01', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(71, 'Fall asleep', NULL, 'whizy212@gmail.com', '$2y$10$Ka.SsmjXW3q/LzI/2bQV5uSo6Mct06sDqRXl4r6eYq.ptWn1Gjlx2', 'student', '2025-10-20 03:13:20', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(72, 'Fall Asleep', NULL, 'salebraded@gmail.com', '$2y$10$BtvRbO/j2HOYAB3IvMXXL.CFrCUZuebvu3KPp5oOc8X.j8Cm/Xt1K', 'student', '2025-10-20 03:13:56', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(73, 'Fall Asleep', NULL, 'test@email.com', '$2y$10$C9V9BDDhDTvHCvYUgbg7peQAKZBNe/cWdYwKgU6zEvm4d0b6tSMSG', 'student', '2025-10-20 03:14:29', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(74, 'Charles', NULL, 'dcharlesmarce@gmail.com', '$2y$10$EbkmLzNenWIiqd7xlieuKewHwk1SXsANnttvuohAxN5ORA58RQ0.2', 'student', '2025-10-20 03:27:44', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(75, 'pauly', NULL, 'paul@gmail.com', '$2y$10$Mg0VvP6Kh7sQe0LKZGlo2.sKZ.kx6zWigupULTm0B1bQ.Q/KPbxIO', 'student', '2025-10-20 03:41:06', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(76, 'student 1', NULL, 'student1@email.com', '$2y$10$KFzZ3cdoxjqXJuA1SiVin.ObUeNYIOkMterLdQhKDHqwU9WBuFE4e', 'student', '2025-10-20 03:54:10', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(77, 'norbert', NULL, 'norbert@gmail.com', '$2y$10$l854QJbxQKQ5d86w37x7z.OzGQGydIuJm7KMTRSpGdIEfe5liFL0C', 'student', '2025-10-20 04:09:22', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(78, 'Norbert Audines', NULL, 's...2303007@gmail.com', '$2y$10$uHKF4Ipf.jfjjO61N2rKL.GFDQw0ENuVgn0osPbxmP5RWeeaMa4Cy', 'student', '2025-10-20 04:10:33', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(79, 'Kylin Cabrera', NULL, '.........@gmail.com', '$2y$10$ZJaUIOMLtnNIebjgjWhC2.cmEoXq3XtFh.TeOLJjGtTtL1I4Ay9Xm', 'student', '2025-10-20 04:23:08', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(80, 'Kylin Cabs', NULL, '..........@gmail.com', '$2y$10$BKB4ddy0h6bIIg652AxHP.MDiLp2h2dnxBXIcfr/TZ33hqa4xzBtq', 'student', '2025-10-20 04:24:36', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(81, 'julian', NULL, 's2400346@usls.edu.ph', '$2y$10$.k9r9LoEaw7wJMal94imgeMWJhiQ9vB509YI7jI9cJOwLN4DNp/ti', 'student', '2025-10-20 05:30:31', 0, NULL, NULL, 0, '09691118016', NULL, NULL, NULL),
+(82, 'e', NULL, 'ej@example.com', '$2y$10$XC8EpIHWCvJPZqU0p3DCnOtUA6aqxh/MbLFIaBtS36s2mGsIW9bcC', 'student', '2025-10-20 06:05:52', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(83, 'bry', NULL, 'bry123@gmail.com', '$2y$10$tsYj50U8Ir.mWRU1jYYU6OUIRqyFCl1RDr4RL8M7Y7cB0SAxbNomu', 'student', '2025-10-20 06:15:29', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(84, 'romeo standards', NULL, 'romeo@exampe.com', '$2y$10$hB/koHVBFY3cAGSlvCpg2u0cnZEp.aGdfVF87cYVjhtXplt29hdj2', 'student', '2025-10-20 07:12:32', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(85, 'Romeo Seva', NULL, 'romrom@example.com', '$2y$10$K8YfVzvjjrPQpEudmLffiu47lubs5W.GJp4/gaNnWqG5o2hnLW16e', 'student', '2025-10-20 07:15:17', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(86, 'Kharyl Alejo', NULL, 'alejokharyl1221@gmail.com', '$2y$10$198x0h4vWxRdG8QIGYOHl.1o8edA9.5LUMxd6KjZiiqzAi6.GxZa.', 'student', '2025-10-20 07:30:31', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(87, 'rojer', NULL, 'rojer@gmail.com', '$2y$10$x.vVvZOWUgHY4APe2b9dbOsqjHSptq9JHfOF5EIunlLWpnwaaSDia', 'student', '2025-10-20 08:05:35', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(88, 'David M', NULL, 'davidm@any.com', '$2y$10$Zfp4jJg5UoV1F/QskVOZOuVB2dmIaQJz7o/a2iiUBLUvsy.FeWF1y', 'student', '2025-10-20 08:08:20', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(101, 'Stefan', NULL, 'stefanjhonn123@gmail.com', '$2y$10$rvTVSIR8OncvaEO9dMFcXuzNnyVrNYxlfqt283PLbJCQ13h/.mMoy', 'student', '2025-10-23 13:13:01', 0, NULL, NULL, 0, '08285779742', NULL, NULL, NULL),
+(105, 'stefan', NULL, 'delgado..@gmail.com', '$2y$10$JLkAitV4EourWM9BUYGsSOugW/n.GGKf..Vsd9CD9MYZvb.636Uuy', 'student', '2025-10-23 14:56:41', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(110, 'stefan', NULL, 'delgado@gmail.com', '$2y$10$V89dE6lppR/fL8JKDO76juIn2V.2w1LV7JAR/JrIMVXnBhTRq4hii', 'student', '2025-10-23 15:03:01', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(111, 'stefan', NULL, 'delgado@email.com', '$2y$10$W5T.vN0ZNAOBxPuvN.AQSu5rcXUfkIhYO7m.M4iO/4iJ1sMx7IfS2', 'student', '2025-10-23 15:04:07', 0, NULL, NULL, -1, NULL, NULL, NULL, NULL),
+(112, 'Stefan Jhonn Delgado', NULL, 'stefan123@gmail.com', '$2y$10$42cwjS3VuYdk9n/ROM/ppezgz.HTPygTaN8uY66gsGKXpVepG62FC', 'student', '2025-11-21 07:32:04', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(113, 'Sid Delgado', NULL, 'sid123@gmail.com', '$2y$10$bJj0JtE1.vJ6OSfdqrlssu9.LOmmWBzC2gcaOa.e01mMx0t8QxT.m', 'student', '2025-11-21 13:41:25', 0, NULL, NULL, 1, '0909090909', NULL, NULL, NULL),
+(114, 'Brad ed Sale', NULL, 'salebred@gmail.com', '$2y$10$gZycN7dNwWJd.qTgLosy8OugIEuhiLFFJULJFIdJ4ZqJM10NLZyo.', 'student', '2025-11-22 01:33:48', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(115, 'Noel Lacson', '', 'n.lacson@gmail.com', '$2y$10$r759pRJKuLtCv38N2kzHX.KjPTWLYidSg4ifyUI.hEVttRoNavhMe', 'admin', '2025-11-22 02:46:54', 0, NULL, NULL, 1, '', 'N/A', NULL, NULL),
+(116, 'Roger Intong', NULL, 'r.intong@gmail.com', '$2y$10$YXCsRSsgMFqxKhhJwQ.ZZuAdoGhbkZoWDENRrz4ZPayOuR7Gj8EVm', 'owner', '2025-11-22 02:55:16', 0, NULL, NULL, 1, '09123456789', NULL, NULL, NULL),
+(117, 'braded', NULL, 'salebrod@gmail.com', '$2y$10$fwCjV269FSV7hS3QHDY/UukjBNMH2dgExKhk/E6cgo1vwyegKCWee', 'student', '2025-11-22 03:13:41', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(118, 'Niel Bunda', NULL, 'n.bunda@gmail.com', '$2y$10$IITbJeYCikzOJDT4jauC6.a9qRUqf9MjKTP.dEuJl2gxEF3l8zLCq', 'student', '2025-11-22 03:14:21', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(119, 'bradsale', NULL, 'sale@gmail.com', '$2y$10$o4tvFFP9JRlY3R9PIticiOn2/GE9whwDef30dud0A4.31PQGM9SK.', 'owner', '2025-11-22 03:15:06', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(120, 'rad', NULL, 'salbrad@gmail.com', '$2y$10$VnBmpUU8gej64u1sq5XKI.nCYJyvSkjmBTKH/V.GJF9oEB/HooB7S', 'student', '2025-11-22 03:22:41', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(121, 'John Paul Gones', NULL, 'john@gmail.com', '$2y$10$c.du2/EgyuGdiv7joovUf.42P7VGe2jGwbKifBqxTBwtqCOAjgHOO', 'student', '2025-11-22 03:23:09', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(122, 'John Denver', NULL, 'denver@gmail.com', '$2y$10$sO2yWDfLaKOmG5NPAJujnufh3HSGCEgJFiRJWHQ5nbQ/kvz0JRO92', 'owner', '2025-11-24 23:45:22', 0, NULL, NULL, 1, '09867342564', NULL, NULL, NULL),
+(123, 'Hi hello', NULL, 'hello@gmail.com', '$2y$10$Ct15sIzxTNedz0r3A8OGYuVwKjeMdXJSJD7nJXrd1uc/9eBfCJa1i', 'student', '2025-11-26 07:18:13', 0, NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(130, 'brd', NULL, 'darksword0700@gmail.com', '$2y$10$wJ556oM6860HTqi78F80/u31Qf/jy2gkUY.6SXEo6bMEcP/04HOn6', 'student', '2025-11-28 14:05:26', 1, '2025-11-28 07:05:26', 'v1.0', 1, NULL, NULL, NULL, NULL),
+(131, 'emanuel', NULL, 'eman@gmail.com', '$2y$10$xPIVtIxO8aotbQFjYOuwXO51D0sRZrGLNhX1qc3cBROg8BB4Ku3Eq', 'owner', '2025-11-30 15:43:35', 1, '2025-11-30 08:43:35', 'v1.0', 1, NULL, NULL, NULL, NULL),
+(132, 'Jacob', NULL, 'jacob@gmail.com', '$2y$10$T8cVn0Na8OlJgaDRcRwRZunWXYKACoCEMbdnd97MlyuHD6ntl3U1O', 'student', '2025-12-01 05:53:48', 1, '2025-11-30 22:53:48', 'v1.0', 1, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1004,9 +1136,50 @@ CREATE TABLE `view_tenant_payments` (
 ,`outstanding_balance` decimal(10,2)
 );
 
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_admin_summary`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_admin_summary` (
+`user_id` int(11)
+,`name` varchar(100)
+,`email` varchar(150)
+,`role` enum('superadmin','admin','owner','student')
+,`created_at` timestamp
+,`privilege_count` bigint(21)
+,`privileges` mediumtext
+);
+
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `admin_approval_requests`
+--
+ALTER TABLE `admin_approval_requests`
+  ADD PRIMARY KEY (`request_id`),
+  ADD KEY `requester_user_id` (`requester_user_id`),
+  ADD KEY `reviewed_by` (`reviewed_by`);
+
+--
+-- Indexes for table `admin_audit_log`
+--
+ALTER TABLE `admin_audit_log`
+  ADD PRIMARY KEY (`log_id`),
+  ADD KEY `target_user_id` (`target_user_id`),
+  ADD KEY `idx_admin_actions` (`admin_user_id`,`created_at`),
+  ADD KEY `idx_action_type` (`action_type`);
+
+--
+-- Indexes for table `admin_privileges`
+--
+ALTER TABLE `admin_privileges`
+  ADD PRIMARY KEY (`privilege_id`),
+  ADD UNIQUE KEY `unique_admin_privilege` (`admin_user_id`,`privilege_name`),
+  ADD KEY `granted_by` (`granted_by`);
 
 --
 -- Indexes for table `announcements`
@@ -1050,6 +1223,13 @@ ALTER TABLE `dormitories`
   ADD PRIMARY KEY (`dorm_id`),
   ADD KEY `owner_id` (`owner_id`),
   ADD KEY `idx_location` (`latitude`,`longitude`);
+
+--
+-- Indexes for table `dorm_certifications`
+--
+ALTER TABLE `dorm_certifications`
+  ADD PRIMARY KEY (`certification_id`),
+  ADD KEY `dorm_id` (`dorm_id`);
 
 --
 -- Indexes for table `dorm_images`
@@ -1138,6 +1318,13 @@ ALTER TABLE `tenants`
   ADD KEY `idx_active_tenants` (`status`,`check_out_date`);
 
 --
+-- Indexes for table `terms_and_conditions`
+--
+ALTER TABLE `terms_and_conditions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `version` (`version`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -1162,6 +1349,24 @@ ALTER TABLE `user_verifications`
 --
 
 --
+-- AUTO_INCREMENT for table `admin_approval_requests`
+--
+ALTER TABLE `admin_approval_requests`
+  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `admin_audit_log`
+--
+ALTER TABLE `admin_audit_log`
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `admin_privileges`
+--
+ALTER TABLE `admin_privileges`
+  MODIFY `privilege_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `announcements`
 --
 ALTER TABLE `announcements`
@@ -1177,19 +1382,25 @@ ALTER TABLE `announcement_reads`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `checkout_requests`
 --
 ALTER TABLE `checkout_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `dormitories`
 --
 ALTER TABLE `dormitories`
-  MODIFY `dorm_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `dorm_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+
+--
+-- AUTO_INCREMENT for table `dorm_certifications`
+--
+ALTER TABLE `dorm_certifications`
+  MODIFY `certification_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `dorm_images`
@@ -1201,13 +1412,13 @@ ALTER TABLE `dorm_images`
 -- AUTO_INCREMENT for table `messages`
 --
 ALTER TABLE `messages`
-  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
 
 --
 -- AUTO_INCREMENT for table `payment_schedules`
@@ -1237,13 +1448,19 @@ ALTER TABLE `room_images`
 -- AUTO_INCREMENT for table `tenants`
 --
 ALTER TABLE `tenants`
-  MODIFY `tenant_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `tenant_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+
+--
+-- AUTO_INCREMENT for table `terms_and_conditions`
+--
+ALTER TABLE `terms_and_conditions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=124;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
 
 --
 -- AUTO_INCREMENT for table `user_preferences`
@@ -1284,9 +1501,39 @@ DROP TABLE IF EXISTS `view_tenant_payments`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_tenant_payments`  AS SELECT `t`.`tenant_id` AS `tenant_id`, `t`.`student_id` AS `student_id`, `u`.`name` AS `student_name`, `t`.`dorm_id` AS `dorm_id`, `d`.`name` AS `dorm_name`, `t`.`room_id` AS `room_id`, `r`.`room_type` AS `room_type`, count(`p`.`payment_id`) AS `total_payments`, coalesce(sum(case when `p`.`status` in ('paid','verified') then `p`.`amount` end),0) AS `total_paid`, coalesce(sum(case when `p`.`status` in ('pending','submitted') then `p`.`amount` end),0) AS `pending_amount`, max(`p`.`payment_date`) AS `last_payment_date`, `t`.`outstanding_balance` AS `outstanding_balance` FROM ((((`tenants` `t` join `users` `u` on(`t`.`student_id` = `u`.`user_id`)) join `dormitories` `d` on(`t`.`dorm_id` = `d`.`dorm_id`)) join `rooms` `r` on(`t`.`room_id` = `r`.`room_id`)) left join `payments` `p` on(`t`.`booking_id` = `p`.`booking_id`)) WHERE `t`.`status` = 'active' GROUP BY `t`.`tenant_id`, `t`.`student_id`, `u`.`name`, `t`.`dorm_id`, `d`.`name`, `t`.`room_id`, `r`.`room_type`, `t`.`outstanding_balance` ;
 
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_admin_summary`
+--
+DROP TABLE IF EXISTS `v_admin_summary`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`yyju4g9j6ey3`@`localhost` SQL SECURITY DEFINER VIEW `v_admin_summary`  AS SELECT `u`.`user_id` AS `user_id`, `u`.`name` AS `name`, `u`.`email` AS `email`, `u`.`role` AS `role`, `u`.`created_at` AS `created_at`, (select count(0) from `admin_privileges` where `admin_privileges`.`admin_user_id` = `u`.`user_id`) AS `privilege_count`, (select group_concat(`admin_privileges`.`privilege_name` separator ',') from `admin_privileges` where `admin_privileges`.`admin_user_id` = `u`.`user_id`) AS `privileges` FROM `users` AS `u` WHERE `u`.`role` in ('admin','superadmin') ORDER BY field(`u`.`role`,'superadmin','admin') ASC, `u`.`created_at` ASC ;
+
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `admin_approval_requests`
+--
+ALTER TABLE `admin_approval_requests`
+  ADD CONSTRAINT `admin_approval_requests_ibfk_1` FOREIGN KEY (`requester_user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `admin_approval_requests_ibfk_2` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `admin_audit_log`
+--
+ALTER TABLE `admin_audit_log`
+  ADD CONSTRAINT `admin_audit_log_ibfk_1` FOREIGN KEY (`admin_user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `admin_audit_log_ibfk_2` FOREIGN KEY (`target_user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `admin_privileges`
+--
+ALTER TABLE `admin_privileges`
+  ADD CONSTRAINT `admin_privileges_ibfk_1` FOREIGN KEY (`admin_user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `admin_privileges_ibfk_2` FOREIGN KEY (`granted_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `announcement_reads`
@@ -1313,6 +1560,12 @@ ALTER TABLE `checkout_requests`
 --
 ALTER TABLE `dormitories`
   ADD CONSTRAINT `dormitories_ibfk_1` FOREIGN KEY (`owner_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `dorm_certifications`
+--
+ALTER TABLE `dorm_certifications`
+  ADD CONSTRAINT `dorm_certifications_ibfk_1` FOREIGN KEY (`dorm_id`) REFERENCES `dormitories` (`dorm_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `dorm_images`

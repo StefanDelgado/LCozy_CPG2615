@@ -394,13 +394,152 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
     }
   }
 
-  /// Returns filtered bookings based on selected tab
-  List<Map<String, dynamic>> _getFilteredBookings() {
+  /// Acknowledges a cancelled booking
+  Future<void> _acknowledgeCancellation(Map<String, dynamic> booking) async {
+    print('📋 [OwnerBooking] ACKNOWLEDGE CANCELLATION CLICKED');
+    
+    if (_isProcessing) {
+      print('📋 [OwnerBooking] Already processing, ignoring click');
+      return;
+    }
+
+    final bookingId = booking['booking_id'] ?? booking['id'];
+    
+    if (bookingId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error: Booking ID is missing'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Check if already acknowledged
+    final isAcknowledged = booking['cancellation_acknowledged'] == 1 || 
+                          booking['cancellation_acknowledged'] == '1' ||
+                          booking['cancellation_acknowledged'] == true;
+    
+    if (isAcknowledged) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This cancellation has already been acknowledged'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Acknowledge Cancellation'),
+        content: Text('Acknowledge the cancellation request from ${booking['student_name'] ?? 'this student'}? This will mark the cancellation as reviewed.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.blue),
+            child: const Text('Acknowledge'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isProcessing = true);
+
+    // Show loading indicator
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 16),
+              Text('Processing acknowledgement...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+    }
+
+    try {
+      final result = await _bookingService.acknowledgeCancellation(
+        bookingId: int.parse(bookingId.toString()),
+        ownerEmail: widget.ownerEmail,
+      );
+
+      // Clear loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+
+      if (result['success'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Cancellation acknowledged successfully'),
+              backgroundColor: Colors.blue,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          _fetchBookings(); // Refresh the list
+        }
+      } else {
+        throw Exception(result['message'] ?? 'Failed to acknowledge cancellation');
+      }
+    } catch (e) {
+      // Clear loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  /// Filters bookings based on the selected tab
+  List<Map<String, dynamic>> _filteredBookings() {
     return _bookings.where((booking) {
       final status = (booking['status'] ?? '').toString().toLowerCase();
-      return _selectedTab == 0 
-          ? status == 'pending'
-          : status == 'approved';
+      if (_selectedTab == 0) {
+        return status == 'pending';
+      } else if (_selectedTab == 1) {
+        return status == 'approved';
+      } else {
+        return status == 'cancelled';
+      }
     }).toList();
   }
 
@@ -454,6 +593,14 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
               onTap: () => _onTabChanged(1),
             ),
           ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: BookingTabButton(
+              label: 'Cancelled',
+              isSelected: _selectedTab == 2,
+              onTap: () => _onTabChanged(2),
+            ),
+          ),
         ],
       ),
     );
@@ -472,25 +619,39 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
       );
     }
 
-    final filteredBookings = _getFilteredBookings();
+    final filteredBookings = _filteredBookings();
 
     if (filteredBookings.isEmpty) {
+      IconData emptyIcon;
+      String emptyTitle;
+      String emptySubtitle;
+      
+      if (_selectedTab == 0) {
+        emptyIcon = Icons.pending_actions_outlined;
+        emptyTitle = 'No pending bookings';
+        emptySubtitle = 'New booking requests will appear here';
+      } else if (_selectedTab == 1) {
+        emptyIcon = Icons.check_circle_outline;
+        emptyTitle = 'No approved bookings';
+        emptySubtitle = 'Approved bookings will appear here';
+      } else {
+        emptyIcon = Icons.cancel_outlined;
+        emptyTitle = 'No cancelled bookings';
+        emptySubtitle = 'Cancelled bookings will appear here';
+      }
+      
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _selectedTab == 0 
-                  ? Icons.pending_actions_outlined
-                  : Icons.check_circle_outline,
+              emptyIcon,
               size: 64,
               color: Colors.grey[400],
             ),
             const SizedBox(height: 16),
             Text(
-              _selectedTab == 0 
-                  ? 'No pending bookings'
-                  : 'No approved bookings',
+              emptyTitle,
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[600],
@@ -499,9 +660,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              _selectedTab == 0
-                  ? 'New booking requests will appear here'
-                  : 'Approved bookings will appear here',
+              emptySubtitle,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[500],
@@ -521,11 +680,13 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
         itemCount: filteredBookings.length,
         itemBuilder: (context, index) {
           final booking = filteredBookings[index];
+          final status = (booking['status'] ?? '').toString().toLowerCase();
           
           return BookingCard(
             booking: booking,
-            onApprove: () => _approveBooking(booking),
-            onReject: () => _rejectBooking(booking),
+            onApprove: status == 'pending' ? () => _approveBooking(booking) : null,
+            onReject: status == 'pending' ? () => _rejectBooking(booking) : null,
+            onAcknowledge: status == 'cancelled' ? () => _acknowledgeCancellation(booking) : null,
             isProcessing: _isProcessing,
           );
         },

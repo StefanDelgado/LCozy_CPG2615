@@ -214,7 +214,10 @@ try {
             b.booking_type,
             b.start_date,
             b.end_date,
-            b.notes as message
+            b.notes as message,
+            b.cancellation_acknowledged,
+            b.cancellation_acknowledged_at,
+            b.cancellation_acknowledged_by
         FROM bookings b
         JOIN rooms r ON b.room_id = r.room_id
         JOIN dormitories d ON r.dorm_id = d.dorm_id

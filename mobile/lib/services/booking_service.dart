@@ -310,4 +310,58 @@ class BookingService {
       };
     }
   }
+
+  /// Acknowledges a cancelled booking
+  Future<Map<String, dynamic>> acknowledgeCancellation({
+    required int bookingId,
+    required String ownerEmail,
+  }) async {
+    try {
+      print('📋 [BookingService] Acknowledging cancellation...');
+      print('📋 [BookingService] Booking ID: $bookingId');
+      print('📋 [BookingService] Owner Email: $ownerEmail');
+
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner/acknowledge_cancellation.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'booking_id': bookingId,
+          'owner_email': ownerEmail,
+        }),
+      );
+
+      print('📋 [BookingService] Response status: ${response.statusCode}');
+      print('📋 [BookingService] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          print('📋 [BookingService] ✅ Cancellation acknowledged successfully');
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Cancellation acknowledged successfully',
+          };
+        } else {
+          print('📋 [BookingService] ❌ Acknowledgement failed: ${data['error']}');
+          return {
+            'success': false,
+            'message': data['error'] ?? 'Failed to acknowledge cancellation',
+          };
+        }
+      } else {
+        print('📋 [BookingService] ❌ Server error: ${response.statusCode}');
+        return {
+          'success': false,
+          'message': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('📋 [BookingService] ❌ Exception: $e');
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
 }
+
