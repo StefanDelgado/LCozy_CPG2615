@@ -148,9 +148,9 @@ $user = current_user();
 </style>
 
 <div class="tabs">
-    <a class="tab-link" href="/modules/admin/admin_dashboard.php">Admin Dashboard</a>
-    <a class="tab-link" href="/modules/owner/owner_dashboard.php">Owner Dashboard</a>
-    <a class="tab-link" href="/modules/student/student_dashboard.php">Student Dashboard</a>
+    <a class="tab-link" href="admin_dashboard.php">Admin Dashboard</a>
+    <a class="tab-link" href="owner_dashboard.php">Owner Dashboard</a>
+    <a class="tab-link" href="student_dashboard.php">Student Dashboard</a>
 </div>
 
 
