@@ -124,7 +124,7 @@ $total_dorms = count($dorms);
       <?php if ($dorm['verified'] == 1): ?>
         <span class="badge success">Approved</span>
       <?php elseif ($dorm['verified'] == -1): ?>
-        <span class="badge error">Rejected</span>
+        <span class="badge error">Disapproved</span>
       <?php else: ?>
         <span class="badge warning">Pending Approval</span>
       <?php endif; ?>
