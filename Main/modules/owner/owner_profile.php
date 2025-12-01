@@ -14,13 +14,24 @@ if (!$owner_id) {
     die("Invalid owner ID.");
 }
 
-// Fetch owner account info
+// Fetch owner account info + verification request
 $stmt = $pdo->prepare("
-    SELECT u.user_id, u.name, u.email, u.role, u.created_at,
-           r.status AS request_status, r.submitted_at, r.processed_at,
-           r.document_path
+    SELECT 
+        u.user_id, 
+        u.name, 
+        u.email, 
+        u.role, 
+        u.created_at,
+
+        r.request_id,
+        r.status AS request_status,
+        r.submitted_at,
+        r.processed_at,
+        r.document_path
+
     FROM users u
-    LEFT JOIN owner_verification_requests r ON r.user_id = u.user_id
+    LEFT JOIN owner_verification_requests r 
+        ON r.user_id = u.user_id
     WHERE u.user_id = ?
 ");
 $stmt->execute([$owner_id]);
@@ -30,7 +41,6 @@ if (!$owner) {
     die("Owner not found.");
 }
 
-// Format role display
 $roleDisplay = ucfirst($owner['role']);
 ?>
 <!DOCTYPE html>
@@ -147,7 +157,9 @@ $roleDisplay = ucfirst($owner['role']);
 
         <div class="info-row">
             <span class="label">Request Status:</span>
-            <span class="value"><?= ucfirst($owner['request_status'] ?? "N/A") ?></span>
+            <span class="value">
+                <?= ucfirst($owner['request_status'] ?? "N/A") ?>
+            </span>
         </div>
 
         <div class="info-row">
@@ -157,7 +169,9 @@ $roleDisplay = ucfirst($owner['role']);
 
         <div class="info-row">
             <span class="label">Processed At:</span>
-            <span class="value"><?= $owner['processed_at'] ?? "Not processed" ?></span>
+            <span class="value">
+                <?= $owner['processed_at'] ?? "Not processed" ?>
+            </span>
         </div>
 
         <?php if (!empty($owner['document_path'])): ?>
@@ -174,7 +188,7 @@ $roleDisplay = ucfirst($owner['role']);
 
         <a href="owner_management.php" class="btn back">← Back</a>
 
-        <?php if ($owner['request_status'] === 'pending'): ?>
+        <?php if ($owner['request_status'] === 'pending' && $owner['request_id']): ?>
             <a href="process_owner_request.php?action=approve&request_id=<?= $owner['request_id'] ?>&user_id=<?= $owner['user_id'] ?>"
                class="btn approve">
                Approve
