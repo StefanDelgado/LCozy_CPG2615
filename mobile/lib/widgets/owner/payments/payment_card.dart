@@ -173,7 +173,7 @@ class PaymentCard extends StatelessWidget {
                   ),
                   onPressed: onReject,
                   icon: const Icon(Icons.close, size: 18),
-                  label: const Text('Reject', style: TextStyle(fontSize: 13)),
+                  label: const Text('Disapprove', style: TextStyle(fontSize: 13)),
                 ),
               ),
               const SizedBox(width: 8),

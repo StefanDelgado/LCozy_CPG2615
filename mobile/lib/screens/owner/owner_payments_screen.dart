@@ -204,9 +204,9 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reject Payment'),
+        title: const Text('Disapprove Payment'),
         content: Text(
-          'Are you sure you want to reject the payment from ${payment['tenant_name']}?',
+          'Are you sure you want to disapprove the payment from ${payment['tenant_name']}?',
         ),
         actions: [
           TextButton(
@@ -216,7 +216,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Reject'),
+            child: const Text('Disapprove'),
           ),
         ],
       ),
@@ -249,7 +249,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Failed to reject payment'),
+            content: Text(result['message'] ?? 'Failed to disapprove payment'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -368,7 +368,7 @@ class _OwnerPaymentsScreenState extends State<OwnerPaymentsScreen> {
                             _onRejectPayment(payment);
                           },
                           icon: const Icon(Icons.close),
-                          label: const Text('Reject'),
+                          label: const Text('Disapprove'),
                         ),
                       ),
                     ),

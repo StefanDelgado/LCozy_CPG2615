@@ -253,8 +253,8 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reject Booking'),
-        content: Text('Are you sure you want to reject the booking request from ${booking['student_name'] ?? 'this student'}?'),
+        title: const Text('Disapprove Booking'),
+        content: Text('Are you sure you want to disapprove the booking request from ${booking['student_name'] ?? 'this student'}?'),
         actions: [
           TextButton(
             onPressed: () {
@@ -269,7 +269,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
               Navigator.pop(context, true);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Reject'),
+            child: const Text('Disapprove'),
           ),
         ],
       ),
@@ -352,7 +352,7 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
         }
       } else {
         print('📋 [OwnerBooking] ❌ Rejection failed: ${result['message']}');
-        final errorMessage = result['message'] ?? 'Failed to reject booking';
+        final errorMessage = result['message'] ?? 'Failed to disapprove booking';
         print('📋 [OwnerBooking] Throwing exception: $errorMessage');
         throw Exception(errorMessage);
       }

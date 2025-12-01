@@ -246,7 +246,7 @@ class RecentPaymentsWidget extends StatelessWidget {
       case 'submitted':
         return 'Submitted';
       case 'rejected':
-        return 'Rejected';
+        return 'Disapproved';
       case 'failed':
         return 'Failed';
       case 'overdue':
