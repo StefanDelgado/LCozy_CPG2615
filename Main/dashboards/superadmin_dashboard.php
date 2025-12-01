@@ -60,14 +60,18 @@ $user = current_user();
             display: flex;
             border-bottom: 2px solid #ddd;
             margin-bottom: 20px;
+            gap: 5px;
         }
         .tab {
             padding: 12px 20px;
             cursor: pointer;
-            background: #eee;
-            margin-right: 5px;
+            background: #e6e6ff;
             border-radius: 6px 6px 0 0;
             font-weight: bold;
+            transition: 0.2s;
+        }
+        .tab:hover {
+            background: #d3d3ff;
         }
         .tab.active {
             background: white;
