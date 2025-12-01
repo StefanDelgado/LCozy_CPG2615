@@ -126,11 +126,33 @@ $user = current_user();
         <h1>Super Admin Dashboard</h1>
 
         <!-- Tabs -->
-        <div class="tabs">
-            <div class="tab active" id="tab-admin" onclick="switchTab('admin')">Admin Dashboard</div>
-            <div class="tab" id="tab-owner" onclick="switchTab('owner')">Owner Dashboard</div>
-            <div class="tab" id="tab-student" onclick="switchTab('student')">Student Dashboard</div>
-        </div>
+        <style>
+    .tabs {
+        display: flex;
+        border-bottom: 2px solid #ddd;
+        margin-bottom: 20px;
+    }
+    .tab-link {
+        padding: 12px 20px;
+        background: #eee;
+        margin-right: 5px;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+        text-decoration: none;
+        color: black;
+        display: inline-block;
+    }
+    .tab-link:hover {
+        background: #ddd;
+    }
+</style>
+
+<div class="tabs">
+    <a class="tab-link" href="/modules/admin/admin_dashboard.php">Admin Dashboard</a>
+    <a class="tab-link" href="/modules/owner/owner_dashboard.php">Owner Dashboard</a>
+    <a class="tab-link" href="/modules/student/student_dashboard.php">Student Dashboard</a>
+</div>
+
 
         <!-- Admin Dashboard -->
         <div class="tab-content active" id="content-admin">
