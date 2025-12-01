@@ -164,6 +164,7 @@ if ($user['role'] === 'student') {
     <nav>
       <?php if ($user['role'] === 'superadmin'): ?>
         <a href="/dashboards/superadmin_dashboard.php">Main</a>
+        <br>Admin<br>
         <a href="/dashboards/admin_dashboard.php">Overview</a>
         <a href="/modules/admin/user_management.php">User Management</a>
         <a href="/modules/admin/reports.php">Reports & Analytics</a>

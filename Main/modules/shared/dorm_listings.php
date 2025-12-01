@@ -1,12 +1,15 @@
 <?php
 require_once __DIR__ . '/../../auth/auth.php';
-require_role('admin');
-require_role('superadmin');
+
+// Allow admin OR superadmin
+require_role(['admin', 'superadmin']);
+
 require_once __DIR__ . '/../../config.php';
 
 $page_title = "Dorm Listings";
 include __DIR__ . '/../../partials/header.php';
 
+// Handle Approve / Reject actions
 if (isset($_GET['action'], $_GET['id'])) {
     $dorm_id = (int)$_GET['id'];
     $action = $_GET['action'];
@@ -49,20 +52,19 @@ $total_dorms = count($dorms);
 
     <?php if (!empty($dorm['cover_image'])): ?>
       <?php 
-      // Handle both relative and absolute paths
       $imagePath = $dorm['cover_image'];
+
       if (strpos($imagePath, '/uploads/') === 0 || strpos($imagePath, 'uploads/') === 0) {
-        // Already has uploads path
         $imageUrl = '../../' . ltrim($imagePath, '/');
       } else {
-        // Just filename
         $imageUrl = '../../uploads/' . $imagePath;
       }
       ?>
-      <img src="<?= htmlspecialchars($imageUrl) ?>" 
-           alt="<?= htmlspecialchars($dorm['dorm_name']) ?>" 
+      <img src="<?= htmlspecialchars($imageUrl) ?>"
+           alt="<?= htmlspecialchars($dorm['dorm_name']) ?>"
            style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:10px;"
            onerror="this.parentElement.innerHTML='<div style=\'width:100%;height:200px;background:#eee;display:flex;align-items:center;justify-content:center;border-radius:8px;\'><span>Image not found</span></div>';">
+
     <?php else: ?>
       <div style="width:100%;height:200px;background:#eee;display:flex;align-items:center;justify-content:center;border-radius:8px;">
         <span>No Image Available</span>
@@ -90,11 +92,11 @@ $total_dorms = count($dorms);
       </thead>
       <tbody>
         <?php
-        $room_sql = "SELECT room_id, room_number, room_type, capacity, price, status FROM rooms WHERE dorm_id = ?";
-        $room_stmt = $pdo->prepare($room_sql);
+        $room_stmt = $pdo->prepare("SELECT room_id, room_number, room_type, capacity, price, status FROM rooms WHERE dorm_id = ?");
         $room_stmt->execute([$dorm['dorm_id']]);
         $rooms = $room_stmt->fetchAll(PDO::FETCH_ASSOC);
         ?>
+
         <?php if ($rooms): ?>
           <?php foreach ($rooms as $room): ?>
           <tr>
@@ -127,6 +129,7 @@ $total_dorms = count($dorms);
         <span class="badge warning">Pending Approval</span>
       <?php endif; ?>
     </p>
+
     <div class="actions">
       <?php if ($dorm['verified'] != 1): ?>
         <a href="?action=approve&id=<?= $dorm['dorm_id'] ?>" class="btn success">Approve</a>
@@ -135,6 +138,7 @@ $total_dorms = count($dorms);
         <a href="?action=reject&id=<?= $dorm['dorm_id'] ?>" class="btn danger">Reject</a>
       <?php endif; ?>
     </div>
+
   </div>
 <?php endforeach; ?>
 </div>
