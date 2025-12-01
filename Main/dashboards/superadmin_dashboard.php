@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/auth.php';
-require_role('superadmin'); // Only superadmin can access
+require_role('superadmin');
 
 $user = current_user();
 ?>
@@ -28,10 +28,7 @@ $user = current_user();
             padding: 20px;
             box-sizing: border-box;
         }
-        .sidebar h2 {
-            margin-top: 0;
-            font-size: 1.4rem;
-        }
+        .sidebar h2 { margin-top: 0; font-size: 1.4rem; }
         .sidebar a {
             display: block;
             color: white;
@@ -40,22 +37,7 @@ $user = current_user();
             margin: 5px 0;
             border-radius: 6px;
         }
-        .sidebar a:hover {
-            background: rgba(255,255,255,0.15);
-        }
-
-        /* Main content */
-        .main {
-            flex: 1;
-            padding: 30px;
-        }
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
+        .sidebar a:hover { background: rgba(255,255,255,0.15); }
         .logout-btn {
             background: #e63946;
             padding: 10px;
@@ -66,11 +48,65 @@ $user = current_user();
             margin-top: 20px;
             text-decoration: none;
         }
-        .logout-btn:hover {
-            background: #c6283c;
+
+        /* Main content */
+        .main {
+            flex: 1;
+            padding: 30px;
         }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            background: #e6e6ff;
+            border-radius: 6px 6px 0 0;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .tab:hover {
+            background: #d3d3ff;
+        }
+        .tab.active {
+            background: white;
+            border-bottom: 2px solid white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
     </style>
+
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+
+            document.getElementById("tab-" + tabName).classList.add("active");
+            document.getElementById("content-" + tabName).classList.add("active");
+        }
+    </script>
 </head>
+
 <body>
 
     <!-- Sidebar -->
@@ -82,28 +118,81 @@ $user = current_user();
         <a href="/modules/admin/admin_management.php">Admin Management</a>
         <a href="/modules/owner/owner_management.php">Owner Management</a>
         <a href="/modules/student/student_management.php">Student Management</a>
-
         <a class="logout-btn" href="/auth/logout.php">Logout</a>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main -->
     <div class="main">
         <h1>Super Admin Dashboard</h1>
 
-        <div class="card">
-            <h2>System Overview</h2>
-            <p>This area can include system data, metrics, or overview stats.</p>
+        <!-- Tabs -->
+        <style>
+    .tabs {
+        display: flex;
+        border-bottom: 2px solid #ddd;
+        margin-bottom: 20px;
+    }
+    .tab-link {
+        padding: 12px 20px;
+        background: #eee;
+        margin-right: 5px;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+        text-decoration: none;
+        color: black;
+        display: inline-block;
+    }
+    .tab-link:hover {
+        background: #ddd;
+    }
+</style>
+
+<div class="tabs">
+    <a class="tab-link" href="admin_dashboard.php">Admin Dashboard</a>
+    <a class="tab-link" href="owner_dashboard.php">Owner Dashboard</a>
+    <a class="tab-link" href="student_dashboard.php">Student Dashboard</a>
+</div>
+
+
+        <!-- Admin Dashboard -->
+        <div class="tab-content active" id="content-admin">
+            <div class="card">
+                <h2>Admin Overview</h2>
+                <p>Manage admin accounts, privileges, and access roles.</p>
+            </div>
+
+            <div class="card">
+                <h2>Admin Controls</h2>
+                <p>Approve, remove, or modify admin-level permissions.</p>
+            </div>
         </div>
 
-        <div class="card">
-            <h2>Admin Controls</h2>
-            <p>You have exclusive rights to approve, verify, and manage admin accounts.</p>
+        <!-- Owner Dashboard -->
+        <div class="tab-content" id="content-owner">
+            <div class="card">
+                <h2>Owner Verification</h2>
+                <p>Review owner profiles & license submissions.</p>
+            </div>
+
+            <div class="card">
+                <h2>Property Management</h2>
+                <p>Monitor property listings and owner activity logs.</p>
+            </div>
         </div>
 
-        <div class="card">
-            <h2>Platform Management</h2>
-            <p>Configure global system settings, user permissions, and more.</p>
+        <!-- Student Dashboard -->
+        <div class="tab-content" id="content-student">
+            <div class="card">
+                <h2>Student Verification</h2>
+                <p>Review pending student ID uploads for verification.</p>
+            </div>
+
+            <div class="card">
+                <h2>Student Activity Tracking</h2>
+                <p>Monitor bookings, reports, and user engagement.</p>
+            </div>
         </div>
+
     </div>
 
 </body>

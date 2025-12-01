@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 
 require_once __DIR__ . '/../../auth/auth.php';
 require_once __DIR__ . '/../../config.php';
-require_role('student');
+require_role('student', 'superadmin');
 
 $page_title = "My Payments";
 include __DIR__ . '/../../partials/header.php';

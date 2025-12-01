@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($room_id) {
                 if ($status === 'approved') {
                     $pdo->prepare("UPDATE rooms SET status='occupied' WHERE room_id=?")->execute([$room_id]);
-                } elseif (in_array($status, ['cancelled','rejected'])) {
+                } elseif (in_array($status, ['cancelled','disapproved'])) {
                     $pdo->prepare("UPDATE rooms SET status='vacant' WHERE room_id=?")->execute([$room_id]);
                 }
             }
@@ -185,7 +185,7 @@ setTimeout(closeFlash,3000);
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
           <option value="cancelled">Cancelled</option>
-          <option value="rejected">Rejected</option>
+          <option value="disapproved">Disapproved</option>
         </select>
       </label>
       <label>Notes

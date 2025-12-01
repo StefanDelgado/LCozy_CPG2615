@@ -162,7 +162,30 @@ if ($user['role'] === 'student') {
     <hr class="sidebar-separator">
 
     <nav>
-      <?php if ($user['role'] === 'admin'): ?>
+      <?php if ($user['role'] === 'superadmin'): ?>
+        <a href="/dashboards/superadmin_dashboard.php">Main</a>
+        <br><b>Admin</b><br>
+        <a href="/dashboards/admin_dashboard.php">Overview</a>
+        <a href="/modules/admin/user_management.php">User Management</a>
+        <a href="/modules/admin/reports.php">Reports & Analytics</a>
+        <a href="/modules/admin/owner_verification.php">Dorm Owner Verification</a>
+        <a href="/modules/shared/dorm_listings.php">Dorm Listings</a>
+        <a href="/modules/admin/booking_oversight.php">Booking & Reservation</a>
+        <a href="/modules/admin/admin_payments.php">Payment Management</a>
+        <a href="/modules/admin/announcements.php">Broadcast Announcements</a>
+        <br><b>Owner</b><br>
+        <a href="/dashboards/owner_dashboard.php">My Dashboard</a>
+        <a href="/modules/owner/owner_dorms.php">Dorm Management</a>
+        <a href="/modules/owner/owner_tenants.php">Tenant Management</a>
+        <a href="/modules/owner/owner_bookings.php">Booking Management</a>
+        <a href="/modules/owner/owner_payments.php">Payment Management</a>
+        <br><b>Student</b><br>
+        <a href="/dashboards/student_dashboard.php">My Dashboard</a>
+        <a href="/modules/shared/available_dorms.php">Available Dorms</a>
+        <a href="/modules/student/student_reservations.php">My Reservations</a>
+        <a href="/modules/student/student_payments.php">Payment Management</a>
+
+      <?php elseif ($user['role'] === 'admin'): ?>
         <a href="/dashboards/admin_dashboard.php">Overview</a>
         <a href="/modules/admin/user_management.php">User Management</a>
         <a href="/modules/admin/reports.php">Reports & Analytics</a>

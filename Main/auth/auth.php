@@ -36,6 +36,12 @@ function require_role($role) {
     login_required();
     $user = current_user();
 
+    // SUPERADMIN OVERRIDE — can access EVERYTHING
+    if ($user['role'] === 'superadmin') {
+        return; // Always allow access
+    }
+
+    // Normal role checking
     if (is_array($role)) {
         if (!in_array($user['role'], $role)) {
             http_response_code(403);
