@@ -28,7 +28,7 @@ if (isset($_GET['action'], $_GET['id'])) {
 
 $sql = "
     SELECT d.dorm_id, d.name AS dorm_name, d.address, d.description, d.verified,
-           d.cover_image, d.features,
+           d.cover_image, d.features, d.owner_id, d.owner_id_document, d.business_permit,
            u.name AS owner_name
     FROM dormitories d
     JOIN users u ON d.owner_id = u.user_id
@@ -72,7 +72,26 @@ $total_dorms = count($dorms);
     <?php endif; ?>
 
     <p><strong>Address:</strong> <?= htmlspecialchars($dorm['address']) ?></p>
-    <p><strong>Owner:</strong> <?= htmlspecialchars($dorm['owner_name']) ?></p>
+    <p><strong>Owner:</strong> <?= htmlspecialchars($dorm['owner_name']) ?> (ID: <?= htmlspecialchars($dorm['owner_id']) ?>)</p>
+    
+    <!-- Owner Documents Section -->
+    <div style="background:#f8f9fa;padding:10px;border-radius:5px;margin:10px 0;">
+      <p style="margin:5px 0;"><strong>Owner ID Document:</strong>
+        <?php if (!empty($dorm['owner_id_document'])): ?>
+          <a href="../../<?= htmlspecialchars($dorm['owner_id_document']) ?>" target="_blank" class="btn" style="padding:5px 10px;font-size:12px;">📄 View Document</a>
+        <?php else: ?>
+          <span style="color:#999;">Not uploaded</span>
+        <?php endif; ?>
+      </p>
+      <p style="margin:5px 0;"><strong>Business Permit:</strong>
+        <?php if (!empty($dorm['business_permit'])): ?>
+          <a href="../../<?= htmlspecialchars($dorm['business_permit']) ?>" target="_blank" class="btn" style="padding:5px 10px;font-size:12px;">📄 View Document</a>
+        <?php else: ?>
+          <span style="color:#999;">Not uploaded</span>
+        <?php endif; ?>
+      </p>
+    </div>
+    
     <p><?= nl2br(htmlspecialchars($dorm['description'])) ?></p>
 
     <?php if (!empty($dorm['features'])): ?>
