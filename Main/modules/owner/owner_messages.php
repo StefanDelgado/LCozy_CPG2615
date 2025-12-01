@@ -309,8 +309,8 @@ if (dormId && studentId) {
   display: grid;
   grid-template-columns: 380px 1fr;
   gap: 0;
-  height: calc(100vh - 200px);
-  min-height: 600px;
+  height: auto;
+  min-height: calc(100vh - 200px);
   background: white;
   border-radius: 12px;
   overflow: hidden;
