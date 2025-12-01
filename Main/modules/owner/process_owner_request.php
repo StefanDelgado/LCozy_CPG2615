@@ -16,10 +16,10 @@ if (!$action || !$request_id || !$user_id) {
 
 try {
 
-    // Get request details
+    // Get request details from user_verifications
     $stmt = $pdo->prepare("
         SELECT r.*, u.role 
-        FROM owner_verification_requests r
+        FROM user_verifications r
         JOIN users u ON u.user_id = r.user_id
         WHERE r.request_id = ?
     ");
@@ -41,13 +41,14 @@ try {
 
         // Update user role to owner
         $updateUser = $pdo->prepare("
-            UPDATE users SET role = 'owner' WHERE user_id = ?
+            UPDATE users SET role = 'owner', verified = 1
+            WHERE user_id = ?
         ");
         $updateUser->execute([$user_id]);
 
         // Mark request as approved
         $approve = $pdo->prepare("
-            UPDATE owner_verification_requests 
+            UPDATE user_verifications
             SET status = 'approved', processed_at = NOW()
             WHERE request_id = ?
         ");
@@ -63,11 +64,10 @@ try {
     elseif ($action === 'disapprove') {
 
         $disapprove = $pdo->prepare("
-            UPDATE owner_verification_requests 
+            UPDATE user_verifications
             SET status = 'disapproved', processed_at = NOW()
             WHERE request_id = ?
         ");
-
         $disapprove->execute([$request_id]);
 
         header("Location: owner_requests.php?success=Owner verification disapproved.");

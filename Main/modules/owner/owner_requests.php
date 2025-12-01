@@ -10,11 +10,11 @@ $page_title = "Owner Verification Requests";
 $current = current_user();
 $is_superadmin = ($current['role'] === 'superadmin');
 
-// Fetch pending requests
+// Fetch pending requests from correct table: user_verifications
 $sql = "
     SELECT r.request_id, r.user_id, r.status, r.created_at,
            u.name, u.email, u.phone, u.address, u.license_no
-    FROM owner_verification_requests r
+    FROM user_verifications r
     JOIN users u ON u.user_id = r.user_id
     WHERE r.status = 'pending'
     ORDER BY r.created_at ASC
@@ -28,7 +28,7 @@ require_once __DIR__ . '/../../partials/header.php';
 
 <div class="page-header">
     <h1>Owner Verification Requests</h1>
-    <p>Review and approve or reject owner verification submissions.</p>
+    <p>Review and approve or disapprove owner verification submissions.</p>
 </div>
 
 <div class="card">
@@ -69,11 +69,11 @@ require_once __DIR__ . '/../../partials/header.php';
                         Approve
                     </a>
 
-                    <!-- Reject -->
+                    <!-- Disapprove -->
                     <a class="btn btn-danger"
-                       href="process_owner_request.php?action=reject&request_id=<?= (int)$req['request_id'] ?>&user_id=<?= (int)$req['user_id'] ?>"
-                       onclick="return confirm('Reject this owner verification?');">
-                        Reject
+                       href="process_owner_request.php?action=disapprove&request_id=<?= (int)$req['request_id'] ?>&user_id=<?= (int)$req['user_id'] ?>"
+                       onclick="return confirm('Disapprove this owner verification?');">
+                        Disapprove
                     </a>
                 </td>
 
