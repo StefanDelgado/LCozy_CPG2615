@@ -96,7 +96,7 @@ if ($role === 'owner') {
 
     <?php
     
-} elseif ($role === 'admin') {
+} elseif ($role === 'admin' || $role === 'superadmin') {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $owner_id = intval($_POST['user_id']);
         $action = $_POST['action'];
