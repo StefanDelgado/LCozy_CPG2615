@@ -187,7 +187,7 @@ class PaymentCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Rejected: ${payment['rejection_reason']}',
+                          'Disapproved: ${payment['rejection_reason']}',
                           style: const TextStyle(color: Colors.red, fontSize: 12),
                         ),
                       ),

@@ -293,7 +293,7 @@ class BookingCard extends StatelessWidget {
                                 )
                               : const Icon(Icons.cancel, size: 20),
                             label: const Text(
-                              'Reject',
+                              'Disapprove',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -405,7 +405,7 @@ class BookingCard extends StatelessWidget {
       case 'pending':
         return 'Pending';
       case 'rejected':
-        return 'Rejected';
+        return 'Disapproved';
       case 'cancelled':
         return 'Cancelled';
       default:
