@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../utils/app_theme.dart';
 import '../../services/checkout_service.dart';
 import '../../services/booking_service.dart';
@@ -150,6 +152,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     _buildInfoRow(Icons.payment, 'Payment Status',
                         widget.booking['payment_status'] ?? 'Pending'),
                   ]),
+
+                  // Contract Documents Section (for approved/active bookings)
+                  if (status == 'approved' || status == 'active') ...[
+                    const SizedBox(height: 24),
+                    _buildSectionTitle('Contract Documents'),
+                    const SizedBox(height: 12),
+                    _buildContractSection(),
+                  ],
 
                   // Cancel Booking Button (for pending/approved before payment)
                   if (canCancelBooking) ...[
@@ -634,4 +644,294 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       );
     }
   }
+
+  /// Builds the contract documents section
+  Widget _buildContractSection() {
+    final studentContract = widget.booking['student_contract_copy'];
+    final ownerContract = widget.booking['owner_contract_copy'];
+    final hasStudentContract = studentContract != null && studentContract.toString().isNotEmpty;
+    final hasOwnerContract = ownerContract != null && ownerContract.toString().isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue[200]!, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Owner's Contract Copy
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.person,
+                  color: Colors.blue[700],
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Owner\'s Contract Copy',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      hasOwnerContract
+                          ? 'Contract uploaded by owner'
+                          : 'Waiting for owner to upload',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (hasOwnerContract)
+                IconButton(
+                  onPressed: () => _viewContract(ownerContract),
+                  icon: const Icon(Icons.visibility, color: Colors.blue),
+                  tooltip: 'View Contract',
+                ),
+            ],
+          ),
+          const Divider(height: 24),
+          
+          // Student's Contract Copy
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.school,
+                  color: Colors.green[700],
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Your Contract Copy',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      hasStudentContract
+                          ? 'Contract uploaded'
+                          : 'Upload your signed contract',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (hasStudentContract)
+                IconButton(
+                  onPressed: () => _viewContract(studentContract),
+                  icon: const Icon(Icons.visibility, color: Colors.green),
+                  tooltip: 'View Contract',
+                ),
+            ],
+          ),
+          
+          // Upload Button
+          if (!hasStudentContract) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isLoading ? null : _uploadContract,
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.upload_file, size: 20),
+                label: const Text(
+                  'Upload Your Signed Contract',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[600],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Accepted formats: PDF, JPG, PNG (Max 5MB)',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ] else ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _isLoading ? null : _uploadContract,
+                icon: const Icon(Icons.refresh, size: 20),
+                label: const Text(
+                  'Replace Contract',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.green[700],
+                  side: BorderSide(color: Colors.green[700]!, width: 2),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Picks and uploads contract document
+  Future<void> _uploadContract() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        File file = File(result.files.single.path!);
+        
+        // Check file size (5MB max)
+        final fileSize = await file.length();
+        if (fileSize > 5 * 1024 * 1024) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('File too large. Maximum size is 5MB'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        setState(() => _isLoading = true);
+
+        final bookingId = widget.booking['booking_id'] is int
+            ? widget.booking['booking_id']
+            : int.tryParse(widget.booking['booking_id']?.toString() ?? '0') ?? 0;
+
+        final uploadResult = await _bookingService.uploadStudentContract(
+          bookingId: bookingId,
+          studentEmail: widget.userEmail,
+          contractFile: file,
+        );
+
+        if (!mounted) return;
+
+        setState(() => _isLoading = false);
+
+        if (uploadResult['success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(uploadResult['message'] ?? 'Contract uploaded successfully'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          // Refresh the screen
+          Navigator.pop(context, true);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(uploadResult['message'] ?? 'Failed to upload contract'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error picking file: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Views contract document
+  void _viewContract(String? contractPath) {
+    if (contractPath == null || contractPath.isEmpty) return;
+    
+    // Show dialog with contract viewing options
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('View Contract'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Contract document is available.'),
+            const SizedBox(height: 16),
+            Text(
+              'Path: $contractPath',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
 }
+

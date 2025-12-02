@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../utils/constants.dart';
 
@@ -363,5 +364,69 @@ class BookingService {
       };
     }
   }
+
+  /// Uploads student's copy of contract document
+  Future<Map<String, dynamic>> uploadStudentContract({
+    required int bookingId,
+    required String studentEmail,
+    required File contractFile,
+  }) async {
+    try {
+      print('📋 [BookingService] Uploading student contract...');
+      print('📋 [BookingService] Booking ID: $bookingId');
+      print('📋 [BookingService] Student Email: $studentEmail');
+      print('📋 [BookingService] File path: ${contractFile.path}');
+
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/student/upload_student_contract.php'),
+      );
+
+      request.fields['booking_id'] = bookingId.toString();
+      request.fields['student_email'] = studentEmail;
+
+      request.files.add(await http.MultipartFile.fromPath(
+        'contract_document',
+        contractFile.path,
+      ));
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      print('📋 [BookingService] Response status: ${response.statusCode}');
+      print('📋 [BookingService] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          print('📋 [BookingService] ✅ Contract uploaded successfully');
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Contract uploaded successfully',
+            'file_path': data['file_path'],
+          };
+        } else {
+          print('📋 [BookingService] ❌ Upload failed: ${data['error']}');
+          return {
+            'success': false,
+            'message': data['error'] ?? 'Failed to upload contract',
+          };
+        }
+      } else {
+        print('📋 [BookingService] ❌ Server error: ${response.statusCode}');
+        return {
+          'success': false,
+          'message': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('📋 [BookingService] ❌ Exception: $e');
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
 }
+
 
