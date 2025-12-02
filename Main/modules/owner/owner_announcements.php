@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../auth/auth.php';
-require_role('owner', 'superadmin');
+require_role('owner', 'superadmin', 'owner');
 require_once __DIR__ . '/../../config.php';
 
 $page_title = "Announcements";
