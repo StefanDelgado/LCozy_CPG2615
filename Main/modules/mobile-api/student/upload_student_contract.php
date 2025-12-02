@@ -88,16 +88,37 @@ try {
         exit;
     }
 
-    // Validate file type (PDF, images)
-    $allowed_types = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-    $file_type = $_FILES['contract_document']['type'];
+    // Validate file type by extension (more reliable than MIME type)
+    $file_extension = strtolower(pathinfo($_FILES['contract_document']['name'], PATHINFO_EXTENSION));
+    $allowed_extensions = ['pdf', 'jpg', 'jpeg', 'png'];
     
-    if (!in_array($file_type, $allowed_types)) {
+    if (!in_array($file_extension, $allowed_extensions)) {
         echo json_encode([
             'success' => false, 
-            'error' => 'Invalid file type. Please upload PDF, JPG, or PNG files only'
+            'error' => 'Invalid file type. Please upload PDF, JPG, or PNG files only. Uploaded: ' . $file_extension
         ]);
         exit;
+    }
+    
+    // Optional: Also check MIME type as secondary validation
+    $allowed_mime_types = [
+        'application/pdf',
+        'image/jpeg',
+        'image/jpg', 
+        'image/pjpeg',
+        'image/png',
+        'image/x-png',
+        'application/octet-stream' // Some devices use this
+    ];
+    $file_mime = $_FILES['contract_document']['type'];
+    
+    // Log the MIME type for debugging
+    error_log("File upload - Extension: $file_extension, MIME: $file_mime");
+    
+    // Only validate MIME if it's set (some clients don't send it)
+    if (!empty($file_mime) && !in_array(strtolower($file_mime), $allowed_mime_types)) {
+        // If extension is valid but MIME doesn't match, log warning but allow
+        error_log("Warning: MIME type mismatch but extension is valid. MIME: $file_mime, Extension: $file_extension");
     }
 
     // Validate file size (max 5MB)
