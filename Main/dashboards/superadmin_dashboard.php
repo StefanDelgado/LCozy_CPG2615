@@ -165,6 +165,26 @@ $user = current_user();
                 <h2>Admin Controls</h2>
                 <p>Approve, remove, or modify admin-level permissions.</p>
             </div>
+
+            <div class="card">
+                <h2>Owner Verification</h2>
+                <p>Review owner profiles & license submissions.</p>
+            </div>
+
+            <div class="card">
+                <h2>Property Management</h2>
+                <p>Monitor property listings and owner activity logs.</p>
+            </div>
+
+            <div class="card">
+                <h2>Student Verification</h2>
+                <p>Review pending student ID uploads for verification.</p>
+            </div>
+
+            <div class="card">
+                <h2>Student Activity Tracking</h2>
+                <p>Monitor bookings, reports, and user engagement.</p>
+            </div>
         </div>
 
         <!-- Owner Dashboard -->

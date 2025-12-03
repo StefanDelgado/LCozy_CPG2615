@@ -88,7 +88,7 @@ if ($role === 'owner') {
       <?php if ($me['verified']==1): ?>
         <span class="badge success">Verified</span>
       <?php elseif ($me['verified']==-1): ?>
-        <span class="badge error">Rejected</span>
+        <span class="badge error">Disapproved</span>
       <?php else: ?>
         <span class="badge warning">Pending</span>
       <?php endif; ?>
@@ -110,12 +110,12 @@ if ($role === 'owner') {
             $pdo->prepare("UPDATE dormitories SET verified = 1 WHERE owner_id = ?")
                 ->execute([$owner_id]);
 
-        } elseif ($action === 'reject') {
+        } elseif ($action === 'disapproved') {
             // Reject owner account
             $pdo->prepare("UPDATE users SET verified = -1 WHERE user_id = ? AND role = 'owner'")
                 ->execute([$owner_id]);
 
-            // Also mark dorms as rejected
+            // Also mark dorms as disapproved
             $pdo->prepare("UPDATE dormitories SET verified = -1 WHERE owner_id = ?")
                 ->execute([$owner_id]);
         }
@@ -126,7 +126,7 @@ if ($role === 'owner') {
         case 'verified':
             $owners = $pdo->query("SELECT * FROM users WHERE role='owner' AND verified=1")->fetchAll();
             break;
-        case 'rejected':
+        case 'disapproved':
             $owners = $pdo->query("SELECT * FROM users WHERE role='owner' AND verified=-1")->fetchAll();
             break;
         default:
@@ -139,7 +139,7 @@ if ($role === 'owner') {
     <div class="filter-actions">
         <a href="?status=pending" class="btn <?=$status==='pending'?'active':''?>">Pending</a>
         <a href="?status=verified" class="btn <?=$status==='verified'?'active':''?>">Verified</a>
-        <a href="?status=rejected" class="btn <?=$status==='rejected'?'active':''?>">Rejected</a>
+        <a href="?status=disapproved" class="btn <?=$status==='disapproved'?'active':''?>">Disapproved</a>
     </div>
 
     <table class="data-table">
@@ -175,7 +175,7 @@ if ($role === 'owner') {
             <?php if ($o['verified']==1): ?>
               <span class="badge success">Verified</span>
             <?php elseif ($o['verified']==-1): ?>
-              <span class="badge error">Rejected</span>
+              <span class="badge error">Disapproved</span>
             <?php else: ?>
               <span class="badge warning">Pending</span>
             <?php endif; ?>
@@ -185,7 +185,7 @@ if ($role === 'owner') {
               <form method="post" style="display:inline">
                 <input type="hidden" name="user_id" value="<?=$o['user_id']?>">
                 <button class="btn-primary" name="action" value="approve">Approve</button>
-                <button class="btn-secondary" name="action" value="reject">Reject</button>
+                <button class="btn-secondary" name="action" value="disapprove">Disapprove</button>
               </form>
             <?php else: ?>
               <em>No actions</em>
