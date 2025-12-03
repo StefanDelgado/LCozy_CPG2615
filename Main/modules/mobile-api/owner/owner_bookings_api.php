@@ -269,9 +269,10 @@ try {
             $calculated_price = $base_price;
         }
         
-        // Extract cancellation reason from notes (if cancelled)
+        // Extract cancellation reason from notes (for both cancelled and cancellation_requested)
         $cancellation_reason = '';
-        if (strtolower($b['status']) === 'cancelled' && !empty($b['message'])) {
+        $status_lower = strtolower($b['status']);
+        if (($status_lower === 'cancelled' || $status_lower === 'cancellation_requested') && !empty($b['message'])) {
             // Look for "Reason: " in the notes
             if (preg_match('/Reason:\s*(.+?)(?:\n|$)/s', $b['message'], $matches)) {
                 $cancellation_reason = trim($matches[1]);

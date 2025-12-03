@@ -257,8 +257,8 @@ class BookingCard extends StatelessWidget {
               ),
             ),
             
-            // Cancellation Reason (only for confirmed cancellations, not requests)
-            if (isCancelled && 
+            // Cancellation Reason (for both cancellation_requested and cancelled)
+            if ((isCancellationRequested || isCancelled) && 
                 booking['cancellation_reason'] != null && 
                 booking['cancellation_reason'].toString().isNotEmpty)
               Padding(
@@ -266,9 +266,16 @@ class BookingCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
+                    color: isCancellationRequested 
+                        ? const Color(0xFFFFFBEB)  // Orange background for requests
+                        : const Color(0xFFFEF2F2),  // Red background for cancelled
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFECACA), width: 1),
+                    border: Border.all(
+                      color: isCancellationRequested 
+                          ? const Color(0xFFFDE68A)  // Orange border for requests
+                          : const Color(0xFFFECACA),  // Red border for cancelled
+                      width: 1,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,8 +285,10 @@ class BookingCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFEF4444), Color(0xFFF87171)],
+                              gradient: LinearGradient(
+                                colors: isCancellationRequested 
+                                    ? [const Color(0xFFF59E0B), const Color(0xFFFBBF24)]  // Orange for requests
+                                    : [const Color(0xFFEF4444), const Color(0xFFF87171)],  // Red for cancelled
                               ),
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -290,11 +299,13 @@ class BookingCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
+                          Text(
                             'Cancellation Reason:',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Color(0xFF991B1B),
+                              color: isCancellationRequested 
+                                  ? const Color(0xFF92400E)  // Orange text for requests
+                                  : const Color(0xFF991B1B),  // Red text for cancelled
                               fontWeight: FontWeight.w600,
                             ),
                           ),
