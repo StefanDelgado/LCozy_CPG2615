@@ -530,6 +530,192 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
     }
   }
 
+  /// Rejects a cancellation request and reverts booking to approved
+  Future<void> _rejectCancellationRequest(Map<String, dynamic> booking) async {
+    print('📋 [OwnerBooking] REJECT CANCELLATION REQUEST CLICKED');
+    
+    if (_isProcessing) {
+      print('📋 [OwnerBooking] Already processing, ignoring click');
+      return;
+    }
+
+    final bookingId = booking['booking_id'] ?? booking['id'];
+    
+    if (bookingId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error: Booking ID is missing'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Disapprove Cancellation Request?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Are you sure you want to disapprove the cancellation request from ${booking['student_name'] ?? 'this student'}?'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 18, color: Colors.blue[700]),
+                      const SizedBox(width: 8),
+                      Text(
+                        'What happens:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[700],
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildInfoItem('The booking will return to APPROVED status'),
+                  _buildInfoItem('The student can proceed with their booking'),
+                  _buildInfoItem('No cancellation will occur'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No, Keep Request'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Yes, Disapprove Request'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isProcessing = true);
+
+    // Show loading indicator
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 16),
+              Text('Disapproving cancellation request...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+    }
+
+    try {
+      final result = await _bookingService.rejectCancellationRequest(
+        bookingId: int.parse(bookingId.toString()),
+        ownerEmail: widget.ownerEmail,
+      );
+
+      // Clear loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+
+      if (result['success'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Cancellation request disapproved successfully'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          _fetchBookings(); // Refresh the list
+        }
+      } else {
+        throw Exception(result['error'] ?? 'Failed to disapprove cancellation request');
+      }
+    } catch (e) {
+      // Clear loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Widget _buildInfoItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, top: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '• ',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.blue[700],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Opens chat with the student who cancelled
   Future<void> _messageStudent(Map<String, dynamic> booking) async {
     try {
@@ -753,6 +939,9 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
             onReject: status == 'pending' ? () => _rejectBooking(booking) : null,
             onAcknowledge: isCancellationRequested
                 ? () => _acknowledgeCancellation(booking) 
+                : null,
+            onRejectCancellation: isCancellationRequested
+                ? () => _rejectCancellationRequest(booking)
                 : null,
             onMessage: (isCancellationRequested || isCancelled) 
                 ? () => _messageStudent(booking) 

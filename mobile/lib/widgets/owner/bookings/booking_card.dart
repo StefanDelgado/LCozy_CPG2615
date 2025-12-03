@@ -6,6 +6,7 @@ class BookingCard extends StatelessWidget {
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
   final VoidCallback? onAcknowledge;
+  final VoidCallback? onRejectCancellation;
   final VoidCallback? onMessage;
   final bool isProcessing;
 
@@ -15,6 +16,7 @@ class BookingCard extends StatelessWidget {
     this.onApprove,
     this.onReject,
     this.onAcknowledge,
+    this.onRejectCancellation,
     this.onMessage,
     this.isProcessing = false,
   });
@@ -516,6 +518,54 @@ class BookingCard extends StatelessWidget {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                    
+                    // Reject Cancellation Request button (for cancellation_requested only)
+                    if (isCancellationRequested && onRejectCancellation != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFEF4444), Color(0xFFF87171)],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: isProcessing ? null : onRejectCancellation,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            icon: isProcessing 
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : const Icon(Icons.cancel_outlined, size: 20),
+                            label: const Text(
+                              'Disapprove Cancellation',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ),
                       ),
                     
