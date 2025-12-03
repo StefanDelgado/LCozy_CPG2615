@@ -170,6 +170,7 @@ if ($user['role'] === 'student') {
         <a href="/modules/admin/reports.php">Reports & Analytics</a>
         <a href="/modules/admin/owner_verification.php">Dorm Owner Verification</a>
         <a href="/modules/shared/dorm_listings.php">Dorm Listings</a>
+        <li><a href="/modules/admin/admin_reviews.php">Review Moderation</a></li>
         <a href="/modules/admin/booking_oversight.php">Booking & Reservation</a>
         <a href="/modules/admin/admin_payments.php">Payment Management</a>
         <a href="/modules/admin/announcements.php">Broadcast Announcements</a>
@@ -191,6 +192,7 @@ if ($user['role'] === 'student') {
         <a href="/modules/admin/reports.php">Reports & Analytics</a>
         <a href="/modules/admin/owner_verification.php">Dorm Owner Verification</a>
         <a href="/modules/shared/dorm_listings.php">Dorm Listings</a>
+        <li><a href="/modules/admin/admin_reviews.php">Review Moderation</a></li>
         <a href="/modules/admin/booking_oversight.php">Booking & Reservation</a>
         <a href="/modules/admin/admin_payments.php">Payment Management</a>
         <a href="/modules/admin/announcements.php">Broadcast Announcements</a>

@@ -8,7 +8,7 @@ include __DIR__ . '/../../partials/header.php';
 
 if (isset($_GET['action'], $_GET['id'])) {
     $id = intval($_GET['id']);
-    $action = $_GET['action'] === 'approve' ? 'approved' : 'rejected';
+    $action = $_GET['action'] === 'approve' ? 'approved' : 'disapproved';
     $stmt = $pdo->prepare("UPDATE reviews SET status = ? WHERE review_id = ?");
     $stmt->execute([$action, $id]);
 }
@@ -49,7 +49,7 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <td><?= htmlspecialchars($r['status']) ?></td>
         <td>
           <a href="?action=approve&id=<?= $r['review_id'] ?>" class="btn-success">Approve</a>
-          <a href="?action=reject&id=<?= $r['review_id'] ?>" class="btn-danger">Reject</a>
+          <a href="?action=disapprove&id=<?= $r['review_id'] ?>" class="btn-danger">Disapprove</a>
         </td>
       </tr>
     <?php endforeach; ?>
