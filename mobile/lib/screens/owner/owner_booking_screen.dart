@@ -598,7 +598,8 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
       } else if (_selectedTab == 1) {
         return status == 'approved';
       } else {
-        return status == 'cancelled';
+        // Cancelled tab shows both cancellation_requested and cancelled
+        return status == 'cancelled' || status == 'cancellation_requested';
       }
     }).toList();
   }
@@ -741,15 +742,19 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
         itemBuilder: (context, index) {
           final booking = filteredBookings[index];
           final status = (booking['status'] ?? '').toString().toLowerCase();
+          final isCancellationRequested = status == 'cancellation_requested';
+          final isCancelled = status == 'cancelled';
           
           return BookingCard(
             booking: booking,
             onApprove: status == 'pending' ? () => _approveBooking(booking) : null,
             onReject: status == 'pending' ? () => _rejectBooking(booking) : null,
-            onAcknowledge: status == 'cancelled' && booking['cancellation_acknowledged'] != 1 
+            onAcknowledge: isCancellationRequested
                 ? () => _acknowledgeCancellation(booking) 
                 : null,
-            onMessage: status == 'cancelled' ? () => _messageStudent(booking) : null,
+            onMessage: (isCancellationRequested || isCancelled) 
+                ? () => _messageStudent(booking) 
+                : null,
             isProcessing: _isProcessing,
           );
         },

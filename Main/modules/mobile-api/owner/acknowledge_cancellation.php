@@ -59,34 +59,67 @@ try {
         exit;
     }
 
-    // Check if booking is cancelled
-    if ($booking['status'] !== 'cancelled') {
-        echo json_encode(['success' => false, 'error' => 'Booking is not cancelled']);
+    // Check if booking is in cancellation_requested status
+    if ($booking['status'] !== 'cancellation_requested') {
+        echo json_encode([
+            'success' => false, 
+            'error' => 'Booking is not pending cancellation. Current status: ' . $booking['status']
+        ]);
         exit;
     }
 
-    // Check if already acknowledged
+    // Check if already acknowledged (shouldn't happen if status is cancellation_requested, but double-check)
     if ($booking['cancellation_acknowledged'] == 1) {
         echo json_encode(['success' => false, 'error' => 'Cancellation already acknowledged']);
         exit;
     }
 
-    // Acknowledge the cancellation
-    $stmt = $pdo->prepare("
-        UPDATE bookings 
-        SET cancellation_acknowledged = 1,
-            cancellation_acknowledged_at = NOW(),
-            cancellation_acknowledged_by = ?,
-            updated_at = NOW()
-        WHERE booking_id = ?
-    ");
-    $stmt->execute([$owner_id, $booking_id]);
+    // Begin transaction
+    $pdo->beginTransaction();
 
-    echo json_encode([
-        'success' => true,
-        'message' => "Cancellation acknowledged for {$booking['student_name']}'s booking",
-        'booking_id' => $booking_id
-    ]);
+    try {
+        // Acknowledge the cancellation and change status to cancelled
+        $stmt = $pdo->prepare("
+            UPDATE bookings 
+            SET status = 'cancelled',
+                cancellation_acknowledged = 1,
+                cancellation_acknowledged_at = NOW(),
+                cancellation_acknowledged_by = ?,
+                notes = CONCAT(
+                    COALESCE(notes, ''),
+                    '\nCancellation confirmed by owner on ', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s')
+                ),
+                updated_at = NOW()
+            WHERE booking_id = ?
+        ");
+        $stmt->execute([$owner_id, $booking_id]);
+
+        // Cancel any pending payments associated with this booking
+        $stmt = $pdo->prepare("
+            UPDATE payments 
+            SET status = 'rejected',
+                notes = CONCAT(
+                    COALESCE(notes, ''),
+                    IF(COALESCE(notes, '') != '', '\n', ''),
+                    'Payment cancelled due to booking cancellation confirmed on ', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s')
+                ),
+                updated_at = NOW()
+            WHERE booking_id = ? AND status IN ('pending', 'submitted')
+        ");
+        $stmt->execute([$booking_id]);
+
+        $pdo->commit();
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Cancellation confirmed for {$booking['student_name']}'s booking",
+            'booking_id' => $booking_id
+        ]);
+
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 
 } catch (PDOException $e) {
     error_log('Database error in acknowledge_cancellation.php: ' . $e->getMessage());

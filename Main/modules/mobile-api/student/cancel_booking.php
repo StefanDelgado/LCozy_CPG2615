@@ -86,14 +86,14 @@ try {
     $pdo->beginTransaction();
 
     try {
-        // Update booking status to cancelled
+        // Update booking status to cancellation_requested (not cancelled yet - needs owner confirmation)
         $stmt = $pdo->prepare("
             UPDATE bookings 
-            SET status = 'cancelled',
+            SET status = 'cancellation_requested',
                 notes = CONCAT(
                     COALESCE(notes, ''),
                     IF(COALESCE(notes, '') != '', '\n', ''),
-                    'Cancelled by student on ', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), 
+                    'Cancellation requested by student on ', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), 
                     IF(? != '', CONCAT('. Reason: ', ?), '')
                 ),
                 updated_at = NOW()
@@ -101,31 +101,19 @@ try {
         ");
         $stmt->execute([$cancellation_reason, $cancellation_reason, $booking_id]);
 
-        // Cancel any pending payments associated with this booking
-        // Note: Only update status if it's not 'cancelled' already
-        $stmt = $pdo->prepare("
-            UPDATE payments 
-            SET status = 'rejected',
-                notes = CONCAT(
-                    COALESCE(notes, ''),
-                    IF(COALESCE(notes, '') != '', '\n', ''),
-                    'Payment cancelled due to booking cancellation on ', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s')
-                ),
-                updated_at = NOW()
-            WHERE booking_id = ? AND status IN ('pending', 'submitted')
-        ");
-        $stmt->execute([$booking_id]);
+        // Note: Payments are kept as pending until owner confirms cancellation
+        // This gives owner time to review and handle any deposits/refunds
 
         // Note: Room availability is managed separately based on active bookings
-        // We don't automatically set rooms to vacant when a booking is cancelled
-        // because there might be other active bookings for the same room (shared rooms)
+        // We don't automatically set rooms to vacant when a booking cancellation is requested
 
         $pdo->commit();
 
         echo json_encode([
             'success' => true,
-            'message' => 'Booking cancelled successfully',
-            'booking_id' => $booking_id
+            'message' => 'Cancellation request submitted successfully. Waiting for owner confirmation.',
+            'booking_id' => $booking_id,
+            'status' => 'cancellation_requested'
         ]);
 
     } catch (Exception $e) {
