@@ -312,6 +312,70 @@ class BookingService {
     }
   }
 
+  /// Cancels a cancellation request and reverts booking to pending
+  /// 
+  /// Parameters:
+  /// - [bookingId]: The ID of the booking
+  /// - [studentEmail]: The email of the student requesting the cancellation
+  /// 
+  /// Returns:
+  /// - Map with keys:
+  ///   - success: boolean indicating if the request was successful
+  ///   - message: Success or error message
+  ///   - status: New status ('pending') if successful
+  Future<Map<String, dynamic>> cancelCancellationRequest({
+    required int bookingId,
+    required String studentEmail,
+  }) async {
+    try {
+      print('📋 [BookingService] Canceling cancellation request...');
+      print('📋 [BookingService] Booking ID: $bookingId');
+      print('📋 [BookingService] Student Email: $studentEmail');
+
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/student/cancel_cancellation_request.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'booking_id': bookingId,
+          'student_email': studentEmail,
+        }),
+      );
+
+      print('📋 [BookingService] Response status: ${response.statusCode}');
+      print('📋 [BookingService] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          print('📋 [BookingService] ✅ Cancellation request cancelled successfully');
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Cancellation request cancelled successfully',
+            'status': data['status'] ?? 'pending',
+          };
+        } else {
+          print('📋 [BookingService] ❌ Failed: ${data['error']}');
+          return {
+            'success': false,
+            'error': data['error'] ?? 'Failed to cancel cancellation request',
+          };
+        }
+      } else {
+        print('📋 [BookingService] ❌ Server error: ${response.statusCode}');
+        return {
+          'success': false,
+          'error': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('📋 [BookingService] ❌ Exception: $e');
+      return {
+        'success': false,
+        'error': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
   /// Acknowledges a cancelled booking
   Future<Map<String, dynamic>> acknowledgeCancellation({
     required int bookingId,
@@ -365,6 +429,70 @@ class BookingService {
     }
   }
 
+  /// Rejects a cancellation request and reverts booking to approved
+  /// 
+  /// Parameters:
+  /// - [bookingId]: The ID of the booking
+  /// - [ownerEmail]: The email of the owner rejecting the cancellation
+  /// 
+  /// Returns:
+  /// - Map with keys:
+  ///   - success: boolean indicating if the request was successful
+  ///   - message: Success or error message
+  ///   - status: New status ('approved') if successful
+  Future<Map<String, dynamic>> rejectCancellationRequest({
+    required int bookingId,
+    required String ownerEmail,
+  }) async {
+    try {
+      print('📋 [BookingService] Rejecting cancellation request...');
+      print('📋 [BookingService] Booking ID: $bookingId');
+      print('📋 [BookingService] Owner Email: $ownerEmail');
+
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner/reject_cancellation_request.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'booking_id': bookingId,
+          'owner_email': ownerEmail,
+        }),
+      );
+
+      print('📋 [BookingService] Response status: ${response.statusCode}');
+      print('📋 [BookingService] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          print('📋 [BookingService] ✅ Cancellation request rejected successfully');
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Cancellation request rejected successfully',
+            'status': data['status'] ?? 'approved',
+          };
+        } else {
+          print('📋 [BookingService] ❌ Rejection failed: ${data['error']}');
+          return {
+            'success': false,
+            'error': data['error'] ?? 'Failed to reject cancellation request',
+          };
+        }
+      } else {
+        print('📋 [BookingService] ❌ Server error: ${response.statusCode}');
+        return {
+          'success': false,
+          'error': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('📋 [BookingService] ❌ Exception: $e');
+      return {
+        'success': false,
+        'error': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
   /// Uploads student's copy of contract document
   Future<Map<String, dynamic>> uploadStudentContract({
     required int bookingId,
@@ -404,6 +532,67 @@ class BookingService {
             'success': true,
             'message': data['message'] ?? 'Contract uploaded successfully',
             'file_path': data['file_path'],
+          };
+        } else {
+          print('📋 [BookingService] ❌ Upload failed: ${data['error']}');
+          return {
+            'success': false,
+            'message': data['error'] ?? 'Failed to upload contract',
+          };
+        }
+      } else {
+        print('📋 [BookingService] ❌ Server error: ${response.statusCode}');
+        return {
+          'success': false,
+          'message': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('📋 [BookingService] ❌ Exception: $e');
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
+  /// Uploads owner's copy of contract document
+  Future<Map<String, dynamic>> uploadOwnerContract({
+    required int bookingId,
+    required String ownerEmail,
+    required File contractFile,
+  }) async {
+    try {
+      print('📋 [BookingService] Uploading owner contract...');
+      print('📋 [BookingService] Booking ID: $bookingId');
+      print('📋 [BookingService] Owner Email: $ownerEmail');
+
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner/upload_owner_contract.php'),
+      );
+
+      request.fields['booking_id'] = bookingId.toString();
+      request.fields['owner_email'] = ownerEmail;
+      request.files.add(await http.MultipartFile.fromPath(
+        'contract_file',
+        contractFile.path,
+      ));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('📋 [BookingService] Response status: ${response.statusCode}');
+      print('📋 [BookingService] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          print('📋 [BookingService] ✅ Owner contract uploaded successfully');
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Owner contract uploaded successfully',
+            'contract_path': data['contract_path'],
           };
         } else {
           print('📋 [BookingService] ❌ Upload failed: ${data['error']}');

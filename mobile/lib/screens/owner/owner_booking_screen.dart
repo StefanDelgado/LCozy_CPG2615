@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/booking_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_display_widget.dart';
 import '../../widgets/owner/bookings/booking_tab_button.dart';
 import '../../widgets/owner/bookings/booking_card.dart';
 import '../../../utils/app_theme.dart';
+import '../../../utils/api_constants.dart';
+import '../shared/chat_conversation_screen.dart';
 
 /// Screen for managing booking requests
 /// 
@@ -529,16 +534,569 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
     }
   }
 
+  /// Rejects a cancellation request and reverts booking to approved
+  Future<void> _rejectCancellationRequest(Map<String, dynamic> booking) async {
+    print('📋 [OwnerBooking] REJECT CANCELLATION REQUEST CLICKED');
+    
+    if (_isProcessing) {
+      print('📋 [OwnerBooking] Already processing, ignoring click');
+      return;
+    }
+
+    final bookingId = booking['booking_id'] ?? booking['id'];
+    
+    if (bookingId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error: Booking ID is missing'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Disapprove Cancellation Request?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Are you sure you want to disapprove the cancellation request from ${booking['student_name'] ?? 'this student'}?'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 18, color: Colors.blue[700]),
+                      const SizedBox(width: 8),
+                      Text(
+                        'What happens:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[700],
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildInfoItem('The booking will return to APPROVED status'),
+                  _buildInfoItem('The student can proceed with their booking'),
+                  _buildInfoItem('No cancellation will occur'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No, Keep Request'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Yes, Disapprove Request'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isProcessing = true);
+
+    // Show loading indicator
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 16),
+              Text('Disapproving cancellation request...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+    }
+
+    try {
+      final result = await _bookingService.rejectCancellationRequest(
+        bookingId: int.parse(bookingId.toString()),
+        ownerEmail: widget.ownerEmail,
+      );
+
+      // Clear loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+
+      if (result['success'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Cancellation request disapproved successfully'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          _fetchBookings(); // Refresh the list
+        }
+      } else {
+        throw Exception(result['error'] ?? 'Failed to disapprove cancellation request');
+      }
+    } catch (e) {
+      // Clear loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Widget _buildInfoItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, top: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '• ',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.blue[700],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Opens chat with the student who cancelled
+  Future<void> _messageStudent(Map<String, dynamic> booking) async {
+    try {
+      final studentEmail = booking['student_email']?.toString();
+      final studentName = booking['student_name']?.toString() ?? 'Student';
+      final studentId = booking['student_id'];
+      final dormId = booking['dorm_id'];
+      final dormName = booking['dorm_name']?.toString() ?? booking['dorm']?.toString() ?? 'Dorm';
+
+      if (studentEmail == null || studentEmail.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Student email not available'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      if (studentId == null || dormId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to open chat. Missing information.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      print('📨 [OwnerBooking] Opening chat with student: $studentName ($studentEmail) about $dormName');
+      
+      // Navigate to chat conversation screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatConversationScreen(
+            currentUserEmail: widget.ownerEmail,
+            currentUserRole: 'owner',
+            otherUserId: int.parse(studentId.toString()),
+            otherUserName: studentName,
+            otherUserEmail: studentEmail,
+            dormId: int.parse(dormId.toString()),
+            dormName: dormName,
+          ),
+        ),
+      );
+    } catch (e) {
+      print('❌ [OwnerBooking] Error opening chat: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening chat: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Builds the contract documents section for a booking
+  Widget _buildContractSection(Map<String, dynamic> booking) {
+    final studentContract = booking['student_contract_copy']?.toString();
+    final ownerContract = booking['owner_contract_copy']?.toString();
+    final hasStudentContract = studentContract != null && studentContract.isNotEmpty;
+    final hasOwnerContract = ownerContract != null && ownerContract.isNotEmpty;
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.blue[50]!,
+            Colors.blue[100]!.withOpacity(0.3),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue[200]!, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue[600]!, Colors.blue[700]!],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.description,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Booking Contracts',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E3A8A),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Student Contract
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(Icons.school, color: Colors.green[700], size: 18),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Student Contract:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                if (hasStudentContract)
+                  IconButton(
+                    icon: Icon(Icons.visibility, color: Colors.green[600]),
+                    onPressed: () => _viewContract(studentContract),
+                    tooltip: 'View Student Contract',
+                    iconSize: 22,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  )
+                else
+                  Text(
+                    'Not uploaded',
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          
+          // Owner Contract
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(Icons.business, color: Colors.blue[700], size: 18),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Your Contract:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                if (hasOwnerContract) ...[
+                  IconButton(
+                    icon: Icon(Icons.visibility, color: Colors.blue[600]),
+                    onPressed: () => _viewContract(ownerContract),
+                    tooltip: 'View Your Contract',
+                    iconSize: 22,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(Icons.refresh, color: Colors.blue[600]),
+                    onPressed: _isProcessing ? null : () => _uploadOwnerContract(booking),
+                    tooltip: 'Replace Contract',
+                    iconSize: 22,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ] else
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.upload_file, size: 18),
+                    label: const Text('Upload', style: TextStyle(fontSize: 13)),
+                    onPressed: _isProcessing ? null : () => _uploadOwnerContract(booking),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[600],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Handles owner contract upload
+  Future<void> _uploadOwnerContract(Map<String, dynamic> booking) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      );
+      
+      if (result == null || result.files.isEmpty) {
+        print('📋 [OwnerBooking] File picker cancelled');
+        return;
+      }
+      
+      final filePath = result.files.single.path;
+      if (filePath == null) {
+        print('❌ [OwnerBooking] File path is null');
+        return;
+      }
+      
+      final file = File(filePath);
+      final fileSize = await file.length();
+      
+      // Validate file size (5MB limit)
+      if (fileSize > 5 * 1024 * 1024) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('File size exceeds 5MB limit'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+      
+      print('📋 [OwnerBooking] Uploading contract: ${result.files.single.name} (${(fileSize / 1024).toStringAsFixed(2)} KB)');
+      
+      setState(() => _isProcessing = true);
+      
+      final bookingId = booking['booking_id'] ?? booking['id'];
+      final uploadResult = await _bookingService.uploadOwnerContract(
+        bookingId: int.parse(bookingId.toString()),
+        ownerEmail: widget.ownerEmail,
+        contractFile: file,
+      );
+      
+      setState(() => _isProcessing = false);
+      
+      if (!mounted) return;
+      
+      if (uploadResult['success'] == true) {
+        print('✅ [OwnerBooking] Contract uploaded successfully');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(uploadResult['message'] ?? 'Contract uploaded successfully'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        _fetchBookings(); // Refresh to show new contract
+      } else {
+        print('❌ [OwnerBooking] Upload failed: ${uploadResult['message']}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(uploadResult['message'] ?? 'Failed to upload contract'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ [OwnerBooking] Error uploading contract: $e');
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Opens contract document in external viewer
+  Future<void> _viewContract(String? contractPath) async {
+    if (contractPath == null || contractPath.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Contract not available'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    
+    try {
+      // Construct full URL
+      final fullUrl = '${ApiConstants.baseUrl}/$contractPath';
+      final url = Uri.parse(fullUrl);
+      
+      print('📄 [OwnerBooking] Opening contract: $fullUrl');
+      
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch contract viewer';
+      }
+    } catch (e) {
+      print('❌ [OwnerBooking] Error opening contract: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening contract: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   /// Filters bookings based on the selected tab
   List<Map<String, dynamic>> _filteredBookings() {
     return _bookings.where((booking) {
-      final status = (booking['status'] ?? '').toString().toLowerCase();
+      // Normalize status: remove spaces and convert to lowercase for comparison
+      final status = (booking['status'] ?? '').toString().toLowerCase().replaceAll(' ', '_');
       if (_selectedTab == 0) {
         return status == 'pending';
       } else if (_selectedTab == 1) {
         return status == 'approved';
       } else {
-        return status == 'cancelled';
+        // Cancelled tab shows both cancellation_requested and cancelled
+        return status == 'cancelled' || status == 'cancellation_requested';
       }
     }).toList();
   }
@@ -680,13 +1238,27 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
         itemCount: filteredBookings.length,
         itemBuilder: (context, index) {
           final booking = filteredBookings[index];
-          final status = (booking['status'] ?? '').toString().toLowerCase();
+          // Normalize status: remove spaces and convert to lowercase for comparison
+          final status = (booking['status'] ?? '').toString().toLowerCase().replaceAll(' ', '_');
+          final isCancellationRequested = status == 'cancellation_requested';
+          final isCancelled = status == 'cancelled';
           
           return BookingCard(
             booking: booking,
             onApprove: status == 'pending' ? () => _approveBooking(booking) : null,
             onReject: status == 'pending' ? () => _rejectBooking(booking) : null,
-            onAcknowledge: status == 'cancelled' ? () => _acknowledgeCancellation(booking) : null,
+            onAcknowledge: isCancellationRequested
+                ? () => _acknowledgeCancellation(booking) 
+                : null,
+            onRejectCancellation: isCancellationRequested
+                ? () => _rejectCancellationRequest(booking)
+                : null,
+            onContractAction: (status == 'approved' || status == 'active')
+                ? (booking) => _buildContractSection(booking)
+                : null,
+            onMessage: (isCancellationRequested || isCancelled) 
+                ? () => _messageStudent(booking) 
+                : null,
             isProcessing: _isProcessing,
           );
         },

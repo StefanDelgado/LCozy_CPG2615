@@ -207,6 +207,7 @@ try {
             u.name as student_name,
             b.created_at as requested_at,
             COALESCE(b.status, 'pending') as status, -- Default to pending if NULL
+            d.dorm_id,
             d.name as dorm,
             r.room_type,
             r.price as base_price,
@@ -217,7 +218,10 @@ try {
             b.notes as message,
             b.cancellation_acknowledged,
             b.cancellation_acknowledged_at,
-            b.cancellation_acknowledged_by
+            b.cancellation_acknowledged_by,
+            b.student_id,
+            b.student_contract_copy,
+            b.owner_contract_copy
         FROM bookings b
         JOIN rooms r ON b.room_id = r.room_id
         JOIN dormitories d ON r.dorm_id = d.dorm_id
@@ -267,13 +271,31 @@ try {
             $calculated_price = $base_price;
         }
         
+        // Extract cancellation reason from notes (for both cancelled and cancellation_requested)
+        $cancellation_reason = '';
+        $status_lower = strtolower($b['status']);
+        if (($status_lower === 'cancelled' || $status_lower === 'cancellation_requested') && !empty($b['message'])) {
+            // Look for "Reason: " in the notes
+            if (preg_match('/Reason:\s*(.+?)(?:\n|$)/s', $b['message'], $matches)) {
+                $cancellation_reason = trim($matches[1]);
+            }
+        }
+        
+        // Format status for display (handle underscore in cancellation_requested)
+        $status_formatted = ucfirst(strtolower($b['status']));
+        if (strtolower($b['status']) === 'cancellation_requested') {
+            $status_formatted = 'Cancellation Requested';
+        }
+        
         return [
             'id' => $b['id'],
             'booking_id' => $b['id'], // Add booking_id for consistency
+            'student_id' => $b['student_id'], // Add student_id for messaging
             'student_email' => $b['student_email'],
             'student_name' => $b['student_name'],
             'requested_at' => timeAgo($b['requested_at']),
-            'status' => ucfirst(strtolower($b['status'])),
+            'status' => $status_formatted,
+            'dorm_id' => $b['dorm_id'], // Add dorm_id for messaging
             'dorm' => $b['dorm'], // Keep for backward compatibility
             'dorm_name' => $b['dorm'], // Add dorm_name for consistency with widget
             'room_type' => $b['room_type'],
@@ -284,7 +306,13 @@ try {
             'base_price' => $base_price,
             'capacity' => $capacity,
             'price' => '₱' . number_format($calculated_price, 2),
-            'message' => $b['message'] ?? 'No additional message'
+            'message' => $b['message'] ?? 'No additional message',
+            'cancellation_reason' => $cancellation_reason,
+            'cancellation_acknowledged' => $b['cancellation_acknowledged'] ?? 0,
+            'cancellation_acknowledged_at' => $b['cancellation_acknowledged_at'] ?? null,
+            'cancellation_acknowledged_by' => $b['cancellation_acknowledged_by'] ?? null,
+            'student_contract_copy' => $b['student_contract_copy'] ?? null,
+            'owner_contract_copy' => $b['owner_contract_copy'] ?? null
         ];
     }, $bookings);
 
