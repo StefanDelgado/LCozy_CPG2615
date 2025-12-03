@@ -592,7 +592,8 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
   /// Filters bookings based on the selected tab
   List<Map<String, dynamic>> _filteredBookings() {
     return _bookings.where((booking) {
-      final status = (booking['status'] ?? '').toString().toLowerCase();
+      // Normalize status: remove spaces and convert to lowercase for comparison
+      final status = (booking['status'] ?? '').toString().toLowerCase().replaceAll(' ', '_');
       if (_selectedTab == 0) {
         return status == 'pending';
       } else if (_selectedTab == 1) {
@@ -741,7 +742,8 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
         itemCount: filteredBookings.length,
         itemBuilder: (context, index) {
           final booking = filteredBookings[index];
-          final status = (booking['status'] ?? '').toString().toLowerCase();
+          // Normalize status: remove spaces and convert to lowercase for comparison
+          final status = (booking['status'] ?? '').toString().toLowerCase().replaceAll(' ', '_');
           final isCancellationRequested = status == 'cancellation_requested';
           final isCancelled = status == 'cancelled';
           

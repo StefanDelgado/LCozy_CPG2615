@@ -279,6 +279,12 @@ try {
             }
         }
         
+        // Format status for display (handle underscore in cancellation_requested)
+        $status_formatted = ucfirst(strtolower($b['status']));
+        if (strtolower($b['status']) === 'cancellation_requested') {
+            $status_formatted = 'Cancellation Requested';
+        }
+        
         return [
             'id' => $b['id'],
             'booking_id' => $b['id'], // Add booking_id for consistency
@@ -286,7 +292,7 @@ try {
             'student_email' => $b['student_email'],
             'student_name' => $b['student_name'],
             'requested_at' => timeAgo($b['requested_at']),
-            'status' => ucfirst(strtolower($b['status'])),
+            'status' => $status_formatted,
             'dorm_id' => $b['dorm_id'], // Add dorm_id for messaging
             'dorm' => $b['dorm'], // Keep for backward compatibility
             'dorm_name' => $b['dorm'], // Add dorm_name for consistency with widget

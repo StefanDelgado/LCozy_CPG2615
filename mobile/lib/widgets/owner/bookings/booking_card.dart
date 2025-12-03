@@ -28,7 +28,8 @@ class BookingCard extends StatelessWidget {
     final bookingType = booking['booking_type']?.toString() ?? 'Shared';
     final duration = booking['duration']?.toString() ?? 'Not specified';
     final price = booking['price']?.toString() ?? '₱0';
-    final status = (booking['status'] ?? '').toString().toLowerCase();
+    // Normalize status: remove spaces and convert to lowercase for comparison
+    final status = (booking['status'] ?? '').toString().toLowerCase().replaceAll(' ', '_');
     final isPending = status == 'pending';
     final isCancellationRequested = status == 'cancellation_requested';
     final isCancelled = status == 'cancelled';
