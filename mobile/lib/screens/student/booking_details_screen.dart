@@ -51,6 +51,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         (status == 'pending' || status == 'approved') &&
         !_hasPaymentMade();
 
+    // Check if cancellation is requested (can cancel the cancellation request)
+    final isCancellationRequested = status == 'cancellation_requested';
+
     // Check if user can write a review (only when completed)
     final canWriteReview = status == 'completed';
 
@@ -195,6 +198,82 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         fontStyle: FontStyle.italic,
                       ),
                       textAlign: TextAlign.center,
+                    ),
+                  ],
+
+                  // Cancel Cancellation Request Button (for cancellation_requested status)
+                  if (isCancellationRequested) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange[200]!, width: 2),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.pending_actions, color: Colors.orange[700], size: 28),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Cancellation Pending',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange[900],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Waiting for owner confirmation',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.orange[800],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 45,
+                            child: OutlinedButton.icon(
+                              onPressed: _isLoading ? null : _showCancelCancellationDialog,
+                              icon: const Icon(Icons.undo, size: 20),
+                              label: const Text(
+                                'Cancel Cancellation Request',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.blue[700],
+                                side: BorderSide(color: Colors.blue[700]!, width: 2),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'This will revert your booking back to pending status',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[700],
+                              fontStyle: FontStyle.italic,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
 
@@ -936,6 +1015,160 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error opening contract: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Shows confirmation dialog for cancelling cancellation request
+  Future<void> _showCancelCancellationDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Cancellation Request?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Are you sure you want to cancel your cancellation request?',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 18, color: Colors.blue[700]),
+                      const SizedBox(width: 8),
+                      Text(
+                        'What happens:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[700],
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildInfoItem('Your booking will return to PENDING status'),
+                  _buildInfoItem('The owner will no longer see a cancellation request'),
+                  _buildInfoItem('You can proceed with this booking normally'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No, Keep Request'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Yes, Cancel Request'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _submitCancelCancellation();
+    }
+  }
+
+  /// Helper widget for dialog info items
+  Widget _buildInfoItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, top: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '• ',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.blue[700],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Submits cancel cancellation request
+  Future<void> _submitCancelCancellation() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final bookingId = widget.booking['booking_id'] is int
+          ? widget.booking['booking_id']
+          : int.tryParse(widget.booking['booking_id']?.toString() ?? '0') ?? 0;
+
+      final result = await _bookingService.cancelCancellationRequest(
+        bookingId: bookingId,
+        studentEmail: widget.userEmail,
+      );
+
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result['message'] ?? 'Cancellation request cancelled successfully',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        // Return to previous screen with refresh flag
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result['error'] ?? 'Failed to cancel cancellation request',
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 4),
           ),

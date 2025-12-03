@@ -120,7 +120,7 @@ try {
         JOIN dormitories d ON r.dorm_id = d.dorm_id
         JOIN users u ON d.owner_id = u.user_id
         WHERE b.student_id = ? 
-        AND b.status IN ('pending', 'approved', 'active', 'completed', 'cancelled', 'rejected', 'ongoing', 'checkout_requested', 'checkout_approved')
+        AND b.status IN ('pending', 'approved', 'active', 'completed', 'cancelled', 'rejected', 'ongoing', 'checkout_requested', 'checkout_approved', 'cancellation_requested')
         ORDER BY b.created_at DESC
         LIMIT 10
     ");
@@ -217,11 +217,13 @@ try {
                     WHEN b.status = 'checkout_approved' THEN 'Your checkout request has been approved'
                     WHEN b.status = 'checkout_requested' THEN 'Your checkout request is pending'
                     WHEN b.status = 'completed' THEN 'Your booking has been completed'
+                    WHEN b.status = 'cancellation_requested' THEN 'Your cancellation request is pending owner confirmation'
                     WHEN b.status = 'cancelled' THEN 'Your booking has been cancelled'
                     ELSE CONCAT('Booking status: ', b.status)
                 END as body,
                 CASE 
                     WHEN b.status IN ('rejected', 'cancelled') THEN 'urgent'
+                    WHEN b.status = 'cancellation_requested' THEN 'warning'
                     ELSE 'normal'
                 END as urgency
             FROM bookings b
@@ -229,7 +231,7 @@ try {
             JOIN dormitories d ON r.dorm_id = d.dorm_id
             WHERE b.student_id = ?
             AND b.updated_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-            AND b.status IN ('approved', 'rejected', 'checkout_approved', 'checkout_requested', 'completed', 'cancelled')
+            AND b.status IN ('approved', 'rejected', 'checkout_approved', 'checkout_requested', 'completed', 'cancelled', 'cancellation_requested')
             ORDER BY b.updated_at DESC
             LIMIT 5
         ");

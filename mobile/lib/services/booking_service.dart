@@ -312,6 +312,70 @@ class BookingService {
     }
   }
 
+  /// Cancels a cancellation request and reverts booking to pending
+  /// 
+  /// Parameters:
+  /// - [bookingId]: The ID of the booking
+  /// - [studentEmail]: The email of the student requesting the cancellation
+  /// 
+  /// Returns:
+  /// - Map with keys:
+  ///   - success: boolean indicating if the request was successful
+  ///   - message: Success or error message
+  ///   - status: New status ('pending') if successful
+  Future<Map<String, dynamic>> cancelCancellationRequest({
+    required int bookingId,
+    required String studentEmail,
+  }) async {
+    try {
+      print('📋 [BookingService] Canceling cancellation request...');
+      print('📋 [BookingService] Booking ID: $bookingId');
+      print('📋 [BookingService] Student Email: $studentEmail');
+
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/student/cancel_cancellation_request.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'booking_id': bookingId,
+          'student_email': studentEmail,
+        }),
+      );
+
+      print('📋 [BookingService] Response status: ${response.statusCode}');
+      print('📋 [BookingService] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          print('📋 [BookingService] ✅ Cancellation request cancelled successfully');
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Cancellation request cancelled successfully',
+            'status': data['status'] ?? 'pending',
+          };
+        } else {
+          print('📋 [BookingService] ❌ Failed: ${data['error']}');
+          return {
+            'success': false,
+            'error': data['error'] ?? 'Failed to cancel cancellation request',
+          };
+        }
+      } else {
+        print('📋 [BookingService] ❌ Server error: ${response.statusCode}');
+        return {
+          'success': false,
+          'error': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('📋 [BookingService] ❌ Exception: $e');
+      return {
+        'success': false,
+        'error': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
   /// Acknowledges a cancelled booking
   Future<Map<String, dynamic>> acknowledgeCancellation({
     required int bookingId,

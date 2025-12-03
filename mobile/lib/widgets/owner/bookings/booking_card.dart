@@ -257,8 +257,8 @@ class BookingCard extends StatelessWidget {
               ),
             ),
             
-            // Cancellation Reason (for cancellation requests and cancelled bookings)
-            if ((isCancellationRequested || isCancelled) && 
+            // Cancellation Reason (only for confirmed cancellations, not requests)
+            if (isCancelled && 
                 booking['cancellation_reason'] != null && 
                 booking['cancellation_reason'].toString().isNotEmpty)
               Padding(
@@ -290,11 +290,9 @@ class BookingCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            isCancellationRequested 
-                                ? 'Cancellation Reason:' 
-                                : 'Cancellation Reason:',
-                            style: const TextStyle(
+                          const Text(
+                            'Cancellation Reason:',
+                            style: TextStyle(
                               fontSize: 13,
                               color: Color(0xFF991B1B),
                               fontWeight: FontWeight.w600,
