@@ -5,6 +5,7 @@ import '../../widgets/common/error_display_widget.dart';
 import '../../widgets/owner/bookings/booking_tab_button.dart';
 import '../../widgets/owner/bookings/booking_card.dart';
 import '../../../utils/app_theme.dart';
+import '../shared/chat_conversation_screen.dart';
 
 /// Screen for managing booking requests
 /// 
@@ -529,6 +530,65 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
     }
   }
 
+  /// Opens chat with the student who cancelled
+  Future<void> _messageStudent(Map<String, dynamic> booking) async {
+    try {
+      final studentEmail = booking['student_email']?.toString();
+      final studentName = booking['student_name']?.toString() ?? 'Student';
+      final studentId = booking['student_id'];
+      final dormId = booking['dorm_id'];
+      final dormName = booking['dorm_name']?.toString() ?? booking['dorm']?.toString() ?? 'Dorm';
+
+      if (studentEmail == null || studentEmail.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Student email not available'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      if (studentId == null || dormId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to open chat. Missing information.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      print('📨 [OwnerBooking] Opening chat with student: $studentName ($studentEmail) about $dormName');
+      
+      // Navigate to chat conversation screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatConversationScreen(
+            currentUserEmail: widget.ownerEmail,
+            currentUserRole: 'owner',
+            otherUserId: int.parse(studentId.toString()),
+            otherUserName: studentName,
+            otherUserEmail: studentEmail,
+            dormId: int.parse(dormId.toString()),
+            dormName: dormName,
+          ),
+        ),
+      );
+    } catch (e) {
+      print('❌ [OwnerBooking] Error opening chat: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening chat: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   /// Filters bookings based on the selected tab
   List<Map<String, dynamic>> _filteredBookings() {
     return _bookings.where((booking) {
@@ -686,7 +746,10 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
             booking: booking,
             onApprove: status == 'pending' ? () => _approveBooking(booking) : null,
             onReject: status == 'pending' ? () => _rejectBooking(booking) : null,
-            onAcknowledge: status == 'cancelled' ? () => _acknowledgeCancellation(booking) : null,
+            onAcknowledge: status == 'cancelled' && booking['cancellation_acknowledged'] != 1 
+                ? () => _acknowledgeCancellation(booking) 
+                : null,
+            onMessage: status == 'cancelled' ? () => _messageStudent(booking) : null,
             isProcessing: _isProcessing,
           );
         },

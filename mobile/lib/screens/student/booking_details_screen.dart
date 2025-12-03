@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../utils/app_theme.dart';
 import '../../services/checkout_service.dart';
 import '../../services/booking_service.dart';
+import '../../utils/constants.dart';
 import 'submit_review_screen.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
@@ -905,33 +907,41 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   /// Views contract document
-  void _viewContract(String? contractPath) {
-    if (contractPath == null || contractPath.isEmpty) return;
-    
-    // Show dialog with contract viewing options
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('View Contract'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Contract document is available.'),
-            const SizedBox(height: 16),
-            Text(
-              'Path: $contractPath',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
+  Future<void> _viewContract(String? contractPath) async {
+    if (contractPath == null || contractPath.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Contract not available'),
+          backgroundColor: Colors.orange,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+      );
+      return;
+    }
+    
+    try {
+      // Construct full URL
+      final url = Uri.parse('${ApiConstants.baseUrl}/$contractPath');
+      
+      // Try to launch the URL
+      if (await canLaunchUrl(url)) {
+        await launchUrl(
+          url,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        throw 'Could not launch contract viewer';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening contract: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
-        ],
-      ),
-    );
+        );
+      }
+    }
   }
 }
 

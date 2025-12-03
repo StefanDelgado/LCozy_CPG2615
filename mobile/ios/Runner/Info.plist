@@ -50,5 +50,11 @@
     <true/>
     <key>GMSApiKey</key>
     <string>AIzaSyDroL1SHpKimaW2pehkmoso0xfRyLegiAA</string>
+    <!-- URL Launcher schemes for contract viewing -->
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>http</string>
+        <string>https</string>
+    </array>
 </dict>
 </plist>
