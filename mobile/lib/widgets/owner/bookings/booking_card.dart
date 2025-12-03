@@ -8,6 +8,7 @@ class BookingCard extends StatelessWidget {
   final VoidCallback? onAcknowledge;
   final VoidCallback? onRejectCancellation;
   final VoidCallback? onMessage;
+  final Widget Function(Map<String, dynamic>)? onContractAction;
   final bool isProcessing;
 
   const BookingCard({
@@ -18,6 +19,7 @@ class BookingCard extends StatelessWidget {
     this.onAcknowledge,
     this.onRejectCancellation,
     this.onMessage,
+    this.onContractAction,
     this.isProcessing = false,
   });
 
@@ -259,6 +261,13 @@ class BookingCard extends StatelessWidget {
                 ],
               ),
             ),
+            
+            // Contract Documents Section (for approved or active bookings)
+            if ((status == 'approved' || status == 'active') && onContractAction != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: onContractAction!(booking),
+              ),
             
             // Cancellation Reason (for both cancellation_requested and cancelled)
             if ((isCancellationRequested || isCancelled) && 

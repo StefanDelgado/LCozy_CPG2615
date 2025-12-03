@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/booking_service.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_display_widget.dart';
 import '../../widgets/owner/bookings/booking_tab_button.dart';
 import '../../widgets/owner/bookings/booking_card.dart';
 import '../../../utils/app_theme.dart';
+import '../../../utils/api_constants.dart';
 import '../shared/chat_conversation_screen.dart';
 
 /// Screen for managing booking requests
@@ -775,6 +779,312 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
     }
   }
 
+  /// Builds the contract documents section for a booking
+  Widget _buildContractSection(Map<String, dynamic> booking) {
+    final studentContract = booking['student_contract_copy']?.toString();
+    final ownerContract = booking['owner_contract_copy']?.toString();
+    final hasStudentContract = studentContract != null && studentContract.isNotEmpty;
+    final hasOwnerContract = ownerContract != null && ownerContract.isNotEmpty;
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.blue[50]!,
+            Colors.blue[100]!.withOpacity(0.3),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue[200]!, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue[600]!, Colors.blue[700]!],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.description,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Booking Contracts',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E3A8A),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Student Contract
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(Icons.school, color: Colors.green[700], size: 18),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Student Contract:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                if (hasStudentContract)
+                  IconButton(
+                    icon: Icon(Icons.visibility, color: Colors.green[600]),
+                    onPressed: () => _viewContract(studentContract),
+                    tooltip: 'View Student Contract',
+                    iconSize: 22,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  )
+                else
+                  Text(
+                    'Not uploaded',
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          
+          // Owner Contract
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(Icons.business, color: Colors.blue[700], size: 18),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Your Contract:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                if (hasOwnerContract) ...[
+                  IconButton(
+                    icon: Icon(Icons.visibility, color: Colors.blue[600]),
+                    onPressed: () => _viewContract(ownerContract),
+                    tooltip: 'View Your Contract',
+                    iconSize: 22,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(Icons.refresh, color: Colors.blue[600]),
+                    onPressed: _isProcessing ? null : () => _uploadOwnerContract(booking),
+                    tooltip: 'Replace Contract',
+                    iconSize: 22,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ] else
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.upload_file, size: 18),
+                    label: const Text('Upload', style: TextStyle(fontSize: 13)),
+                    onPressed: _isProcessing ? null : () => _uploadOwnerContract(booking),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[600],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Handles owner contract upload
+  Future<void> _uploadOwnerContract(Map<String, dynamic> booking) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      );
+      
+      if (result == null || result.files.isEmpty) {
+        print('📋 [OwnerBooking] File picker cancelled');
+        return;
+      }
+      
+      final filePath = result.files.single.path;
+      if (filePath == null) {
+        print('❌ [OwnerBooking] File path is null');
+        return;
+      }
+      
+      final file = File(filePath);
+      final fileSize = await file.length();
+      
+      // Validate file size (5MB limit)
+      if (fileSize > 5 * 1024 * 1024) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('File size exceeds 5MB limit'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+      
+      print('📋 [OwnerBooking] Uploading contract: ${result.files.single.name} (${(fileSize / 1024).toStringAsFixed(2)} KB)');
+      
+      setState(() => _isProcessing = true);
+      
+      final bookingId = booking['booking_id'] ?? booking['id'];
+      final uploadResult = await _bookingService.uploadOwnerContract(
+        bookingId: int.parse(bookingId.toString()),
+        ownerEmail: widget.ownerEmail,
+        contractFile: file,
+      );
+      
+      setState(() => _isProcessing = false);
+      
+      if (!mounted) return;
+      
+      if (uploadResult['success'] == true) {
+        print('✅ [OwnerBooking] Contract uploaded successfully');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(uploadResult['message'] ?? 'Contract uploaded successfully'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        _fetchBookings(); // Refresh to show new contract
+      } else {
+        print('❌ [OwnerBooking] Upload failed: ${uploadResult['message']}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(uploadResult['message'] ?? 'Failed to upload contract'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ [OwnerBooking] Error uploading contract: $e');
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Opens contract document in external viewer
+  Future<void> _viewContract(String? contractPath) async {
+    if (contractPath == null || contractPath.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Contract not available'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    
+    try {
+      // Construct full URL
+      final fullUrl = '${ApiConstants.baseUrl}/$contractPath';
+      final url = Uri.parse(fullUrl);
+      
+      print('📄 [OwnerBooking] Opening contract: $fullUrl');
+      
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch contract viewer';
+      }
+    } catch (e) {
+      print('❌ [OwnerBooking] Error opening contract: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening contract: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   /// Filters bookings based on the selected tab
   List<Map<String, dynamic>> _filteredBookings() {
     return _bookings.where((booking) {
@@ -942,6 +1252,9 @@ class _OwnerBookingScreenState extends State<OwnerBookingScreen> {
                 : null,
             onRejectCancellation: isCancellationRequested
                 ? () => _rejectCancellationRequest(booking)
+                : null,
+            onContractAction: (status == 'approved' || status == 'active')
+                ? (booking) => _buildContractSection(booking)
                 : null,
             onMessage: (isCancellationRequested || isCancelled) 
                 ? () => _messageStudent(booking) 

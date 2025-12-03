@@ -555,6 +555,67 @@ class BookingService {
       };
     }
   }
+
+  /// Uploads owner's copy of contract document
+  Future<Map<String, dynamic>> uploadOwnerContract({
+    required int bookingId,
+    required String ownerEmail,
+    required File contractFile,
+  }) async {
+    try {
+      print('📋 [BookingService] Uploading owner contract...');
+      print('📋 [BookingService] Booking ID: $bookingId');
+      print('📋 [BookingService] Owner Email: $ownerEmail');
+
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConstants.baseUrl}/modules/mobile-api/owner/upload_owner_contract.php'),
+      );
+
+      request.fields['booking_id'] = bookingId.toString();
+      request.fields['owner_email'] = ownerEmail;
+      request.files.add(await http.MultipartFile.fromPath(
+        'contract_file',
+        contractFile.path,
+      ));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('📋 [BookingService] Response status: ${response.statusCode}');
+      print('📋 [BookingService] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          print('📋 [BookingService] ✅ Owner contract uploaded successfully');
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Owner contract uploaded successfully',
+            'contract_path': data['contract_path'],
+          };
+        } else {
+          print('📋 [BookingService] ❌ Upload failed: ${data['error']}');
+          return {
+            'success': false,
+            'message': data['error'] ?? 'Failed to upload contract',
+          };
+        }
+      } else {
+        print('📋 [BookingService] ❌ Server error: ${response.statusCode}');
+        return {
+          'success': false,
+          'message': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('📋 [BookingService] ❌ Exception: $e');
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
 }
 
 

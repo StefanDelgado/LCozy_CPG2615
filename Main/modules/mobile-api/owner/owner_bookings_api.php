@@ -219,7 +219,9 @@ try {
             b.cancellation_acknowledged,
             b.cancellation_acknowledged_at,
             b.cancellation_acknowledged_by,
-            b.student_id
+            b.student_id,
+            b.student_contract_copy,
+            b.owner_contract_copy
         FROM bookings b
         JOIN rooms r ON b.room_id = r.room_id
         JOIN dormitories d ON r.dorm_id = d.dorm_id
@@ -308,7 +310,9 @@ try {
             'cancellation_reason' => $cancellation_reason,
             'cancellation_acknowledged' => $b['cancellation_acknowledged'] ?? 0,
             'cancellation_acknowledged_at' => $b['cancellation_acknowledged_at'] ?? null,
-            'cancellation_acknowledged_by' => $b['cancellation_acknowledged_by'] ?? null
+            'cancellation_acknowledged_by' => $b['cancellation_acknowledged_by'] ?? null,
+            'student_contract_copy' => $b['student_contract_copy'] ?? null,
+            'owner_contract_copy' => $b['owner_contract_copy'] ?? null
         ];
     }, $bookings);
 
