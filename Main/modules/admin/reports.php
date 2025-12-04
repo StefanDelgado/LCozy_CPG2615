@@ -38,6 +38,44 @@ $trends = $pdo->query("
     ORDER BY month DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
+// Review summary counts
+$review_stats = $pdo->query("
+    SELECT
+        COUNT(*) AS total_reviews,
+        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved,
+        SUM(CASE WHEN status = 'disapproved' THEN 1 ELSE 0 END) AS disapproved,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending
+    FROM reviews
+")->fetch(PDO::FETCH_ASSOC);
+
+// Monthly review trend (last 12 months)
+$review_trends = $pdo->query("
+    SELECT
+        DATE_FORMAT(created_at, '%Y-%m') AS month,
+        COUNT(*) AS total_reviews,
+        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved,
+        SUM(CASE WHEN status = 'disapproved' THEN 1 ELSE 0 END) AS disapproved,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending
+    FROM reviews
+    WHERE created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
+    GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+    ORDER BY month DESC
+")->fetchAll(PDO::FETCH_ASSOC);
+
+// Top 5 dorms by average rating
+$top_rated_dorms = $pdo->query("
+    SELECT 
+        d.name,
+        COUNT(r.review_id) AS total_reviews,
+        COALESCE(AVG(r.rating), 0) AS avg_rating
+    FROM dormitories d
+    LEFT JOIN reviews r ON r.dorm_id = d.dorm_id
+    GROUP BY d.dorm_id
+    HAVING total_reviews > 0
+    ORDER BY avg_rating DESC
+    LIMIT 5
+")->fetchAll(PDO::FETCH_ASSOC);
+
 // Top performing dorms
 $top_dorms = $pdo->query("
     SELECT 
@@ -105,6 +143,29 @@ require_once __DIR__ . '/../../partials/header.php';
     </div>
 </div>
 
+<!-- Review Summary -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3><?= number_format($review_stats['total_reviews']) ?></h3>
+        <p>Total Reviews</p>
+    </div>
+
+    <div class="stat-card">
+        <h3><?= number_format($review_stats['approved']) ?></h3>
+        <p>Approved Reviews</p>
+    </div>
+
+    <div class="stat-card">
+        <h3><?= number_format($review_stats['disapproved']) ?></h3>
+        <p>Disapproved Reviews</p>
+    </div>
+
+    <div class="stat-card">
+        <h3><?= number_format($review_stats['pending']) ?></h3>
+        <p>Pending Reviews</p>
+    </div>
+</div>
+
 <!-- Charts Section -->
 <div class="reports-grid">
     <div class="chart-card">
@@ -115,6 +176,11 @@ require_once __DIR__ . '/../../partials/header.php';
         <h2>Payments by Status</h2>
         <canvas id="paymentStatus"></canvas>
     </div>
+</div>
+
+<div class="chart-card">
+    <h2>Monthly Review Trends</h2>
+    <canvas id="reviewTrends"></canvas>
 </div>
 
 <!-- Top Performing Dorms -->
@@ -148,6 +214,7 @@ require_once __DIR__ . '/../../partials/header.php';
 <script>
 const trends = <?= json_encode($trends) ?>;
 const paymentStatus = <?= json_encode($payment_status) ?>;
+const reviewTrends = <?= json_encode($review_trends) ?>;
 
 // Booking Trends Chart
 new Chart(document.getElementById('bookingTrends').getContext('2d'), {
@@ -193,6 +260,51 @@ new Chart(document.getElementById('paymentStatus').getContext('2d'), {
         cutout: '70%'
     }
 });
+
+// Review Trends Chart
+new Chart(document.getElementById('reviewTrends').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: reviewTrends.map(t => t.month),
+        datasets: [
+            {
+                label: 'Total Reviews',
+                data: reviewTrends.map(t => t.total_reviews),
+                borderColor: '#4A3AFF',
+                backgroundColor: 'rgba(74,58,255,0.1)',
+                fill: true
+            },
+            {
+                label: 'Approved',
+                data: reviewTrends.map(t => t.approved),
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40,167,69,0.1)',
+                fill: true
+            },
+            {
+                label: 'Disapproved',
+                data: reviewTrends.map(t => t.disapproved),
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220,53,69,0.1)',
+                fill: true
+            },
+            {
+                label: 'Pending',
+                data: reviewTrends.map(t => t.pending),
+                borderColor: '#ffc107',
+                backgroundColor: 'rgba(255,193,7,0.1)',
+                fill: true
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: { 
+            title: { display: true, text: 'Review Moderation Overview (Last 12 Months)' } 
+        }
+    }
+});
+
 </script>
 
 <style>
